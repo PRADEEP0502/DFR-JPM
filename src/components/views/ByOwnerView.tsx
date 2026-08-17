@@ -1,0 +1,122 @@
+import React from 'react';
+import { UserCheck, User, ArrowRight, IndianRupee, Clock } from 'lucide-react';
+import { BillRegisterItem, DfrUser } from '../../types/dfr';
+import { ViewTab } from '../layout/Sidebar';
+
+interface ByOwnerViewProps {
+  bills: BillRegisterItem[];
+  users: DfrUser[];
+  onSelectTab: (tab: ViewTab) => void;
+  onSelectBill: (bill: BillRegisterItem) => void;
+}
+
+export const ByOwnerView: React.FC<ByOwnerViewProps> = ({
+  bills,
+  users,
+  onSelectTab,
+  onSelectBill,
+}) => {
+  const activeBills = bills.filter(b => b.dfr_status !== 'PAID' && b.dfr_status !== 'CLOSED');
+  const activeUsers = users.filter(u => u.id !== 'user-000');
+
+  return (
+    <div className="space-y-6 pb-12">
+      <div>
+        <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+          <UserCheck className="w-6 h-6 text-purple-600" />
+          Pending Bills by Responsible Person (RP / Owner)
+        </h1>
+        <p className="text-sm text-slate-500 mt-1">
+          Owner-wise tracking of bills initially received by each staff member (distinct from current holder)
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {activeUsers.map(user => {
+          const personBills = activeBills.filter(b => b.owner_id === user.id);
+          const totalAmount = personBills.reduce((sum, b) => sum + b.amount, 0);
+          const oldestAge = personBills.reduce((max, b) => Math.max(max, b.age_days), 0);
+          const criticalCount = personBills.filter(b => b.age_band === 'A-10').length;
+
+          return (
+            <div
+              key={user.id}
+              className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs space-y-4 hover:border-slate-300 transition text-slate-900"
+            >
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 border border-purple-200 flex items-center justify-center font-black text-lg">
+                    {user.full_name.charAt(0)}
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-slate-900 text-base">{user.full_name}</h3>
+                    <span className="text-[11px] text-slate-500 font-bold uppercase">RP Owner</span>
+                  </div>
+                </div>
+
+                {criticalCount > 0 && (
+                  <span className="px-2.5 py-1 rounded bg-red-100 text-red-700 border border-red-200 text-xs font-bold animate-pulse">
+                    {criticalCount} Critical
+                  </span>
+                )}
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                  <span className="text-[10px] text-slate-500 uppercase font-bold">Owned Bills</span>
+                  <p className="text-lg font-black text-slate-900 mt-0.5">{personBills.length}</p>
+                </div>
+
+                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                  <span className="text-[10px] text-slate-500 uppercase font-bold">Exposure</span>
+                  <p className="text-sm font-black text-emerald-600 mt-1">
+                    ₹{(totalAmount / 1000).toFixed(0)}k
+                  </p>
+                </div>
+
+                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                  <span className="text-[10px] text-slate-500 uppercase font-bold">Max Age</span>
+                  <p className="text-sm font-black text-amber-600 mt-1">{oldestAge}d</p>
+                </div>
+              </div>
+
+              <div className="space-y-2 pt-2">
+                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                  Owned Bills & Current Holders
+                </span>
+                {personBills.length === 0 ? (
+                  <p className="text-xs text-slate-400 italic">No active bills owned by this RP.</p>
+                ) : (
+                  <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+                    {personBills.map(b => (
+                      <div
+                        key={b.gb_no}
+                        onClick={() => onSelectBill(b)}
+                        className="bg-slate-50 border border-slate-200 hover:border-purple-400 p-2 rounded-xl text-xs flex items-center justify-between cursor-pointer transition"
+                      >
+                        <div>
+                          <span className="font-bold text-purple-700">GB #{b.gb_no}</span>
+                          <span className="text-slate-800 font-semibold ml-2 truncate max-w-[120px] inline-block align-bottom">
+                            {b.party_name}
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-[10px] text-sky-700 font-bold block">
+                            Holder: {b.current_holder_name}
+                          </span>
+                          <span className="text-[10px] text-slate-500 font-bold">
+                            ₹{b.amount.toLocaleString('en-IN')} ({b.age_days}d)
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
