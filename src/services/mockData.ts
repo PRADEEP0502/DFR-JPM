@@ -1,196 +1,232 @@
-import { DfrUser, DfrLabel, ErpBill, DfrBill, HolderHistory, DfrAlert, DfrStatus } from '../types/dfr';
+import { DfrUser, DfrLabel, CategoryHolderMapping, ErpBill, DfrBillTracking, HolderHistory, DfrAlert, ProcessStage } from '../types/dfr';
+import { mapErpToDfrStage } from './selsoftApi';
 
 export const MOCK_USERS: DfrUser[] = [
   { id: 'user-001', full_name: 'VANITHA', role: 'STAFF', active: true },
-  { id: 'user-002', full_name: 'KARUPPASAMY', role: 'STAFF', active: true },
-  { id: 'user-003', full_name: 'SUGANYA', role: 'STAFF', active: true },
-  { id: 'user-004', full_name: 'HEMALATHA', role: 'STAFF', active: true },
-  { id: 'user-005', full_name: 'JANANI', role: 'STAFF', active: true },
-  { id: 'user-006', full_name: 'JEYA SURIYA', role: 'STAFF', active: true },
-  { id: 'user-007', full_name: 'ACCOUNTS', role: 'ACCOUNTS', active: true },
-  { id: 'user-008', full_name: 'MANAGEMENT (MD)', role: 'MD', active: true },
+  { id: 'user-002', full_name: 'SURIYA', role: 'STAFF', active: true },
+  { id: 'user-003', full_name: 'KIRUTHIKA', role: 'STAFF', active: true },
+  { id: 'user-004', full_name: 'KARUPPASAMY', role: 'STAFF', active: true },
+  { id: 'user-005', full_name: 'SUGANYA', role: 'STAFF', active: true },
+  { id: 'user-006', full_name: 'JANANI', role: 'STAFF', active: true },
+  { id: 'user-007', full_name: 'HEMALATHA', role: 'STAFF', active: true },
+  { id: 'user-008', full_name: 'ACCOUNTS', role: 'ACCOUNTS', active: true },
+  { id: 'user-009', full_name: 'MANAGEMENT (MD)', role: 'MD', active: true },
   { id: 'user-000', full_name: 'Unassigned', role: 'STAFF', active: true },
 ];
 
+export const INITIAL_CATEGORY_MAPPINGS: CategoryHolderMapping[] = [
+  { id: 'map-1', category: 'CHEMICAL', holder_id: 'user-001', holder_name: 'VANITHA', is_active: true, updated_at: '2026-08-27T00:00:00Z' },
+  { id: 'map-2', category: 'DYES', holder_id: 'user-001', holder_name: 'VANITHA', is_active: true, updated_at: '2026-08-27T00:00:00Z' },
+  { id: 'map-3', category: 'POLYBAG', holder_id: 'user-001', holder_name: 'VANITHA', is_active: true, updated_at: '2026-08-27T00:00:00Z' },
+  { id: 'map-4', category: 'MAINTENANCE', holder_id: 'user-002', holder_name: 'SURIYA', is_active: true, updated_at: '2026-08-27T00:00:00Z' },
+  { id: 'map-5', category: 'ELECTRICAL', holder_id: 'user-002', holder_name: 'SURIYA', is_active: true, updated_at: '2026-08-27T00:00:00Z' },
+  { id: 'map-6', category: 'STATIONARY', holder_id: 'user-003', holder_name: 'KIRUTHIKA', is_active: true, updated_at: '2026-08-27T00:00:00Z' },
+  { id: 'map-7', category: 'CLEANING PURPOSE', holder_id: 'user-003', holder_name: 'KIRUTHIKA', is_active: true, updated_at: '2026-08-27T00:00:00Z' },
+];
+
 export const INITIAL_LABELS: DfrLabel[] = [
-  { id: 'lbl-001', name: 'Urgent', color: '#ef4444', description: 'Requires priority processing' },
-  { id: 'lbl-002', name: 'VIP Supplier', color: '#8b5cf6', description: 'Key vendor relationship' },
-  { id: 'lbl-003', name: 'Query Raised', color: '#f59e0b', description: 'Under clarification with vendor' },
-  { id: 'lbl-004', name: 'Discount Eligible', color: '#10b981', description: 'Early payment cash discount available' },
-  { id: 'lbl-005', name: 'Audit Sample', color: '#0284c7', description: 'Flagged for monthly internal audit' },
-  { id: 'lbl-006', name: 'Tax Clarification', color: '#ec4899', description: 'GST / TDS rate verification pending' },
+  { id: 'lbl-1', name: 'High Priority', color: '#ef4444', description: 'Urgent management attention required' },
+  { id: 'lbl-2', name: 'Price Discrepancy', color: '#f59e0b', description: 'Variance found between PO and Invoice' },
+  { id: 'lbl-3', name: 'QC Issue', color: '#8b5cf6', description: 'Pending lab testing or quality approval' },
+  { id: 'lbl-4', name: 'Credit Note Pending', color: '#ec4899', description: 'Awaiting supplier credit adjustment' },
+  { id: 'lbl-5', name: 'Regular Yarn', color: '#0284c7', description: 'Standard production raw material' },
+  { id: 'lbl-6', name: 'GST Review', color: '#10b981', description: 'Tax rate or E-way bill validation' },
 ];
 
-const VENDORS = [
-  'LAKSHMI COTTON MILLS', 'SRI RAMA TEXTILES', 'KAVERI YARNS LTD', 'COIMBATORE SPINNERS',
-  'JAYAM TRADERS', 'BHARANI DYEING PROCESS', 'THIRUMALAI TEXTILES', 'NEXUS CHEMICALS CORP',
-  'ANAMALAI WEAVING MILLS', 'VELAN LOGISTICS', 'SRI VENKATESHWARA YARNS', 'KONGU PROCESSING',
-  'SANGAM ENTERPRISES', 'POOMPUHAR STORES', 'BALAJI COTTON TRADING'
+// Cache for mock Selsoft ERP dataset
+let cachedMockDataset: ErpBill[] | null = null;
+
+const CATEGORIES = ['CHEMICAL', 'STATIONARY', 'MAINTENANCE', 'DYES', 'ELECTRICAL', 'YARN', 'PACKING', 'GENERAL'];
+
+const SUPPLIERS = [
+  'COIMBATORE SPINNERS',
+  'KAVERI YARNS LTD',
+  'SRI RAMA TEXTILES',
+  'BALAJI COTTON TRADING',
+  'POOMPUHAR STORES',
+  'JAYAM TRADERS',
+  'BHARANI DYEING PROCESS',
+  'THIRUMALAI TEXTILES',
+  'NEXUS CHEMICALS CORP',
+  'GOMATHI COTTON MILLS',
+  'TIRUPUR KNITTING SUPPLIES',
+  'SURYA ELECTRICALS',
+  'VELAN INDUSTRIAL SPARES',
+  'ANNAPOORNA PACKAGING',
 ];
 
-export function generateInitialData() {
-  const erpBills: ErpBill[] = [];
-  const dfrBills: DfrBill[] = [];
+/**
+ * Generates 116 realistic Selsoft GetBillsInward API records
+ */
+export const getMockSelsoftDataset = (): ErpBill[] => {
+  if (cachedMockDataset) return cachedMockDataset;
+
+  const now = new Date('2026-08-27T12:00:00Z');
+  const bills: ErpBill[] = [];
+
+  for (let i = 1; i <= 116; i++) {
+    const headerId = 1000 + i;
+    const brNo = `BR-2026-${(10000 + i).toString().slice(1)}`;
+    const category = CATEGORIES[i % CATEGORIES.length];
+    const supplier = SUPPLIERS[i % SUPPLIERS.length];
+    const billNo = i % 3 === 0 ? `MEMO-${2000 + i}` : `INV/2026/${3000 + i}`;
+
+    // Age distribution across 0 - 28 days for realistic A-3, A-5, A-10 spread
+    let ageDays = 0;
+    if (i <= 40) {
+      ageDays = (i % 3); // 0-2 days: NORMAL
+    } else if (i <= 65) {
+      ageDays = 3 + (i % 2); // 3-4 days: A-3
+    } else if (i <= 90) {
+      ageDays = 5 + (i % 5); // 5-9 days: A-5
+    } else {
+      ageDays = 10 + (i % 18); // 10-28 days: A-10 Critical
+    }
+
+    const brDateObj = new Date(now.getTime() - ageDays * 24 * 60 * 60 * 1000);
+    const brDate = brDateObj.toISOString().split('T')[0];
+
+    // Bill invoice date is 1-5 days before BR Date
+    const billDateObj = new Date(brDateObj.getTime() - (1 + (i % 5)) * 24 * 60 * 60 * 1000);
+    const billDate = billDateObj.toISOString().split('T')[0];
+
+    // Bill amount
+    const amount = Math.floor(((i * 18730) % 450000 + 15000) / 100) * 100;
+
+    // Approval / Stage simulation
+    let approvalStatus = 'PENDING';
+    let nextApprover = 'IAD';
+    let rejectedBy: string | undefined = undefined;
+    let rejectionReason: string | undefined = undefined;
+    let tallyStatus: string | undefined = 'WAITING';
+    let billStatus = 'OPEN';
+    let tallyExportedDate: string | undefined = undefined;
+
+    if (i % 17 === 0) {
+      approvalStatus = 'REJECTED';
+      nextApprover = 'PURCHASE';
+      rejectedBy = 'HEMALATHA';
+      rejectionReason = 'Price mismatch against approved purchase quotation';
+    } else if (i > 105) {
+      // Some closed/paid bills for testing
+      approvalStatus = 'APPROVED';
+      nextApprover = 'COMPLETED';
+      tallyStatus = 'POSTED';
+      billStatus = 'PAID';
+      tallyExportedDate = new Date(brDateObj.getTime() + 4 * 24 * 60 * 60 * 1000).toISOString();
+    } else if (i % 4 === 0) {
+      approvalStatus = 'APPROVED';
+      nextApprover = 'TALLY';
+      tallyStatus = 'EXPORTED';
+      tallyExportedDate = new Date(brDateObj.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString();
+    } else if (i % 3 === 0) {
+      approvalStatus = 'IN_PROGRESS';
+      nextApprover = 'ACCOUNTS';
+    } else if (i % 5 === 0) {
+      approvalStatus = 'IN_PROGRESS';
+      nextApprover = 'JMD';
+    } else if (i % 2 === 0) {
+      approvalStatus = 'IN_PROGRESS';
+      nextApprover = 'AO';
+    } else {
+      approvalStatus = 'PENDING';
+      nextApprover = 'IAD';
+    }
+
+    bills.push({
+      header_id: headerId,
+      br_no: brNo,
+      br_date: brDate,
+      category,
+      supplier,
+      bill_no: billNo,
+      bill_date: billDate,
+      amount,
+      approval_status: approvalStatus,
+      next_approver: nextApprover,
+      rejected_by: rejectedBy,
+      rejection_reason: rejectionReason,
+      tally_status: tallyStatus,
+      bill_status: billStatus,
+      tally_exported_date: tallyExportedDate,
+      last_modified_datetime: new Date(brDateObj.getTime() + 2 * 60 * 60 * 1000).toISOString(),
+    });
+  }
+
+  cachedMockDataset = bills;
+  return bills;
+};
+
+/**
+ * Seeds initial DFR tracking state from Selsoft ERP records
+ */
+export const generateInitialData = () => {
+  const erpBills = getMockSelsoftDataset();
+  const staffUsers = MOCK_USERS.filter(u => u.id !== 'user-000' && u.id !== 'user-008');
+
+  const dfrBills: DfrBillTracking[] = [];
   const holderHistory: HolderHistory[] = [];
   const alerts: DfrAlert[] = [];
   const billLabelsMap: Record<number, string[]> = {};
 
-  const now = new Date();
-  const historyIdCounter = { val: 1 };
-  const alertIdCounter = { val: 1 };
+  let historyIdCounter = 1;
+  let alertIdCounter = 1;
 
-  // Generate 108 realistic live bill records
-  for (let i = 1; i <= 108; i++) {
-    const gbNo = 1000 + i;
-    const erpRef = `ERP-2026-${(10000 + i).toString()}`;
-    const billDcNo = i % 4 === 0 ? `MEMO-${2000 + i}` : `INV/${2026}/${3000 + i}`;
-    const vendor = VENDORS[i % VENDORS.length];
-    const amount = Math.floor((Math.random() * 450000 + 15000) / 100) * 100;
-    const category = i % 5 === 0 ? 'CASH BILL' : 'CREDIT BILL';
+  erpBills.forEach((e, idx) => {
+    // Assign initial holder from staff rotation (maintained exclusively by DFR)
+    const assignedUser = staffUsers[idx % staffUsers.length];
+    const stage = mapErpToDfrStage(e);
 
-    // Age distribution: 0-2 (Normal), 3-4 (A-3), 5-9 (A-5), 10-28 (A-10)
-    let ageDays = 0;
-    if (i <= 35) {
-      ageDays = Math.floor(Math.random() * 3); // 0, 1, 2
-    } else if (i <= 60) {
-      ageDays = 3 + Math.floor(Math.random() * 2); // 3, 4
-    } else if (i <= 85) {
-      ageDays = 5 + Math.floor(Math.random() * 5); // 5-9
-    } else {
-      ageDays = 10 + Math.floor(Math.random() * 19); // 10-28
-    }
-
-    const recdDateObj = new Date(now);
-    recdDateObj.setDate(now.getDate() - ageDays);
-    const recdDateStr = recdDateObj.toISOString().split('T')[0];
-
-    const billDateObj = new Date(recdDateObj);
-    billDateObj.setDate(recdDateObj.getDate() - Math.floor(Math.random() * 4));
-    const billDateStr = billDateObj.toISOString().split('T')[0];
-
-    // Status distribution
-    let dfrStatus: DfrStatus = 'OPEN';
-    let tallyPostedAt: string | undefined = undefined;
-    let paymentStatus: ErpBill['payment_status'] = 'NOT_STARTED';
-    let paymentCompletedAt: string | undefined = undefined;
-
-    // A subset are moved to Tally or Paid
-    if (i % 7 === 0) {
-      dfrStatus = 'PAID';
-      paymentStatus = 'COMPLETED';
-      const tallyDate = new Date(recdDateObj);
-      tallyDate.setDate(tallyDate.getDate() + Math.min(2, ageDays));
-      tallyPostedAt = tallyDate.toISOString();
-      const paidDate = new Date(tallyDate);
-      paidDate.setDate(paidDate.getDate() + 1);
-      paymentCompletedAt = paidDate.toISOString();
-    } else if (i % 5 === 0) {
-      dfrStatus = 'TALLY_DONE';
-      paymentStatus = 'PENDING';
-      const tallyDate = new Date(recdDateObj);
-      tallyDate.setDate(tallyDate.getDate() + Math.min(3, ageDays));
-      tallyPostedAt = tallyDate.toISOString();
-    } else if (i % 13 === 0) {
-      dfrStatus = 'ON_HOLD';
-    } else if (i % 17 === 0) {
-      dfrStatus = 'CLOSED';
-    }
-
-    const erpBill: ErpBill = {
-      erp_bill_ref: erpRef,
-      bill_dc_no: billDcNo,
-      bill_date: billDateStr,
-      party_name: vendor,
-      amount: amount,
-      category: category,
-      prn: `PRN-${5000 + i}`,
-      bill_recd_date: recdDateStr,
-      tally_ref: tallyPostedAt ? `TALLY-REF-${8000 + i}` : undefined,
-      tally_posted_at: tallyPostedAt,
-      payment_ref: paymentCompletedAt ? `PAY-TXN-${9000 + i}` : undefined,
-      payment_status: paymentStatus,
-      payment_completed_at: paymentCompletedAt,
-      last_synced_at: new Date(now.getTime() - Math.random() * 12 * 60 * 1000).toISOString(),
+    const dfrBill: DfrBillTracking = {
+      header_id: e.header_id,
+      current_holder_id: assignedUser.id,
+      current_stage: stage,
+      dfr_status: e.bill_status === 'PAID' ? 'PAID' : stage === 'TALLY' ? 'TALLY_DONE' : 'OPEN',
+      created_at: new Date(e.br_date).toISOString(),
+      updated_at: e.last_modified_datetime,
     };
+    dfrBills.push(dfrBill);
 
-    // Assign owner and current holder
-    const activeStaff = MOCK_USERS.filter(u => u.id !== 'user-000' && u.id !== 'user-008');
-    const owner = activeStaff[i % activeStaff.length];
-    const currentHolder = activeStaff[(i + 2) % activeStaff.length];
-
-    const stages: DfrBill['current_stage'][] = ['IAD', 'AO', 'PURCHASE', 'JMD', 'ACCOUNTS', 'TALLY', 'PAYMENT'];
-    const currentStage = tallyPostedAt ? 'TALLY' : (paymentCompletedAt ? 'PAYMENT' : stages[i % 5]);
-
-    const dfrBill: DfrBill = {
-      gb_no: gbNo,
-      erp_bill_ref: erpRef,
-      owner_id: owner.id,
-      current_holder_id: currentHolder.id,
-      current_stage: currentStage,
-      dfr_status: dfrStatus,
-      created_at: recdDateStr + 'T09:00:00.000Z',
-      updated_at: new Date(now.getTime() - Math.random() * 24 * 3600 * 1000).toISOString(),
-    };
-
-    // History record: Intake
+    // Initial intake history entry
     holderHistory.push({
-      id: historyIdCounter.val++,
-      gb_no: gbNo,
+      id: historyIdCounter++,
+      header_id: e.header_id,
       from_holder_id: null,
-      to_holder_id: owner.id,
+      to_holder_id: assignedUser.id,
       from_stage: null,
-      to_stage: 'IAD',
-      changed_by: owner.id,
-      note: 'Initial bill physical receipt and GB entry',
-      changed_at: recdDateStr + 'T09:05:00.000Z'
+      to_stage: stage,
+      changed_by: assignedUser.id,
+      note: 'Initial Bill Inward intake from Selsoft ERP',
+      changed_at: new Date(e.br_date).toISOString(),
     });
 
-    if (currentHolder.id !== owner.id) {
-      holderHistory.push({
-        id: historyIdCounter.val++,
-        gb_no: gbNo,
-        from_holder_id: owner.id,
-        to_holder_id: currentHolder.id,
-        from_stage: 'IAD',
-        to_stage: currentStage,
-        changed_by: owner.id,
-        note: `Handover from ${owner.full_name} to ${currentHolder.full_name} for verification`,
-        changed_at: new Date(new Date(recdDateStr).getTime() + 24 * 3600 * 1000).toISOString()
-      });
-    }
+    // Multi-labels tagging sample
+    if (idx % 7 === 0) billLabelsMap[e.header_id] = ['lbl-1', 'lbl-5'];
+    else if (idx % 11 === 0) billLabelsMap[e.header_id] = ['lbl-2'];
+    else if (idx % 13 === 0) billLabelsMap[e.header_id] = ['lbl-3'];
 
-    // Alerts for A-3, A-5, A-10
-    if (ageDays >= 10 && dfrStatus !== 'PAID' && dfrStatus !== 'CLOSED') {
+    // Critical A-10 alerts
+    const now = new Date('2026-08-27T12:00:00Z');
+    const brDateObj = new Date(e.br_date);
+    const ageDays = Math.floor((now.getTime() - brDateObj.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (ageDays >= 10 && e.bill_status !== 'PAID') {
       alerts.push({
-        id: alertIdCounter.val++,
-        gb_no: gbNo,
+        id: alertIdCounter++,
+        header_id: e.header_id,
         band: 'A-10',
-        raised_at: new Date(new Date(recdDateStr).getTime() + 10 * 24 * 3600 * 1000).toISOString(),
-        acknowledged_by: i % 2 === 0 ? 'user-006' : undefined,
-        acknowledged_at: i % 2 === 0 ? new Date().toISOString() : undefined,
-      });
-    } else if (ageDays >= 5 && dfrStatus !== 'PAID' && dfrStatus !== 'CLOSED') {
-      alerts.push({
-        id: alertIdCounter.val++,
-        gb_no: gbNo,
-        band: 'A-5',
-        raised_at: new Date(new Date(recdDateStr).getTime() + 5 * 24 * 3600 * 1000).toISOString(),
+        raised_at: new Date(brDateObj.getTime() + 10 * 24 * 60 * 60 * 1000).toISOString(),
+        acknowledged_by: idx % 2 === 0 ? 'user-004' : undefined,
+        acknowledged_at: idx % 2 === 0 ? new Date().toISOString() : undefined,
       });
     }
+  });
 
-    // Multi-labels assignment
-    const labelIds: string[] = [];
-    if (i % 6 === 0) labelIds.push('lbl-001'); // Urgent
-    if (i % 8 === 0) labelIds.push('lbl-002'); // VIP Supplier
-    if (i % 11 === 0) labelIds.push('lbl-003'); // Query Raised
-    if (i % 9 === 0) labelIds.push('lbl-004'); // Discount Eligible
-    if (labelIds.length > 0) {
-      billLabelsMap[gbNo] = labelIds;
-    }
-
-    erpBills.push(erpBill);
-    dfrBills.push(dfrBill);
-  }
-
-  return { erpBills, dfrBills, holderHistory, alerts, billLabelsMap };
-}
+  return {
+    erpBills,
+    dfrBills,
+    holderHistory,
+    alerts,
+    billLabelsMap,
+  };
+};

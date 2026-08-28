@@ -14,51 +14,66 @@ export interface DfrLabel {
   description?: string;
 }
 
-export type BillCategory = 'CASH BILL' | 'CREDIT BILL';
-export type ProcessStage = 'IAD' | 'AO' | 'PURCHASE' | 'JMD' | 'ACCOUNTS' | 'TALLY' | 'PAYMENT';
+export interface CategoryHolderMapping {
+  id: string;
+  category: string;
+  holder_id: string;
+  holder_name: string;
+  is_active: boolean;
+  updated_at: string;
+}
+
+// Canonical DFR process stages: Bill Inward → IAD → AO → JMD → Accounts / Tally
+export type ProcessStage = 'BILL_INWARD' | 'IAD' | 'AO' | 'JMD' | 'ACCOUNTS' | 'TALLY';
+
+export const STAGE_DISPLAY_NAMES: Record<ProcessStage, string> = {
+  BILL_INWARD: 'Bill Inward',
+  IAD: 'IAD',
+  AO: 'AO',
+  JMD: 'JMD',
+  ACCOUNTS: 'Accounts / Tally',
+  TALLY: 'Accounts / Tally',
+};
+
 export type DfrStatus = 'OPEN' | 'ON_HOLD' | 'TALLY_DONE' | 'PAID' | 'CLOSED';
-export type PaymentStatus = 'NOT_STARTED' | 'PENDING' | 'COMPLETED';
 export type AgeBand = 'NORMAL' | 'A-3' | 'A-5' | 'A-10';
 
+// 1. ERP Bill interface matching Selsoft GetBillsInward response
 export interface ErpBill {
-  erp_bill_ref: string;
-  bill_dc_no: string;
-  bill_date: string; // ISO YYYY-MM-DD
-  party_name: string;
+  header_id: number;
+  br_no: string;
+  br_date: string; // ISO YYYY-MM-DD - Bill Inward Date
+  category: string; // e.g. CHEMICAL, STATIONARY, MAINTENANCE, DYES, ELECTRICAL
+  supplier: string; // Party / Vendor Name
+  bill_no: string; // Supplier Invoice/DC No
+  bill_date: string; // Invoice Date
   amount: number;
-  category: BillCategory;
-  prn?: string;
-  quotation_ref?: string;
-  po_ref?: string;
-  material_inward_ref?: string;
-  qc_approval_status?: string;
-  bill_inward_ref?: string;
-  grn_ref?: string;
-  bill_recd_date?: string; // ISO YYYY-MM-DD
-  process_stage_raw?: string;
-  tally_ref?: string;
-  tally_posted_at?: string; // ISO date string
-  payment_ref?: string;
-  payment_status: PaymentStatus;
-  payment_completed_at?: string;
-  last_synced_at: string;
+  approval_status: string; // e.g. PENDING, APPROVED, REJECTED
+  next_approver?: string;
+  rejected_by?: string;
+  rejection_reason?: string;
+  tally_status?: string; // WAITING, EXPORTED, POSTED, PENDING
+  bill_status: string; // OPEN, PAID, CLOSED, CANCELLED
+  tally_exported_date?: string;
+  last_modified_datetime: string;
   raw_payload?: Record<string, any>;
 }
 
-export interface DfrBill {
-  gb_no: number;
-  erp_bill_ref: string;
-  owner_id: string;
-  current_holder_id: string;
+// 2. DFR Internal Tracking Record (Separated from ERP data)
+export interface DfrBillTracking {
+  header_id: number;
+  current_holder_id: string; // Maintained strictly via DFR human checkpoints
   current_stage: ProcessStage;
   dfr_status: DfrStatus;
+  notes?: string;
   created_at: string;
   updated_at: string;
 }
 
+// 3. Holder History Audit Log
 export interface HolderHistory {
   id: number;
-  gb_no: number;
+  header_id: number;
   from_holder_id: string | null;
   to_holder_id: string;
   from_stage: ProcessStage | null;
@@ -68,44 +83,61 @@ export interface HolderHistory {
   changed_at: string;
 }
 
+// 4. Ageing Alerts Log
 export interface DfrAlert {
   id: number;
-  gb_no: number;
+  header_id: number;
   band: 'A-3' | 'A-5' | 'A-10';
   raised_at: string;
   acknowledged_by?: string;
   acknowledged_at?: string;
 }
 
+// 5. Unified Bill Register Item for Grid & Views
 export interface BillRegisterItem {
-  gb_no: number;
-  erp_bill_ref: string;
-  bill_dc_no: string;
+  header_id: number;
+  br_no: string;
+  br_date: string;
+  bill_no: string;
   bill_date: string;
-  party_name: string;
+  supplier: string;
   amount: number;
-  category: BillCategory;
-  owner_id: string;
-  owner_name: string;
+  category: string;
   current_holder_id: string;
   current_holder_name: string;
   current_stage: ProcessStage;
-  dfr_status: DfrStatus;
-  effective_recd_date: string;
-  age_days: number;
+  age_days: number; // Strictly computed: Current Date - br_date
   age_band: AgeBand;
-  tally_posted_at?: string;
-  tally_age_days?: number; // Days pending in Tally awaiting payment
-  moved_to_tally: boolean;
-  payment_status: PaymentStatus;
-  payment_completed_at?: string;
+  approval_status: string;
+  next_approver?: string;
+  rejected_by?: string;
+  rejection_reason?: string;
+  tally_status?: string;
+  tally_exported_date?: string;
+  bill_status: string;
+  dfr_status: DfrStatus;
   labels: DfrLabel[];
 }
 
+// 6. Selsoft API Metadata & Pagination Envelopes
+export interface SelsoftApiResponse<T = ErpBill[]> {
+  Success: boolean;
+  PageNumber: number;
+  PageSize: number;
+  TotalCount: number;
+  TotalPages: number;
+  SyncTimestampUtc: string;
+  Data: T;
+  ErrorMessage?: string;
+}
+
 export interface SyncState {
-  last_synced_at: string;
+  last_synced_at?: string | null;
+  next_sync_at: string;
+  sync_interval_mins: number;
   is_syncing: boolean;
-  total_bills: number;
+  total_count: number;
+  total_pages: number;
   sync_errors_count: number;
   last_error?: string;
 }

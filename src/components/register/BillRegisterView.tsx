@@ -3,16 +3,26 @@ import {
   FileSpreadsheet,
   Filter,
   ArrowUpDown,
-  Tag,
-  Search,
-  CheckCircle2,
-  Clock,
+  Calendar,
+  X,
+  RotateCcw,
+  Check,
   User,
-  Calculator,
-  CreditCard,
-  X
+  Layers,
+  Sparkles,
+  IndianRupee,
+  Clock,
+  AlertOctagon,
+  ChevronRight,
 } from 'lucide-react';
-import { BillRegisterItem, DfrUser, DfrLabel, AgeBand, DfrStatus, BillCategory, ProcessStage } from '../../types/dfr';
+import {
+  BillRegisterItem,
+  DfrUser,
+  DfrLabel,
+  AgeBand,
+  ProcessStage,
+  STAGE_DISPLAY_NAMES,
+} from '../../types/dfr';
 
 interface BillRegisterViewProps {
   bills: BillRegisterItem[];
@@ -22,6 +32,16 @@ interface BillRegisterViewProps {
   onSelectBill: (bill: BillRegisterItem) => void;
 }
 
+type DateFilterPreset =
+  | 'ALL'
+  | 'TODAY'
+  | 'YESTERDAY'
+  | 'LAST_7_DAYS'
+  | 'LAST_30_DAYS'
+  | 'THIS_MONTH'
+  | 'LAST_MONTH'
+  | 'CUSTOM';
+
 export const BillRegisterView: React.FC<BillRegisterViewProps> = ({
   bills,
   users,
@@ -29,37 +49,148 @@ export const BillRegisterView: React.FC<BillRegisterViewProps> = ({
   searchQuery,
   onSelectBill,
 }) => {
+  // Filter States
   const [holderFilter, setHolderFilter] = useState<string>('ALL');
-  const [ownerFilter, setOwnerFilter] = useState<string>('ALL');
   const [stageFilter, setStageFilter] = useState<string>('ALL');
   const [bandFilter, setBandFilter] = useState<string>('ALL');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
   const [selectedLabelId, setSelectedLabelId] = useState<string>('ALL');
 
-  const [sortField, setSortField] = useState<keyof BillRegisterItem>('gb_no');
+  // Date Filter States (Based strictly on BR Date / Inward Date)
+  const [datePreset, setDatePreset] = useState<DateFilterPreset>('ALL');
+  const [customFromDate, setCustomFromDate] = useState<string>('');
+  const [customToDate, setCustomToDate] = useState<string>('');
+  const [appliedCustomFrom, setAppliedCustomFrom] = useState<string>('');
+  const [appliedCustomTo, setAppliedCustomTo] = useState<string>('');
+
+  // Sorting
+  const [sortField, setSortField] = useState<keyof BillRegisterItem>('header_id');
   const [sortAsc, setSortAsc] = useState<boolean>(false);
+
+  // Unique Categories extracted from actual dataset
+  const uniqueCategories = useMemo(() => {
+    const set = new Set<string>();
+    bills.forEach(b => {
+      if (b.category) set.add(b.category);
+    });
+    return Array.from(set).sort();
+  }, [bills]);
+
+  // Date range calculator for BR Date
+  const isWithinDateFilter = (brDateStr: string): boolean => {
+    if (datePreset === 'ALL') return true;
+
+    const brDate = new Date(brDateStr);
+    const now = new Date('2026-08-27T12:00:00Z');
+    const todayStr = now.toISOString().split('T')[0];
+
+    if (datePreset === 'TODAY') {
+      return brDateStr === todayStr;
+    }
+
+    if (datePreset === 'YESTERDAY') {
+      const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      return brDateStr === yesterday.toISOString().split('T')[0];
+    }
+
+    if (datePreset === 'LAST_7_DAYS') {
+      const cutoff = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      return brDate >= cutoff && brDate <= now;
+    }
+
+    if (datePreset === 'LAST_30_DAYS') {
+      const cutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      return brDate >= cutoff && brDate <= now;
+    }
+
+    if (datePreset === 'THIS_MONTH') {
+      return (
+        brDate.getFullYear() === now.getFullYear() &&
+        brDate.getMonth() === now.getMonth()
+      );
+    }
+
+    if (datePreset === 'LAST_MONTH') {
+      const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      return (
+        brDate.getFullYear() === lastMonth.getFullYear() &&
+        brDate.getMonth() === lastMonth.getMonth()
+      );
+    }
+
+    if (datePreset === 'CUSTOM') {
+      if (appliedCustomFrom && brDateStr < appliedCustomFrom) return false;
+      if (appliedCustomTo && brDateStr > appliedCustomTo) return false;
+      return true;
+    }
+
+    return true;
+  };
+
+  const handleApplyCustomDate = () => {
+    setAppliedCustomFrom(customFromDate);
+    setAppliedCustomTo(customToDate);
+  };
+
+  const clearFilters = () => {
+    setHolderFilter('ALL');
+    setStageFilter('ALL');
+    setBandFilter('ALL');
+    setStatusFilter('ALL');
+    setCategoryFilter('ALL');
+    setSelectedLabelId('ALL');
+    setDatePreset('ALL');
+    setCustomFromDate('');
+    setCustomToDate('');
+    setAppliedCustomFrom('');
+    setAppliedCustomTo('');
+  };
+
+  const hasActiveFilters =
+    holderFilter !== 'ALL' ||
+    stageFilter !== 'ALL' ||
+    bandFilter !== 'ALL' ||
+    statusFilter !== 'ALL' ||
+    categoryFilter !== 'ALL' ||
+    selectedLabelId !== 'ALL' ||
+    datePreset !== 'ALL';
 
   const filteredBills = useMemo(() => {
     return bills.filter(b => {
+      // Date Filter (BR Date)
+      if (!isWithinDateFilter(b.br_date)) return false;
+
+      // Dropdown Filters
       if (holderFilter !== 'ALL' && b.current_holder_id !== holderFilter) return false;
-      if (ownerFilter !== 'ALL' && b.owner_id !== ownerFilter) return false;
-      if (stageFilter !== 'ALL' && b.current_stage !== stageFilter) return false;
+      if (stageFilter !== 'ALL') {
+        if (stageFilter === 'ACCOUNTS') {
+          if (b.current_stage !== 'ACCOUNTS' && b.current_stage !== 'TALLY') return false;
+        } else if (b.current_stage !== stageFilter) {
+          return false;
+        }
+      }
       if (bandFilter !== 'ALL' && b.age_band !== bandFilter) return false;
-      if (statusFilter !== 'ALL' && b.dfr_status !== statusFilter) return false;
+      if (statusFilter !== 'ALL' && b.bill_status !== statusFilter) return false;
       if (categoryFilter !== 'ALL' && b.category !== categoryFilter) return false;
       if (selectedLabelId !== 'ALL') {
         const hasLabel = b.labels.some(l => l.id === selectedLabelId);
         if (!hasLabel) return false;
       }
 
+      // Search Query: Header ID, BR No, Bill No, Party / Supplier
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
-        const matchGb = b.gb_no.toString().includes(q);
-        const matchDc = b.bill_dc_no.toLowerCase().includes(q);
-        const matchParty = b.party_name.toLowerCase().includes(q);
+        const matchHeader = b.header_id.toString().includes(q);
+        const matchBr = b.br_no.toLowerCase().includes(q);
+        const matchBillNo = b.bill_no.toLowerCase().includes(q);
+        const matchSupplier = b.supplier.toLowerCase().includes(q);
+        const matchCategory = b.category.toLowerCase().includes(q);
         const matchTag = b.labels.some(l => l.name.toLowerCase().includes(q));
-        if (!matchGb && !matchDc && !matchParty && !matchTag) return false;
+
+        if (!matchHeader && !matchBr && !matchBillNo && !matchSupplier && !matchCategory && !matchTag) {
+          return false;
+        }
       }
 
       return true;
@@ -67,13 +198,15 @@ export const BillRegisterView: React.FC<BillRegisterViewProps> = ({
   }, [
     bills,
     holderFilter,
-    ownerFilter,
     stageFilter,
     bandFilter,
     statusFilter,
     categoryFilter,
     selectedLabelId,
-    searchQuery
+    datePreset,
+    appliedCustomFrom,
+    appliedCustomTo,
+    searchQuery,
   ]);
 
   const sortedBills = useMemo(() => {
@@ -98,125 +231,245 @@ export const BillRegisterView: React.FC<BillRegisterViewProps> = ({
     }
   };
 
-  const ageBandColors = {
-    NORMAL: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-    'A-3': 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    'A-5': 'bg-amber-100 text-amber-800 border-amber-200',
-    'A-10': 'bg-red-100 text-red-800 border-red-200 font-extrabold animate-pulse',
+  // Summary Metrics for filtered view
+  const totalFilteredAmount = useMemo(() => {
+    return filteredBills.reduce((sum, b) => sum + b.amount, 0);
+  }, [filteredBills]);
+
+  const criticalFilteredCount = useMemo(() => {
+    return filteredBills.filter(b => b.age_band === 'A-10').length;
+  }, [filteredBills]);
+
+  const avgAgeDays = useMemo(() => {
+    if (filteredBills.length === 0) return 0;
+    const total = filteredBills.reduce((sum, b) => sum + b.age_days, 0);
+    return Math.round(total / filteredBills.length);
+  }, [filteredBills]);
+
+  const ageBandColors: Record<AgeBand, string> = {
+    NORMAL: 'bg-emerald-50 text-emerald-700 border-emerald-300 font-bold',
+    'A-3': 'bg-yellow-50 text-yellow-800 border-yellow-300 font-bold',
+    'A-5': 'bg-amber-50 text-amber-800 border-amber-300 font-extrabold',
+    'A-10': 'bg-red-50 text-red-700 border-red-300 font-black animate-pulse',
   };
 
-  const clearFilters = () => {
-    setHolderFilter('ALL');
-    setOwnerFilter('ALL');
-    setStageFilter('ALL');
-    setBandFilter('ALL');
-    setStatusFilter('ALL');
-    setCategoryFilter('ALL');
-    setSelectedLabelId('ALL');
+  const stageBadgeColors: Record<ProcessStage, string> = {
+    BILL_INWARD: 'bg-slate-100 text-slate-700 border-slate-300',
+    IAD: 'bg-sky-50 text-sky-700 border-sky-200',
+    AO: 'bg-blue-50 text-blue-700 border-blue-200',
+    JMD: 'bg-purple-50 text-purple-700 border-purple-200',
+    ACCOUNTS: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+    TALLY: 'bg-emerald-50 text-emerald-700 border-emerald-200',
   };
 
   return (
-    <div className="space-y-6 pb-12">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-6 pb-16">
+      {/* Top Header Title & Metrics Strip */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-sky-950 to-slate-900 p-6 rounded-3xl text-white shadow-xl">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <FileSpreadsheet className="w-6 h-6 text-sky-600" />
-            Master Bill Register
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Complete database view with multi-label filtering, age bands, and physical stage tracking
-          </p>
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-2xl bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-sky-400">
+              <FileSpreadsheet className="w-5 h-5" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-black tracking-tight">Master Bill Register</h1>
+              <p className="text-xs text-sky-200/80 mt-0.5">
+                Real-time Selsoft ERP pipeline tracking from Bill Inward to Tally
+              </p>
+            </div>
+          </div>
         </div>
-        <div className="text-xs text-slate-600 bg-white border border-slate-200 px-3 py-1.5 rounded-xl shadow-2xs font-semibold">
-          Showing <strong className="text-sky-600">{sortedBills.length}</strong> of {bills.length} bills
+
+        {/* Quick Summary Badges */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="bg-white/10 backdrop-blur border border-white/10 px-3.5 py-2 rounded-2xl">
+            <span className="text-[10px] text-sky-200 uppercase font-bold tracking-wider block">
+              Filtered Bills
+            </span>
+            <p className="text-lg font-black text-white">{sortedBills.length}</p>
+          </div>
+
+          <div className="bg-white/10 backdrop-blur border border-white/10 px-3.5 py-2 rounded-2xl">
+            <span className="text-[10px] text-emerald-200 uppercase font-bold tracking-wider block">
+              Total Value
+            </span>
+            <p className="text-lg font-black text-emerald-300">
+              ₹{(totalFilteredAmount / 100000).toFixed(2)}L
+            </p>
+          </div>
+
+          <div className="bg-white/10 backdrop-blur border border-white/10 px-3.5 py-2 rounded-2xl">
+            <span className="text-[10px] text-amber-200 uppercase font-bold tracking-wider block">
+              Avg Age
+            </span>
+            <p className="text-lg font-black text-amber-300">{avgAgeDays} Days</p>
+          </div>
+
+          <div className="bg-white/10 backdrop-blur border border-white/10 px-3.5 py-2 rounded-2xl">
+            <span className="text-[10px] text-red-200 uppercase font-bold tracking-wider block">
+              A-10 Critical
+            </span>
+            <p className="text-lg font-black text-red-400">{criticalFilteredCount}</p>
+          </div>
         </div>
       </div>
 
-      {/* Filter Toolbar */}
-      <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs space-y-3">
+      {/* Filter Controls Card */}
+      <div className="bg-white border border-slate-200/90 rounded-3xl p-5 shadow-sm space-y-4">
+        {/* Date Filter Toolbar (Based on BR Date) */}
+        <div className="border-b border-slate-100 pb-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-700 uppercase tracking-wider">
+              <Calendar className="w-4 h-4 text-sky-600" />
+              BR Date / Inward Filter:
+            </div>
+
+            <div className="flex flex-wrap items-center gap-1.5 text-xs">
+              {(
+                [
+                  { id: 'ALL', label: 'All Dates' },
+                  { id: 'TODAY', label: 'Today' },
+                  { id: 'YESTERDAY', label: 'Yesterday' },
+                  { id: 'LAST_7_DAYS', label: 'Last 7 Days' },
+                  { id: 'LAST_30_DAYS', label: 'Last 30 Days' },
+                  { id: 'THIS_MONTH', label: 'This Month' },
+                  { id: 'LAST_MONTH', label: 'Last Month' },
+                  { id: 'CUSTOM', label: 'Custom Range' },
+                ] as const
+              ).map(preset => (
+                <button
+                  key={preset.id}
+                  onClick={() => setDatePreset(preset.id)}
+                  className={`px-3 py-1.5 rounded-xl font-bold text-xs transition ${
+                    datePreset === preset.id
+                      ? 'bg-sky-600 text-white shadow-xs'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900'
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Custom Date Range Inputs */}
+          {datePreset === 'CUSTOM' && (
+            <div className="flex flex-wrap items-center gap-3 mt-3 pt-3 border-t border-slate-100 bg-slate-50 p-3 rounded-2xl">
+              <div className="flex items-center gap-2 text-xs">
+                <span className="font-bold text-slate-600">From:</span>
+                <input
+                  type="date"
+                  value={customFromDate}
+                  onChange={e => setCustomFromDate(e.target.value)}
+                  className="bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-slate-900 focus:outline-none focus:border-sky-500"
+                />
+              </div>
+
+              <div className="flex items-center gap-2 text-xs">
+                <span className="font-bold text-slate-600">To:</span>
+                <input
+                  type="date"
+                  value={customToDate}
+                  onChange={e => setCustomToDate(e.target.value)}
+                  className="bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-slate-900 focus:outline-none focus:border-sky-500"
+                />
+              </div>
+
+              <button
+                onClick={handleApplyCustomDate}
+                className="px-3.5 py-1 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs rounded-xl transition flex items-center gap-1 shadow-2xs"
+              >
+                <Check className="w-3.5 h-3.5" /> Apply
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Dropdown Filters Grid */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs font-bold text-slate-700 uppercase tracking-wider">
             <Filter className="w-3.5 h-3.5 text-sky-600" />
-            Filter Controls
+            Field Filters
           </div>
-          {(holderFilter !== 'ALL' ||
-            ownerFilter !== 'ALL' ||
-            stageFilter !== 'ALL' ||
-            bandFilter !== 'ALL' ||
-            statusFilter !== 'ALL' ||
-            categoryFilter !== 'ALL' ||
-            selectedLabelId !== 'ALL') && (
+          {hasActiveFilters && (
             <button
               onClick={clearFilters}
               className="text-xs text-red-600 hover:underline font-bold flex items-center gap-1"
             >
-              <X className="w-3 h-3" /> Reset Filters
+              <RotateCcw className="w-3 h-3" /> Reset Filters
             </button>
           )}
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5 text-xs">
-          {/* Holder */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-xs">
+          {/* Category */}
           <div>
-            <label className="block text-[10px] text-slate-500 font-bold mb-1">Current Holder</label>
+            <label className="block text-[11px] text-slate-500 font-bold mb-1">Category (ERP)</label>
+            <select
+              value={categoryFilter}
+              onChange={e => setCategoryFilter(e.target.value)}
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 focus:outline-none focus:border-sky-500 font-medium"
+            >
+              <option value="ALL">All Categories</option>
+              {uniqueCategories.map(cat => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Current Holder */}
+          <div>
+            <label className="block text-[11px] text-slate-500 font-bold mb-1">Current Holder</label>
             <select
               value={holderFilter}
               onChange={e => setHolderFilter(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-slate-900 focus:outline-none focus:border-sky-500"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 focus:outline-none focus:border-sky-500 font-medium"
             >
               <option value="ALL">All Holders</option>
-              {users.filter(u => u.id !== 'user-000').map(u => (
-                <option key={u.id} value={u.id}>
-                  {u.full_name}
-                </option>
-              ))}
+              {users
+                .filter(u => u.id !== 'user-000')
+                .map(u => (
+                  <option key={u.id} value={u.id}>
+                    {u.full_name}
+                  </option>
+                ))}
             </select>
           </div>
 
-          {/* Owner */}
+          {/* Current Stage */}
           <div>
-            <label className="block text-[10px] text-slate-500 font-bold mb-1">Owner (RP)</label>
-            <select
-              value={ownerFilter}
-              onChange={e => setOwnerFilter(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-slate-900 focus:outline-none focus:border-sky-500"
-            >
-              <option value="ALL">All Owners</option>
-              {users.filter(u => u.id !== 'user-000').map(u => (
-                <option key={u.id} value={u.id}>
-                  {u.full_name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Stage */}
-          <div>
-            <label className="block text-[10px] text-slate-500 font-bold mb-1">Pipeline Stage</label>
+            <label className="block text-[11px] text-slate-500 font-bold mb-1">Current Stage</label>
             <select
               value={stageFilter}
               onChange={e => setStageFilter(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-slate-900 focus:outline-none focus:border-sky-500"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 focus:outline-none focus:border-sky-500 font-medium"
             >
               <option value="ALL">All Stages</option>
-              <option value="IAD">IAD</option>
-              <option value="AO">AO</option>
-              <option value="PURCHASE">Purchase</option>
-              <option value="JMD">JMD</option>
-              <option value="ACCOUNTS">Accounts</option>
-              <option value="TALLY">Tally</option>
-              <option value="PAYMENT">Payment</option>
+              {(
+                [
+                  'BILL_INWARD',
+                  'IAD',
+                  'AO',
+                  'JMD',
+                  'ACCOUNTS',
+                ] as ProcessStage[]
+              ).map(st => (
+                <option key={st} value={st}>
+                  {STAGE_DISPLAY_NAMES[st]}
+                </option>
+              ))}
             </select>
           </div>
 
-          {/* Age Band */}
+          {/* Ageing Band */}
           <div>
-            <label className="block text-[10px] text-slate-500 font-bold mb-1">Age Band</label>
+            <label className="block text-[11px] text-slate-500 font-bold mb-1">Ageing Band</label>
             <select
               value={bandFilter}
               onChange={e => setBandFilter(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-slate-900 focus:outline-none focus:border-sky-500"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 focus:outline-none focus:border-sky-500 font-medium"
             >
               <option value="ALL">All Bands</option>
               <option value="NORMAL">Normal (0-2d)</option>
@@ -226,46 +479,31 @@ export const BillRegisterView: React.FC<BillRegisterViewProps> = ({
             </select>
           </div>
 
-          {/* DFR Status */}
+          {/* Bill Status */}
           <div>
-            <label className="block text-[10px] text-slate-500 font-bold mb-1">DFR Status</label>
+            <label className="block text-[11px] text-slate-500 font-bold mb-1">Status (ERP)</label>
             <select
               value={statusFilter}
               onChange={e => setStatusFilter(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-slate-900 focus:outline-none focus:border-sky-500"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 focus:outline-none focus:border-sky-500 font-medium"
             >
               <option value="ALL">All Statuses</option>
+              <option value="Active">Active</option>
+              <option value="Deleted">Deleted</option>
               <option value="OPEN">OPEN</option>
-              <option value="ON_HOLD">ON_HOLD</option>
-              <option value="TALLY_DONE">TALLY_DONE</option>
               <option value="PAID">PAID</option>
-              <option value="CLOSED">CLOSED</option>
             </select>
           </div>
 
-          {/* Category */}
+          {/* Multi-Label Tag */}
           <div>
-            <label className="block text-[10px] text-slate-500 font-bold mb-1">Category</label>
-            <select
-              value={categoryFilter}
-              onChange={e => setCategoryFilter(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-slate-900 focus:outline-none focus:border-sky-500"
-            >
-              <option value="ALL">All Categories</option>
-              <option value="CREDIT BILL">CREDIT BILL</option>
-              <option value="CASH BILL">CASH BILL</option>
-            </select>
-          </div>
-
-          {/* Multi-Label Filter */}
-          <div>
-            <label className="block text-[10px] text-slate-500 font-bold mb-1">Multi-Label Tag</label>
+            <label className="block text-[11px] text-slate-500 font-bold mb-1">Custom Labels</label>
             <select
               value={selectedLabelId}
               onChange={e => setSelectedLabelId(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-slate-900 focus:outline-none focus:border-sky-500"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 focus:outline-none focus:border-sky-500 font-medium"
             >
-              <option value="ALL">All Multi-Labels</option>
+              <option value="ALL">All Labels</option>
               {labels.map(l => (
                 <option key={l.id} value={l.id}>
                   {l.name}
@@ -276,95 +514,237 @@ export const BillRegisterView: React.FC<BillRegisterViewProps> = ({
         </div>
       </div>
 
-      {/* Main Data Table */}
-      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
+      {/* Main Data Table: Spacious, Clean 14-Column Grid with Scroll */}
+      <div className="bg-white border border-slate-200/90 rounded-3xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-100/90 text-slate-700 uppercase tracking-wider font-bold border-b border-slate-200">
+          <table className="w-full text-left text-xs min-w-[1440px] border-collapse">
+            <thead className="bg-slate-100/95 text-slate-600 uppercase tracking-wider font-extrabold text-[11px] border-b border-slate-200 sticky top-0 z-10 backdrop-blur">
               <tr>
+                {/* 1. Header ID */}
                 <th
-                  onClick={() => handleSort('gb_no')}
-                  className="py-3.5 px-4 cursor-pointer hover:text-slate-900 transition"
+                  onClick={() => handleSort('header_id')}
+                  className="py-4 px-4 w-24 min-w-[90px] cursor-pointer hover:text-slate-900 transition"
                 >
-                  <div className="flex items-center gap-1">
-                    <span>GB No</span>
-                    <ArrowUpDown className="w-3 h-3" />
+                  <div className="flex items-center gap-1.5">
+                    <span>Header ID</span>
+                    <ArrowUpDown className="w-3 h-3 text-slate-400" />
                   </div>
                 </th>
+
+                {/* 2. BR No */}
                 <th
-                  onClick={() => handleSort('party_name')}
-                  className="py-3.5 px-4 cursor-pointer hover:text-slate-900 transition"
+                  onClick={() => handleSort('br_no')}
+                  className="py-4 px-4 w-28 min-w-[110px] cursor-pointer hover:text-slate-900 transition"
                 >
-                  <div className="flex items-center gap-1">
-                    <span>Supplier Party</span>
-                    <ArrowUpDown className="w-3 h-3" />
+                  <div className="flex items-center gap-1.5">
+                    <span>BR No</span>
+                    <ArrowUpDown className="w-3 h-3 text-slate-400" />
                   </div>
                 </th>
-                <th className="py-3.5 px-4">Bill/DC No</th>
+
+                {/* 3. BR Date */}
+                <th
+                  onClick={() => handleSort('br_date')}
+                  className="py-4 px-4 w-28 min-w-[110px] cursor-pointer hover:text-slate-900 transition"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span>BR Date</span>
+                    <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                  </div>
+                </th>
+
+                {/* 4. Bill No */}
+                <th className="py-4 px-4 w-28 min-w-[110px]">Bill No</th>
+
+                {/* 5. Bill Date */}
+                <th className="py-4 px-4 w-28 min-w-[110px]">Bill Date</th>
+
+                {/* 6. Party / Supplier */}
+                <th
+                  onClick={() => handleSort('supplier')}
+                  className="py-4 px-4 min-w-[200px] cursor-pointer hover:text-slate-900 transition"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span>Party / Supplier</span>
+                    <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                  </div>
+                </th>
+
+                {/* 7. Amount */}
                 <th
                   onClick={() => handleSort('amount')}
-                  className="py-3.5 px-4 cursor-pointer hover:text-slate-900 transition"
+                  className="py-4 px-4 w-32 min-w-[120px] cursor-pointer hover:text-slate-900 transition"
                 >
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1.5">
                     <span>Amount</span>
-                    <ArrowUpDown className="w-3 h-3" />
+                    <ArrowUpDown className="w-3 h-3 text-slate-400" />
                   </div>
                 </th>
-                <th className="py-3.5 px-4">Owner (RP)</th>
-                <th className="py-3.5 px-4">Current Holder</th>
-                <th className="py-3.5 px-4">Stage</th>
+
+                {/* 8. Category */}
+                <th className="py-4 px-4 w-28 min-w-[110px]">Category</th>
+
+                {/* 9. Current Holder */}
+                <th className="py-4 px-4 w-36 min-w-[140px]">Current Holder</th>
+
+                {/* 10. Current Stage */}
+                <th className="py-4 px-4 w-32 min-w-[120px]">Current Stage</th>
+
+                {/* 11. Age */}
                 <th
                   onClick={() => handleSort('age_days')}
-                  className="py-3.5 px-4 cursor-pointer hover:text-slate-900 transition"
+                  className="py-4 px-4 w-20 min-w-[80px] cursor-pointer hover:text-slate-900 transition"
                 >
-                  <div className="flex items-center gap-1">
-                    <span>Age (Band)</span>
-                    <ArrowUpDown className="w-3 h-3" />
+                  <div className="flex items-center gap-1.5">
+                    <span>Age</span>
+                    <ArrowUpDown className="w-3 h-3 text-slate-400" />
                   </div>
                 </th>
-                <th className="py-3.5 px-4">Multi-Labels</th>
-                <th className="py-3.5 px-4">Tally / Payment</th>
+
+                {/* 12. Ageing */}
+                <th className="py-4 px-4 w-24 min-w-[90px]">Ageing</th>
+
+                {/* 13. Status */}
+                <th className="py-4 px-4 w-28 min-w-[110px]">Status</th>
+
+                {/* 14. Labels */}
+                <th className="py-4 px-4 w-36 min-w-[130px]">Labels</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
+            <tbody className="divide-y divide-slate-100 font-medium text-slate-800 bg-white">
               {sortedBills.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="py-12 text-center text-slate-500">
-                    No bill records match your current filter selection.
+                  <td colSpan={14} className="py-16 text-center text-slate-500">
+                    <p className="text-sm font-semibold">No bill records match your current search and filter selection.</p>
+                    <button
+                      onClick={clearFilters}
+                      className="mt-3 px-4 py-1.5 bg-sky-50 text-sky-600 hover:bg-sky-100 rounded-xl text-xs font-bold transition"
+                    >
+                      Clear Filters
+                    </button>
                   </td>
                 </tr>
               ) : (
-                sortedBills.map(b => (
+                sortedBills.map((b, idx) => (
                   <tr
-                    key={b.gb_no}
+                    key={b.header_id}
                     onClick={() => onSelectBill(b)}
-                    className="hover:bg-sky-50/50 transition cursor-pointer group"
+                    className={`hover:bg-sky-50/70 transition cursor-pointer group ${
+                      idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'
+                    }`}
                   >
-                    <td className="py-3 px-4 font-extrabold text-sky-600 group-hover:text-sky-700">
-                      GB #{b.gb_no}
+                    {/* 1. Header ID */}
+                    <td className="py-3.5 px-4 font-mono font-bold text-slate-500 whitespace-nowrap">
+                      #{b.header_id}
                     </td>
-                    <td className="py-3 px-4 font-bold text-slate-900">{b.party_name}</td>
-                    <td className="py-3 px-4 text-slate-500 font-mono">{b.bill_dc_no}</td>
-                    <td className="py-3 px-4 font-bold text-slate-900">
-                      ₹{b.amount.toLocaleString('en-IN')}
-                    </td>
-                    <td className="py-3 px-4 text-slate-500">{b.owner_name}</td>
-                    <td className="py-3 px-4 font-bold text-sky-700">{b.current_holder_name}</td>
-                    <td className="py-3 px-4 text-slate-700">{b.current_stage}</td>
-                    <td className="py-3 px-4">
-                      <span className={`px-2.5 py-1 rounded text-[11px] font-bold border ${ageBandColors[b.age_band]}`}>
-                        {b.age_band} ({b.age_days}d)
+
+                    {/* 2. BR No */}
+                    <td className="py-3.5 px-4 whitespace-nowrap">
+                      <span className="font-extrabold text-sky-700 bg-sky-50 border border-sky-200/80 px-2 py-0.5 rounded-lg group-hover:bg-sky-100 transition">
+                        {b.br_no}
                       </span>
                     </td>
-                    <td className="py-3 px-4">
-                      <div className="flex flex-wrap gap-1 max-w-[160px]">
+
+                    {/* 3. BR Date */}
+                    <td className="py-3.5 px-4 text-slate-600 whitespace-nowrap font-mono text-[11px]">
+                      {b.br_date}
+                    </td>
+
+                    {/* 4. Bill No */}
+                    <td className="py-3.5 px-4 text-slate-700 font-mono text-[11px] whitespace-nowrap font-bold">
+                      {b.bill_no}
+                    </td>
+
+                    {/* 5. Bill Date */}
+                    <td className="py-3.5 px-4 text-slate-500 font-mono text-[11px] whitespace-nowrap">
+                      {b.bill_date}
+                    </td>
+
+                    {/* 6. Party / Supplier */}
+                    <td className="py-3.5 px-4 font-bold text-slate-900 whitespace-nowrap">
+                      {b.supplier}
+                    </td>
+
+                    {/* 7. Amount */}
+                    <td className="py-3.5 px-4 font-black text-slate-900 whitespace-nowrap">
+                      ₹{b.amount.toLocaleString('en-IN')}
+                    </td>
+
+                    {/* 8. Category */}
+                    <td className="py-3.5 px-4 whitespace-nowrap">
+                      <span className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 font-bold text-[11px] border border-slate-200 shadow-2xs">
+                        {b.category}
+                      </span>
+                    </td>
+
+                    {/* 9. Current Holder */}
+                    <td className="py-3.5 px-4 font-extrabold text-sky-800 whitespace-nowrap">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-5 h-5 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center text-[10px] font-black border border-sky-200">
+                          {b.current_holder_name.charAt(0)}
+                        </div>
+                        <span>{b.current_holder_name}</span>
+                      </div>
+                    </td>
+
+                    {/* 10. Current Stage */}
+                    <td className="py-3.5 px-4 whitespace-nowrap font-semibold">
+                      <span
+                        className={`px-2.5 py-1 rounded-lg text-[11px] border font-bold ${
+                          stageBadgeColors[b.current_stage] || 'bg-slate-100 text-slate-700 border-slate-200'
+                        }`}
+                      >
+                        {STAGE_DISPLAY_NAMES[b.current_stage] || b.current_stage}
+                      </span>
+                    </td>
+
+                    {/* 11. Age */}
+                    <td className="py-3.5 px-4 whitespace-nowrap font-mono font-bold text-slate-700">
+                      {b.age_days}d
+                    </td>
+
+                    {/* 12. Ageing (A-3 / A-5 / A-10 inside Ageing) */}
+                    <td className="py-3.5 px-4 whitespace-nowrap">
+                      <span
+                        className={`px-2.5 py-1 rounded-lg text-[10px] border shadow-2xs ${
+                          ageBandColors[b.age_band]
+                        }`}
+                      >
+                        {b.age_band}
+                      </span>
+                    </td>
+
+                    {/* 13. Status */}
+                    <td className="py-3.5 px-4 whitespace-nowrap">
+                      {b.bill_status === 'PAID' ? (
+                        <span className="text-[10px] font-extrabold text-emerald-800 bg-emerald-100 border border-emerald-300 px-2.5 py-1 rounded-lg">
+                          PAID
+                        </span>
+                      ) : b.approval_status === 'REJECTED' ? (
+                        <span className="text-[10px] font-extrabold text-red-700 bg-red-100 border border-red-300 px-2.5 py-1 rounded-lg">
+                          REJECTED
+                        </span>
+                      ) : b.tally_status === 'EXPORTED' || b.tally_status === 'POSTED' ? (
+                        <span className="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-300 px-2.5 py-1 rounded-lg">
+                          Tally Exported
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 font-semibold">
+                          {b.bill_status}
+                        </span>
+                      )}
+                    </td>
+
+                    {/* 14. Labels */}
+                    <td className="py-3.5 px-4">
+                      <div className="flex flex-wrap gap-1 max-w-[150px]">
                         {b.labels.length === 0 ? (
-                          <span className="text-[10px] text-slate-400 italic">—</span>
+                          <span className="text-[11px] text-slate-400 italic">—</span>
                         ) : (
                           b.labels.map(l => (
                             <span
                               key={l.id}
-                              className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white"
+                              className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white shadow-2xs"
                               style={{ backgroundColor: l.color }}
                             >
                               {l.name}
@@ -372,21 +752,6 @@ export const BillRegisterView: React.FC<BillRegisterViewProps> = ({
                           ))
                         )}
                       </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      {b.dfr_status === 'PAID' ? (
-                        <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded">
-                          PAID
-                        </span>
-                      ) : b.moved_to_tally ? (
-                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
-                          Tally ({b.tally_age_days ?? 0}d)
-                        </span>
-                      ) : (
-                        <span className="text-[10px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
-                          Pending Tally
-                        </span>
-                      )}
                     </td>
                   </tr>
                 ))

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, ArrowRight, CheckCircle2, UserCheck } from 'lucide-react';
-import { BillRegisterItem, DfrUser, ProcessStage } from '../../types/dfr';
+import { BillRegisterItem, DfrUser, ProcessStage, STAGE_DISPLAY_NAMES } from '../../types/dfr';
 
 interface HandoverModalProps {
   bill: BillRegisterItem;
@@ -11,13 +11,11 @@ interface HandoverModalProps {
 }
 
 const STAGES: { id: ProcessStage; label: string }[] = [
-  { id: 'IAD', label: 'IAD — Initial Inward' },
-  { id: 'AO', label: 'AO — Admin Officer' },
-  { id: 'PURCHASE', label: 'Purchase Department' },
-  { id: 'JMD', label: 'JMD — Joint MD Office' },
-  { id: 'ACCOUNTS', label: 'Accounts Department' },
-  { id: 'TALLY', label: 'Tally Entry' },
-  { id: 'PAYMENT', label: 'Payment Processing' },
+  { id: 'BILL_INWARD', label: 'Bill Inward (Initial Intake)' },
+  { id: 'IAD', label: 'IAD (Internal Audit Department)' },
+  { id: 'AO', label: 'AO (Administrative Officer)' },
+  { id: 'JMD', label: 'JMD (Joint MD Office)' },
+  { id: 'ACCOUNTS', label: 'Accounts / Tally' },
 ];
 
 export const HandoverModal: React.FC<HandoverModalProps> = ({
@@ -47,9 +45,12 @@ export const HandoverModal: React.FC<HandoverModalProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold px-2 py-0.5 rounded bg-sky-100 text-sky-800 border border-sky-200">
-                GB #{bill.gb_no}
+                {bill.br_no}
               </span>
-              <h2 className="text-lg font-extrabold text-slate-900">Confirm Custody Handover</h2>
+              <span className="text-xs font-mono text-slate-500 font-semibold">
+                (Header #{bill.header_id})
+              </span>
+              <h2 className="text-lg font-extrabold text-slate-900">Confirm Handover</h2>
             </div>
             <p className="text-xs text-slate-500 font-medium mt-0.5">
               Human Checkpoint: Write permanent physical audit record
@@ -65,18 +66,24 @@ export const HandoverModal: React.FC<HandoverModalProps> = ({
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
-          {/* Current Custody Visual */}
+          {/* Current Holder Visual */}
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex items-center justify-between text-xs">
             <div>
-              <span className="text-slate-500 text-[11px] font-bold uppercase">Current Custodian</span>
+              <span className="text-slate-500 text-[11px] font-bold uppercase">Current Holder</span>
               <p className="font-extrabold text-slate-900 mt-0.5">{bill.current_holder_name}</p>
-              <p className="text-slate-500 text-[11px]">Stage: {bill.current_stage}</p>
+              <p className="text-slate-500 text-[11px]">
+                Stage: {STAGE_DISPLAY_NAMES[bill.current_stage] || bill.current_stage}
+              </p>
             </div>
             <ArrowRight className="w-5 h-5 text-sky-600" />
             <div className="text-right">
               <span className="text-slate-500 text-[11px] font-bold uppercase">New Recipient</span>
-              <p className="font-extrabold text-sky-700 mt-0.5">{selectedHolder?.full_name || 'Select'}</p>
-              <p className="text-slate-500 text-[11px]">Stage: {selectedStage}</p>
+              <p className="font-extrabold text-sky-700 mt-0.5">
+                {selectedHolder?.full_name || 'Select'}
+              </p>
+              <p className="text-slate-500 text-[11px]">
+                Stage: {STAGE_DISPLAY_NAMES[selectedStage] || selectedStage}
+              </p>
             </div>
           </div>
 
@@ -139,7 +146,9 @@ export const HandoverModal: React.FC<HandoverModalProps> = ({
             <div>
               <span className="font-bold">Human Checkpoint Action:</span>
               <p className="text-slate-700 text-[11px] mt-0.5">
-                Signing as <strong className="text-slate-900">{currentUser.full_name}</strong> ({currentUser.role}). This will append an un-editable row into <code className="text-sky-700 font-semibold">dfr.holder_history</code>.
+                Signing as <strong className="text-slate-900">{currentUser.full_name}</strong> (
+                {currentUser.role}). This will append an un-editable row into{' '}
+                <code className="text-sky-700 font-semibold">dfr_holder_history</code>.
               </p>
             </div>
           </div>

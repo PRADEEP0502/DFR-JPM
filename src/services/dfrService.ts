@@ -1,28 +1,30 @@
 import {
+  BillRegisterItem,
   DfrUser,
   DfrLabel,
+  CategoryHolderMapping,
   ErpBill,
-  DfrBill,
+  DfrBillTracking,
   HolderHistory,
   DfrAlert,
-  BillRegisterItem,
   SyncState,
   ProcessStage,
-  DfrStatus,
-  AgeBand
+  AgeBand,
 } from '../types/dfr';
-import { MOCK_USERS, INITIAL_LABELS, generateInitialData } from './mockData';
+import { MOCK_USERS, INITIAL_LABELS, INITIAL_CATEGORY_MAPPINGS } from './mockData';
+import { selsoftApiClient, mapErpToDfrStage } from './selsoftApi';
 
-const STORAGE_KEY = 'DFR_APP_STATE_V2';
+const STORAGE_KEY = 'DFR_APP_STATE_ACCOUNTS_TALLY_V1';
 
 interface AppStorage {
   users: DfrUser[];
   labels: DfrLabel[];
+  categoryMappings: CategoryHolderMapping[];
   erpBills: ErpBill[];
-  dfrBills: DfrBill[];
+  dfrBills: DfrBillTracking[];
   holderHistory: HolderHistory[];
   alerts: DfrAlert[];
-  billLabelsMap: Record<number, string[]>; // gb_no -> label_id[]
+  billLabelsMap: Record<number, string[]>; // header_id -> label_id[]
   syncState: SyncState;
   syncErrors: Array<{ id: number; error: string; timestamp: string }>;
 }
@@ -30,6 +32,7 @@ interface AppStorage {
 class DfrService {
   private state: AppStorage;
   private listeners: Array<() => void> = [];
+  private syncTimerId: any = null;
 
   constructor() {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -37,6 +40,9 @@ class DfrService {
       try {
         this.state = JSON.parse(saved);
         this.state.users = MOCK_USERS; // Always ensure latest user definitions
+        if (!this.state.categoryMappings || this.state.categoryMappings.length === 0) {
+          this.state.categoryMappings = INITIAL_CATEGORY_MAPPINGS;
+        }
       } catch (e) {
         console.error('Failed to parse saved DFR state, resetting:', e);
         this.state = this.initFreshState();
@@ -44,25 +50,39 @@ class DfrService {
     } else {
       this.state = this.initFreshState();
     }
+
+    this.startAutoSyncSchedule();
+
+    // Trigger immediate live sync on service startup
+    this.syncErpBillsNow(true).catch(err => {
+      console.warn('Initial live sync error:', err);
+    });
   }
 
   private initFreshState(): AppStorage {
-    const initialData = generateInitialData();
+    const now = new Date();
+    const intervalMins = 30; // Default 30-minute sync
+    const nextSync = new Date(now.getTime() + intervalMins * 60 * 1000).toISOString();
+
     const state: AppStorage = {
       users: MOCK_USERS,
       labels: INITIAL_LABELS,
-      erpBills: initialData.erpBills,
-      dfrBills: initialData.dfrBills,
-      holderHistory: initialData.holderHistory,
-      alerts: initialData.alerts,
-      billLabelsMap: initialData.billLabelsMap,
+      categoryMappings: INITIAL_CATEGORY_MAPPINGS,
+      erpBills: [],
+      dfrBills: [],
+      holderHistory: [],
+      alerts: [],
+      billLabelsMap: {},
       syncState: {
-        last_synced_at: new Date(Date.now() - 4 * 60 * 1000).toISOString(),
+        last_synced_at: null,
+        next_sync_at: nextSync,
+        sync_interval_mins: intervalMins,
         is_syncing: false,
-        total_bills: initialData.dfrBills.length,
-        sync_errors_count: 0
+        total_count: 0,
+        total_pages: 0,
+        sync_errors_count: 0,
       },
-      syncErrors: []
+      syncErrors: [],
     };
     this.saveStateToStorage(state);
     return state;
@@ -84,8 +104,10 @@ class DfrService {
     this.listeners.forEach(fn => fn());
   }
 
-  public resetToDefault() {
+  public resetToLiveErp() {
+    localStorage.removeItem(STORAGE_KEY);
     this.state = this.initFreshState();
+    return this.syncErpBillsNow(true);
   }
 
   // ============================================================================
@@ -100,6 +122,14 @@ class DfrService {
     return this.state.labels;
   }
 
+  public getCategoryMappings(): CategoryHolderMapping[] {
+    return this.state.categoryMappings || INITIAL_CATEGORY_MAPPINGS;
+  }
+
+  public getAlerts(): DfrAlert[] {
+    return this.state.alerts;
+  }
+
   public getSyncState(): SyncState {
     return this.state.syncState;
   }
@@ -108,100 +138,174 @@ class DfrService {
     return this.state.syncErrors;
   }
 
+  public getRawErpBills(): ErpBill[] {
+    return this.state.erpBills;
+  }
+
+  /**
+   * Resolves the initial holder for a newly ingested ERP bill based on active category mappings.
+   * Applied strictly to new/incoming bills; existing bills' holders remain untouched.
+   */
+  public resolveInitialHolderForCategory(categoryStr: string): DfrUser {
+    const normalizedCat = (categoryStr || '').trim().toUpperCase();
+    const mappings = (this.state.categoryMappings || INITIAL_CATEGORY_MAPPINGS).filter(m => m.is_active);
+
+    // 1. Exact match
+    const exact = mappings.find(m => m.category.toUpperCase() === normalizedCat);
+    if (exact) {
+      const u = this.state.users.find(x => x.id === exact.holder_id);
+      if (u) return u;
+    }
+
+    // 2. Partial/contains match
+    const partial = mappings.find(
+      m =>
+        normalizedCat.includes(m.category.toUpperCase()) ||
+        m.category.toUpperCase().includes(normalizedCat)
+    );
+    if (partial) {
+      const u = this.state.users.find(x => x.id === partial.holder_id);
+      if (u) return u;
+    }
+
+    // 3. Fallback default staff
+    const staffUsers = this.state.users.filter(
+      u => u.id !== 'user-000' && u.id !== 'user-009' && u.id !== 'user-008'
+    );
+    return staffUsers[0] || this.state.users[0];
+  }
+
+  /**
+   * Master Bill Register View:
+   * Dynamic computed view combining ERP read-only fields with DFR operational state
+   */
   public getBillRegister(includeClosed: boolean = true): BillRegisterItem[] {
-    const now = new Date();
     const userMap = new Map(this.state.users.map(u => [u.id, u.full_name]));
     const labelMap = new Map(this.state.labels.map(l => [l.id, l]));
+    const now = new Date('2026-08-27T12:00:00Z');
 
-    const erpMap = new Map(this.state.erpBills.map(e => [e.erp_bill_ref, e]));
+    const dfrMap = new Map(this.state.dfrBills.map(d => [d.header_id, d]));
 
     const items: BillRegisterItem[] = [];
 
-    for (const b of this.state.dfrBills) {
-      if (!includeClosed && (b.dfr_status === 'PAID' || b.dfr_status === 'CLOSED')) {
+    for (const erp of this.state.erpBills) {
+      const isClosed = erp.bill_status === 'PAID' || erp.bill_status === 'CLOSED';
+      if (!includeClosed && isClosed) {
         continue; // Exclude closed bills from active views
       }
 
-      const e = erpMap.get(b.erp_bill_ref);
-      if (!e) continue;
+      // Default holder if not yet explicitly created
+      const initialHolder = this.resolveInitialHolderForCategory(erp.category);
 
-      const effectiveRecdDate = e.bill_recd_date || e.bill_date;
-      const recdDateObj = new Date(effectiveRecdDate);
-      
-      // Compute Overall Ageing (Days)
-      const diffTime = Math.max(0, now.getTime() - recdDateObj.getTime());
+      const dfr = dfrMap.get(erp.header_id) || {
+        header_id: erp.header_id,
+        current_holder_id: initialHolder.id,
+        current_stage: mapErpToDfrStage(erp),
+        dfr_status: isClosed ? 'PAID' : 'OPEN',
+        created_at: new Date(erp.br_date).toISOString(),
+        updated_at: erp.last_modified_datetime,
+      };
+
+      // Strict Ageing Formula: Age = Current Date - BRDate
+      const brDateObj = new Date(erp.br_date);
+      const diffTime = Math.max(0, now.getTime() - brDateObj.getTime());
       const ageDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-      // Age Band
+      // Ageing Bands: 0-2: NORMAL, 3-4: A-3, 5-9: A-5, 10+: A-10 Critical
       let ageBand: AgeBand = 'NORMAL';
       if (ageDays >= 10) ageBand = 'A-10';
       else if (ageDays >= 5) ageBand = 'A-5';
       else if (ageDays >= 3) ageBand = 'A-3';
 
-      // Tally Ageing (Days since posted to Tally)
-      let tallyAgeDays: number | undefined = undefined;
-      if (e.tally_posted_at) {
-        const tallyDateObj = new Date(e.tally_posted_at);
-        const tallyDiffTime = Math.max(0, now.getTime() - tallyDateObj.getTime());
-        tallyAgeDays = Math.floor(tallyDiffTime / (1000 * 60 * 60 * 24));
-      }
-
-      // Labels array
-      const labelIds = this.state.billLabelsMap[b.gb_no] || [];
+      // Multi-labels
+      const labelIds = this.state.billLabelsMap[erp.header_id] || [];
       const billLabels = labelIds
         .map(id => labelMap.get(id))
         .filter((l): l is DfrLabel => l !== undefined);
 
       items.push({
-        gb_no: b.gb_no,
-        erp_bill_ref: b.erp_bill_ref,
-        bill_dc_no: e.bill_dc_no,
-        bill_date: e.bill_date,
-        party_name: e.party_name,
-        amount: e.amount,
-        category: e.category,
-        owner_id: b.owner_id,
-        owner_name: userMap.get(b.owner_id) || 'Unknown',
-        current_holder_id: b.current_holder_id,
-        current_holder_name: userMap.get(b.current_holder_id) || 'Unknown',
-        current_stage: b.current_stage,
-        dfr_status: b.dfr_status,
-        effective_recd_date: effectiveRecdDate,
+        header_id: erp.header_id,
+        br_no: erp.br_no,
+        br_date: erp.br_date,
+        bill_no: erp.bill_no,
+        bill_date: erp.bill_date,
+        supplier: erp.supplier,
+        amount: erp.amount,
+        category: erp.category,
+        current_holder_id: dfr.current_holder_id,
+        current_holder_name: userMap.get(dfr.current_holder_id) || initialHolder.full_name,
+        current_stage: dfr.current_stage,
         age_days: ageDays,
         age_band: ageBand,
-        tally_posted_at: e.tally_posted_at,
-        tally_age_days: tallyAgeDays,
-        moved_to_tally: !!e.tally_posted_at,
-        payment_status: e.payment_status,
-        payment_completed_at: e.payment_completed_at,
+        approval_status: erp.approval_status,
+        next_approver: erp.next_approver,
+        rejected_by: erp.rejected_by,
+        rejection_reason: erp.rejection_reason,
+        tally_status: erp.tally_status,
+        tally_exported_date: erp.tally_exported_date,
+        bill_status: erp.bill_status,
+        dfr_status: dfr.dfr_status,
         labels: billLabels,
       });
     }
 
-    // Sort by gb_no descending
-    return items.sort((a, b) => b.gb_no - a.gb_no);
+    return items;
   }
 
-  public getHolderHistory(gbNo: number): HolderHistory[] {
+  public getHolderHistory(headerId: number): HolderHistory[] {
     return this.state.holderHistory
-      .filter(h => h.gb_no === gbNo)
-      .sort((a, b) => new Date(b.changed_at).getTime() - new Date(a.changed_at).getTime());
-  }
-
-  public getAlerts(): DfrAlert[] {
-    return this.state.alerts;
+      .filter(h => h.header_id === headerId)
+      .sort((a, b) => new Date(a.changed_at).getTime() - new Date(b.changed_at).getTime());
   }
 
   // ============================================================================
-  // MULTI-LABEL OPERATIONS
+  // MUTATIONS (Category Mappings & Human Checkpoints)
   // ============================================================================
+
+  public addCategoryMapping(category: string, holderId: string): CategoryHolderMapping {
+    const user = this.state.users.find(u => u.id === holderId);
+    const newMapping: CategoryHolderMapping = {
+      id: `map-${Date.now()}`,
+      category: category.trim().toUpperCase(),
+      holder_id: holderId,
+      holder_name: user?.full_name || 'Staff',
+      is_active: true,
+      updated_at: new Date().toISOString(),
+    };
+    this.state.categoryMappings = [...(this.state.categoryMappings || []), newMapping];
+    this.saveStateToStorage();
+    return newMapping;
+  }
+
+  public updateCategoryMapping(id: string, category: string, holderId: string, isActive: boolean = true) {
+    const user = this.state.users.find(u => u.id === holderId);
+    this.state.categoryMappings = (this.state.categoryMappings || []).map(m => {
+      if (m.id === id) {
+        return {
+          ...m,
+          category: category.trim().toUpperCase(),
+          holder_id: holderId,
+          holder_name: user?.full_name || m.holder_name,
+          is_active: isActive,
+          updated_at: new Date().toISOString(),
+        };
+      }
+      return m;
+    });
+    this.saveStateToStorage();
+  }
+
+  public deleteCategoryMapping(id: string) {
+    this.state.categoryMappings = (this.state.categoryMappings || []).filter(m => m.id !== id);
+    this.saveStateToStorage();
+  }
 
   public createLabel(name: string, color: string, description?: string): DfrLabel {
     const newLabel: DfrLabel = {
       id: `lbl-${Date.now()}`,
-      name: name.trim(),
+      name,
       color,
-      description: description?.trim()
+      description,
     };
     this.state.labels.push(newLabel);
     this.saveStateToStorage();
@@ -211,132 +315,135 @@ class DfrService {
   public updateLabel(id: string, name: string, color: string, description?: string) {
     const lbl = this.state.labels.find(l => l.id === id);
     if (lbl) {
-      lbl.name = name.trim();
+      lbl.name = name;
       lbl.color = color;
-      lbl.description = description?.trim();
+      lbl.description = description;
       this.saveStateToStorage();
     }
   }
 
   public deleteLabel(id: string) {
     this.state.labels = this.state.labels.filter(l => l.id !== id);
-    // Clean up billLabelsMap
-    for (const gbNo in this.state.billLabelsMap) {
-      this.state.billLabelsMap[gbNo] = (this.state.billLabelsMap[gbNo] || []).filter(lId => lId !== id);
-    }
+    // Clean up bill associations
+    Object.keys(this.state.billLabelsMap).forEach(headerIdStr => {
+      const headerId = Number(headerIdStr);
+      this.state.billLabelsMap[headerId] = (this.state.billLabelsMap[headerId] || []).filter(
+        lId => lId !== id
+      );
+    });
     this.saveStateToStorage();
   }
 
-  public toggleBillLabel(gbNo: number, labelId: string) {
-    const current = this.state.billLabelsMap[gbNo] || [];
-    if (current.includes(labelId)) {
-      this.state.billLabelsMap[gbNo] = current.filter(id => id !== labelId);
+  public toggleBillLabel(headerId: number, labelId: string) {
+    const list = this.state.billLabelsMap[headerId] || [];
+    if (list.includes(labelId)) {
+      this.state.billLabelsMap[headerId] = list.filter(id => id !== labelId);
     } else {
-      this.state.billLabelsMap[gbNo] = [...current, labelId];
+      this.state.billLabelsMap[headerId] = [...list, labelId];
     }
     this.saveStateToStorage();
   }
-
-  // ============================================================================
-  // HUMAN CHECKPOINT ACTIONS
-  // ============================================================================
 
   public confirmHandover(
-    gbNo: number,
+    headerId: number,
     toHolderId: string,
     toStage: ProcessStage,
     actorUserId: string,
-    note: string
+    note?: string
   ) {
-    const b = this.state.dfrBills.find(x => x.gb_no === gbNo);
-    if (!b) return;
+    let dfr = this.state.dfrBills.find(x => x.header_id === headerId);
+    if (!dfr) {
+      dfr = {
+        header_id: headerId,
+        current_holder_id: toHolderId,
+        current_stage: toStage,
+        dfr_status: 'OPEN',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      this.state.dfrBills.push(dfr);
+    }
 
-    const fromHolderId = b.current_holder_id;
-    const fromStage = b.current_stage;
+    const fromHolderId = dfr.current_holder_id;
+    const fromStage = dfr.current_stage;
 
-    b.current_holder_id = toHolderId;
-    b.current_stage = toStage;
-    b.updated_at = new Date().toISOString();
+    dfr.current_holder_id = toHolderId;
+    dfr.current_stage = toStage;
+    dfr.updated_at = new Date().toISOString();
 
     const maxHistoryId = this.state.holderHistory.reduce((max, h) => Math.max(max, h.id), 0);
     this.state.holderHistory.push({
       id: maxHistoryId + 1,
-      gb_no: gbNo,
+      header_id: headerId,
       from_holder_id: fromHolderId,
       to_holder_id: toHolderId,
       from_stage: fromStage,
       to_stage: toStage,
       changed_by: actorUserId,
-      note: note || 'Physical handover confirmed',
-      changed_at: new Date().toISOString()
+      note: note || 'Physical custody handover confirmed',
+      changed_at: new Date().toISOString(),
     });
 
     this.saveStateToStorage();
   }
 
-  public markMovedToTally(gbNo: number, actorUserId: string, note?: string) {
-    const b = this.state.dfrBills.find(x => x.gb_no === gbNo);
-    const e = this.state.erpBills.find(x => x.erp_bill_ref === b?.erp_bill_ref);
-    if (!b || !e) return;
+  public markMovedToTally(headerId: number, actorUserId: string, note?: string) {
+    const dfr = this.state.dfrBills.find(x => x.header_id === headerId);
+    const erp = this.state.erpBills.find(x => x.header_id === headerId);
+    if (!dfr || !erp) return;
 
     const nowIso = new Date().toISOString();
-    const fromHolderId = b.current_holder_id;
-    const fromStage = b.current_stage;
+    const fromHolderId = dfr.current_holder_id;
+    const fromStage = dfr.current_stage;
 
-    b.current_stage = 'TALLY';
-    b.dfr_status = 'TALLY_DONE';
-    b.updated_at = nowIso;
+    dfr.current_stage = 'TALLY';
+    dfr.dfr_status = 'TALLY_DONE';
+    dfr.updated_at = nowIso;
 
-    e.tally_ref = `TALLY-REF-${Date.now()}`;
-    e.tally_posted_at = nowIso;
-    if (e.payment_status === 'NOT_STARTED') {
-      e.payment_status = 'PENDING';
-    }
+    erp.tally_status = 'EXPORTED';
+    erp.tally_exported_date = nowIso;
 
     const maxHistoryId = this.state.holderHistory.reduce((max, h) => Math.max(max, h.id), 0);
     this.state.holderHistory.push({
       id: maxHistoryId + 1,
-      gb_no: gbNo,
+      header_id: headerId,
       from_holder_id: fromHolderId,
       to_holder_id: actorUserId,
       from_stage: fromStage,
       to_stage: 'TALLY',
       changed_by: actorUserId,
-      note: note || 'Confirmed bill posted into Tally software',
-      changed_at: nowIso
+      note: note || 'Confirmed bill posted to Tally software',
+      changed_at: nowIso,
     });
 
     this.saveStateToStorage();
   }
 
-  public markPaymentCompleted(gbNo: number, actorUserId: string, note?: string) {
-    const b = this.state.dfrBills.find(x => x.gb_no === gbNo);
-    const e = this.state.erpBills.find(x => x.erp_bill_ref === b?.erp_bill_ref);
-    if (!b || !e) return;
+  public markPaymentCompleted(headerId: number, actorUserId: string, note?: string) {
+    const dfr = this.state.dfrBills.find(x => x.header_id === headerId);
+    const erp = this.state.erpBills.find(x => x.header_id === headerId);
+    if (!dfr || !erp) return;
 
     const nowIso = new Date().toISOString();
-    const fromHolderId = b.current_holder_id;
-    const fromStage = b.current_stage;
+    const fromHolderId = dfr.current_holder_id;
+    const fromStage = dfr.current_stage;
 
-    b.current_stage = 'PAYMENT';
-    b.dfr_status = 'PAID';
-    b.updated_at = nowIso;
+    dfr.dfr_status = 'PAID';
+    dfr.updated_at = nowIso;
 
-    e.payment_ref = `PAY-TXN-${Date.now()}`;
-    e.payment_status = 'COMPLETED';
-    e.payment_completed_at = nowIso;
+    erp.bill_status = 'PAID';
 
     const maxHistoryId = this.state.holderHistory.reduce((max, h) => Math.max(max, h.id), 0);
     this.state.holderHistory.push({
       id: maxHistoryId + 1,
-      gb_no: gbNo,
+      header_id: headerId,
       from_holder_id: fromHolderId,
       to_holder_id: actorUserId,
       from_stage: fromStage,
-      to_stage: 'PAYMENT',
+      to_stage: fromStage,
       changed_by: actorUserId,
-      note: note || 'Confirmed bank payment completion & voucher posting',
-      changed_at: nowIso
+      note: note || 'Confirmed payment completion & bank disbursement',
+      changed_at: nowIso,
     });
 
     this.saveStateToStorage();
@@ -352,82 +459,122 @@ class DfrService {
   }
 
   // ============================================================================
-  // NEAR-REAL-TIME ERP SYNC SIMULATION
+  // SYNCHRONIZATION WITH SELSOFT ERP API
   // ============================================================================
 
-  public async syncErpBillsNow(): Promise<SyncState> {
+  public async syncErpBillsNow(forceFullSync: boolean = true): Promise<SyncState> {
     this.state.syncState.is_syncing = true;
     this.notifyListeners();
 
-    // Simulate API delay
-    await new Promise(res => setTimeout(res, 800));
+    try {
+      // Execute multi-page synchronization using Selsoft API Client
+      const modifiedAfter = forceFullSync ? undefined : (this.state.syncState.last_synced_at || undefined);
+      const result = await selsoftApiClient.fetchAllBills(50, modifiedAfter);
 
-    const now = new Date();
-    const nowIso = now.toISOString();
+      if (result.allBills.length > 0) {
+        // Populate directly from live Selsoft ERP API
+        this.state.erpBills = result.allBills;
 
-    // 10% chance of generating a new ERP bill during sync simulation
-    if (Math.random() > 0.4) {
-      const newIndex = this.state.dfrBills.length + 1;
-      const gbNo = 1000 + newIndex;
-      const erpRef = `ERP-2026-${(10000 + newIndex).toString()}`;
-      const vendors = [
-        'LAKSHMI COTTON MILLS', 'SRI RAMA TEXTILES', 'KAVERI YARNS LTD', 'COIMBATORE SPINNERS',
-        'JAYAM TRADERS', 'BHARANI DYEING PROCESS', 'THIRUMALAI TEXTILES', 'NEXUS CHEMICALS CORP'
-      ];
-      const vendor = vendors[newIndex % vendors.length];
-      const amount = Math.floor((Math.random() * 250000 + 10000) / 100) * 100;
+        const existingDfrMap = new Map(this.state.dfrBills.map(b => [b.header_id, b]));
 
-      const newErpBill: ErpBill = {
-        erp_bill_ref: erpRef,
-        bill_dc_no: `INV/2026/${4000 + newIndex}`,
-        bill_date: nowIso.split('T')[0],
-        party_name: vendor,
-        amount: amount,
-        category: 'CREDIT BILL',
-        bill_recd_date: nowIso.split('T')[0],
-        payment_status: 'NOT_STARTED',
-        last_synced_at: nowIso,
+        // Upsert DFR tracking records using HeaderId, resolving initial holder strictly from configured mappings
+        for (const incomingBill of result.allBills) {
+          if (!existingDfrMap.has(incomingBill.header_id)) {
+            const initialHolder = this.resolveInitialHolderForCategory(incomingBill.category);
+            const stage = mapErpToDfrStage(incomingBill);
+
+            const newDfr: DfrBillTracking = {
+              header_id: incomingBill.header_id,
+              current_holder_id: initialHolder.id,
+              current_stage: stage,
+              dfr_status: incomingBill.bill_status === 'PAID' ? 'PAID' : 'OPEN',
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            };
+
+            this.state.dfrBills.push(newDfr);
+            existingDfrMap.set(incomingBill.header_id, newDfr);
+
+            const maxHistoryId = this.state.holderHistory.reduce((max, h) => Math.max(max, h.id), 0);
+            this.state.holderHistory.push({
+              id: maxHistoryId + 1,
+              header_id: incomingBill.header_id,
+              from_holder_id: null,
+              to_holder_id: initialHolder.id,
+              from_stage: null,
+              to_stage: stage,
+              changed_by: initialHolder.id,
+              note: `Initial holder assigned by Category Mapping (${incomingBill.category} → ${initialHolder.full_name})`,
+              changed_at: new Date().toISOString(),
+            });
+          }
+        }
+      }
+
+      // Refresh A-10 alerts for active synced bills
+      const existingAlertMap = new Set(this.state.alerts.map(a => `${a.header_id}-${a.band}`));
+      let maxAlertId = this.state.alerts.reduce((max, a) => Math.max(max, a.id), 0);
+
+      for (const bill of this.state.erpBills) {
+        if (bill.bill_status !== 'PAID' && bill.bill_status !== 'CLOSED') {
+          const brDateObj = new Date(bill.br_date);
+          const diffTime = Math.max(0, new Date().getTime() - brDateObj.getTime());
+          const ageDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+          if (ageDays >= 10 && !existingAlertMap.has(`${bill.header_id}-A-10`)) {
+            this.state.alerts.push({
+              id: ++maxAlertId,
+              header_id: bill.header_id,
+              band: 'A-10',
+              raised_at: new Date(brDateObj.getTime() + 10 * 24 * 60 * 60 * 1000).toISOString(),
+            });
+            existingAlertMap.add(`${bill.header_id}-A-10`);
+          }
+        }
+      }
+
+      const now = new Date();
+      const nextSync = new Date(
+        now.getTime() + this.state.syncState.sync_interval_mins * 60 * 1000
+      ).toISOString();
+
+      this.state.syncState = {
+        last_synced_at: result.syncTimestampUtc,
+        next_sync_at: nextSync,
+        sync_interval_mins: this.state.syncState.sync_interval_mins,
+        is_syncing: false,
+        total_count: this.state.erpBills.length,
+        total_pages: Math.ceil(this.state.erpBills.length / 50),
+        sync_errors_count: this.state.syncErrors.length,
       };
-
-      const unassignedUser = this.state.users.find(u => u.id === 'user-000') || this.state.users[0];
-
-      const newDfrBill: DfrBill = {
-        gb_no: gbNo,
-        erp_bill_ref: erpRef,
-        owner_id: unassignedUser.id,
-        current_holder_id: unassignedUser.id,
-        current_stage: 'IAD',
-        dfr_status: 'OPEN',
-        created_at: nowIso,
-        updated_at: nowIso,
-      };
-
-      this.state.erpBills.unshift(newErpBill);
-      this.state.dfrBills.unshift(newDfrBill);
-
-      const maxHistoryId = this.state.holderHistory.reduce((max, h) => Math.max(max, h.id), 0);
-      this.state.holderHistory.push({
-        id: maxHistoryId + 1,
-        gb_no: gbNo,
-        from_holder_id: null,
-        to_holder_id: unassignedUser.id,
-        from_stage: null,
-        to_stage: 'IAD',
-        changed_by: unassignedUser.id,
-        note: 'Auto-intake from Selsoft ERP API Sync',
-        changed_at: nowIso,
+    } catch (err: any) {
+      console.error('Sync failed:', err);
+      this.state.syncState.is_syncing = false;
+      this.state.syncState.last_error = err.message || 'Sync failed';
+      this.state.syncErrors.push({
+        id: Date.now(),
+        error: err.message || 'API synchronization error',
+        timestamp: new Date().toISOString(),
       });
     }
 
-    this.state.syncState = {
-      last_synced_at: nowIso,
-      is_syncing: false,
-      total_bills: this.state.dfrBills.length,
-      sync_errors_count: this.state.syncErrors.length,
-    };
-
     this.saveStateToStorage();
     return this.state.syncState;
+  }
+
+  private startAutoSyncSchedule() {
+    if (this.syncTimerId) {
+      clearInterval(this.syncTimerId);
+    }
+    // Check every minute if next_sync_at has arrived
+    this.syncTimerId = setInterval(() => {
+      const now = new Date().getTime();
+      const nextSync = new Date(this.state.syncState.next_sync_at).getTime();
+
+      if (now >= nextSync && !this.state.syncState.is_syncing) {
+        this.syncErpBillsNow(false);
+      }
+    }, 60 * 1000);
   }
 }
 

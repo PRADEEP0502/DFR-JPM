@@ -22,19 +22,27 @@ export const TopBar: React.FC<TopBarProps> = ({
   onSearchChange,
 }) => {
   const [minutesAgo, setMinutesAgo] = useState<number>(0);
+  const [nextInMins, setNextInMins] = useState<number>(30);
 
   useEffect(() => {
     const calcAgo = () => {
-      if (!syncState.last_synced_at) return;
-      const last = new Date(syncState.last_synced_at).getTime();
-      const diffMs = Date.now() - last;
-      setMinutesAgo(Math.max(0, Math.floor(diffMs / (1000 * 60))));
+      if (syncState.last_synced_at) {
+        const last = new Date(syncState.last_synced_at).getTime();
+        const diffMs = Date.now() - last;
+        setMinutesAgo(Math.max(0, Math.floor(diffMs / (1000 * 60))));
+      }
+
+      if (syncState.next_sync_at) {
+        const next = new Date(syncState.next_sync_at).getTime();
+        const remainMs = next - Date.now();
+        setNextInMins(Math.max(0, Math.ceil(remainMs / (1000 * 60))));
+      }
     };
 
     calcAgo();
     const interval = setInterval(calcAgo, 15000);
     return () => clearInterval(interval);
-  }, [syncState.last_synced_at]);
+  }, [syncState.last_synced_at, syncState.next_sync_at]);
 
   const roleColors: Record<UserRole, string> = {
     MD: 'bg-purple-100 text-purple-700 border-purple-200',
@@ -50,7 +58,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
         <input
           type="text"
-          placeholder="Search GB No, Bill/DC No, Party, Tag..."
+          placeholder="Search Header ID, BR No, Bill No, Supplier..."
           value={searchQuery}
           onChange={e => onSearchChange(e.target.value)}
           className="w-full bg-slate-100/80 border border-slate-200 rounded-xl pl-9 pr-4 py-1.5 text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition"
@@ -76,7 +84,10 @@ export const TopBar: React.FC<TopBarProps> = ({
             </span>
             <Clock className="w-3.5 h-3.5 text-slate-400" />
             <span className="text-slate-700 font-medium">
-              Synced {minutesAgo === 0 ? 'just now' : `${minutesAgo}m ago`}
+              Last Synced: {minutesAgo === 0 ? 'just now' : `${minutesAgo}m ago`}
+            </span>
+            <span className="text-[10px] text-slate-400 font-semibold ml-1">
+              (Next in {nextInMins}m)
             </span>
           </div>
 

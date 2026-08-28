@@ -1,6 +1,6 @@
 import React from 'react';
-import { Users, User, ArrowRight, IndianRupee, Clock, AlertTriangle } from 'lucide-react';
-import { BillRegisterItem, DfrUser } from '../../types/dfr';
+import { Users, User, IndianRupee, Clock, AlertTriangle } from 'lucide-react';
+import { BillRegisterItem, DfrUser, STAGE_DISPLAY_NAMES } from '../../types/dfr';
 import { ViewTab } from '../layout/Sidebar';
 
 interface ByHolderViewProps {
@@ -13,11 +13,12 @@ interface ByHolderViewProps {
 export const ByHolderView: React.FC<ByHolderViewProps> = ({
   bills,
   users,
-  onSelectTab,
   onSelectBill,
 }) => {
   // Exclude closed/paid bills from active holder counts
-  const activeBills = bills.filter(b => b.dfr_status !== 'PAID' && b.dfr_status !== 'CLOSED');
+  const activeBills = bills.filter(
+    b => b.bill_status !== 'PAID' && b.bill_status !== 'CLOSED' && b.dfr_status !== 'PAID'
+  );
 
   const activeUsers = users.filter(u => u.id !== 'user-000');
 
@@ -26,10 +27,10 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
       <div>
         <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
           <Users className="w-6 h-6 text-sky-600" />
-          Pending Bills by Current Custodian / Holder
+          Pending Bills by Current Holder
         </h1>
         <p className="text-sm text-slate-500 mt-1">
-          Person-wise workload summary showing pending bill count, total exposure amount, and oldest sitting bill
+          Person-wise workload summary showing pending bill count, total exposure amount, and oldest sitting bill based on BR Date
         </p>
       </div>
 
@@ -93,14 +94,14 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
                   <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
                     {personBills.map(b => (
                       <div
-                        key={b.gb_no}
+                        key={b.header_id}
                         onClick={() => onSelectBill(b)}
                         className="bg-slate-50 border border-slate-200 hover:border-sky-400 p-2 rounded-xl text-xs flex items-center justify-between cursor-pointer transition"
                       >
                         <div>
-                          <span className="font-bold text-sky-700">GB #{b.gb_no}</span>
+                          <span className="font-bold text-sky-700">{b.br_no}</span>
                           <span className="text-slate-800 font-semibold ml-2 truncate max-w-[120px] inline-block align-bottom">
-                            {b.party_name}
+                            {b.supplier}
                           </span>
                         </div>
                         <span className="text-[10px] font-bold text-slate-600">

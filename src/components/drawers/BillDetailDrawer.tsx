@@ -12,10 +12,17 @@ import {
   AlertTriangle,
   ArrowRight,
   Calculator,
-  CreditCard,
-  History
+  History,
+  XCircle,
+  ShieldAlert,
 } from 'lucide-react';
-import { BillRegisterItem, DfrUser, HolderHistory, DfrLabel } from '../../types/dfr';
+import {
+  BillRegisterItem,
+  DfrUser,
+  HolderHistory,
+  DfrLabel,
+  STAGE_DISPLAY_NAMES,
+} from '../../types/dfr';
 import { dfrService } from '../../services/dfrService';
 
 interface BillDetailDrawerProps {
@@ -30,7 +37,6 @@ interface BillDetailDrawerProps {
 
 export const BillDetailDrawer: React.FC<BillDetailDrawerProps> = ({
   bill,
-  users,
   labels,
   currentUser,
   onClose,
@@ -40,7 +46,8 @@ export const BillDetailDrawer: React.FC<BillDetailDrawerProps> = ({
   const [showLabelPicker, setShowLabelPicker] = useState<boolean>(false);
   const [note, setNote] = useState<string>('');
 
-  const history = dfrService.getHolderHistory(bill.gb_no);
+  const history = dfrService.getHolderHistory(bill.header_id);
+  const users = dfrService.getUsers();
   const userMap = new Map(users.map(u => [u.id, u.full_name]));
 
   const ageBandColors = {
@@ -51,17 +58,17 @@ export const BillDetailDrawer: React.FC<BillDetailDrawerProps> = ({
   };
 
   const handleToggleLabel = (labelId: string) => {
-    dfrService.toggleBillLabel(bill.gb_no, labelId);
+    dfrService.toggleBillLabel(bill.header_id, labelId);
     onRefresh();
   };
 
   const handleMoveToTally = () => {
-    dfrService.markMovedToTally(bill.gb_no, currentUser.id, note);
+    dfrService.markMovedToTally(bill.header_id, currentUser.id, note);
     onRefresh();
   };
 
   const handleCompletePayment = () => {
-    dfrService.markPaymentCompleted(bill.gb_no, currentUser.id, note);
+    dfrService.markPaymentCompleted(bill.header_id, currentUser.id, note);
     onRefresh();
   };
 
@@ -73,17 +80,17 @@ export const BillDetailDrawer: React.FC<BillDetailDrawerProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-extrabold px-2.5 py-1 rounded bg-sky-100 text-sky-800 border border-sky-200 tracking-wider">
-                GB #{bill.gb_no}
+                {bill.br_no}
+              </span>
+              <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-slate-200 text-slate-700">
+                Header #{bill.header_id}
               </span>
               <span className={`text-xs font-bold px-2.5 py-1 rounded border ${ageBandColors[bill.age_band]}`}>
-                {bill.age_band} ({bill.age_days} days)
-              </span>
-              <span className="text-xs font-bold px-2 py-0.5 rounded bg-slate-200 text-slate-700">
-                {bill.dfr_status}
+                {bill.age_band} ({bill.age_days}d from BR Date)
               </span>
             </div>
-            <h2 className="text-lg font-extrabold text-slate-900 mt-2">{bill.party_name}</h2>
-            <p className="text-xs text-slate-500 font-medium">Bill/DC No: {bill.bill_dc_no}</p>
+            <h2 className="text-lg font-extrabold text-slate-900 mt-2">{bill.supplier}</h2>
+            <p className="text-xs text-slate-500 font-medium">Invoice No: {bill.bill_no}</p>
           </div>
           <button
             onClick={onClose}
@@ -93,72 +100,163 @@ export const BillDetailDrawer: React.FC<BillDetailDrawerProps> = ({
           </button>
         </div>
 
-        {/* Drawer Content */}
+        {/* Drawer Scrollable Content */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {/* Key Metrics Grid */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
-              <span className="text-xs text-slate-500 font-semibold">Bill Amount</span>
-              <p className="text-xl font-black text-sky-600 mt-0.5 flex items-center">
-                <IndianRupee className="w-4 h-4 mr-0.5" />
-                {bill.amount.toLocaleString('en-IN')}
-              </p>
-              <span className="text-[10px] text-slate-500 font-bold">{bill.category}</span>
-            </div>
-
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
-              <span className="text-xs text-slate-500 font-semibold">Overall Ageing</span>
-              <p className="text-xl font-black text-slate-900 mt-0.5 flex items-center gap-1">
-                <Clock className="w-4 h-4 text-slate-400" />
-                {bill.age_days} Days
-              </p>
-              <span className="text-[10px] text-slate-500">Recd: {bill.effective_recd_date}</span>
+          {/* Section 1: BILL INFORMATION */}
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
+            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+              <Building2 className="w-3.5 h-3.5 text-sky-600" />
+              Bill Information (ERP)
+            </h3>
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div>
+                <span className="text-slate-500">Header ID:</span>
+                <p className="font-mono font-bold text-slate-900 mt-0.5">#{bill.header_id}</p>
+              </div>
+              <div>
+                <span className="text-slate-500">BR No (Inward Ref):</span>
+                <p className="font-extrabold text-sky-600 mt-0.5">{bill.br_no}</p>
+              </div>
+              <div>
+                <span className="text-slate-500">BR Date (Inward Date):</span>
+                <p className="font-mono font-bold text-slate-900 mt-0.5">{bill.br_date}</p>
+              </div>
+              <div>
+                <span className="text-slate-500">Bill Date (Invoice Date):</span>
+                <p className="font-mono font-bold text-slate-900 mt-0.5">{bill.bill_date}</p>
+              </div>
+              <div>
+                <span className="text-slate-500">Supplier / Party:</span>
+                <p className="font-bold text-slate-900 mt-0.5">{bill.supplier}</p>
+              </div>
+              <div>
+                <span className="text-slate-500">Category:</span>
+                <p className="font-bold text-slate-900 mt-0.5">
+                  <span className="px-2 py-0.5 rounded bg-slate-200 text-slate-800 text-[11px]">
+                    {bill.category}
+                  </span>
+                </p>
+              </div>
+              <div className="col-span-2 pt-1 border-t border-slate-200 flex items-center justify-between">
+                <span className="text-slate-500 font-semibold">Bill Amount:</span>
+                <p className="text-lg font-black text-sky-600 flex items-center">
+                  <IndianRupee className="w-4 h-4 mr-0.5" />
+                  {bill.amount.toLocaleString('en-IN')}
+                </p>
+              </div>
             </div>
           </div>
 
-          {/* Tally Ageing Highlight (If moved to Tally) */}
-          {bill.moved_to_tally && (
-            <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex items-center justify-between">
+          {/* Section 2: ERP INFORMATION */}
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
+            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5 text-indigo-600" />
+              ERP Process & Approval Information
+            </h3>
+            <div className="grid grid-cols-2 gap-3 text-xs">
               <div>
-                <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider">
-                  Separate Tally Ageing
-                </span>
-                <p className="text-base font-black text-emerald-900 mt-0.5">
-                  {bill.tally_age_days ?? 0} Days pending in Tally
-                </p>
-                <p className="text-[11px] text-emerald-700 font-medium">
-                  Posted: {bill.tally_posted_at ? new Date(bill.tally_posted_at).toLocaleDateString() : 'N/A'}
+                <span className="text-slate-500">Approval Status:</span>
+                <p className="font-bold text-slate-900 mt-0.5">
+                  <span
+                    className={`px-2 py-0.5 rounded text-[10px] font-extrabold ${
+                      bill.approval_status === 'APPROVED'
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : bill.approval_status === 'REJECTED'
+                        ? 'bg-red-100 text-red-800'
+                        : 'bg-amber-100 text-amber-800'
+                    }`}
+                  >
+                    {bill.approval_status}
+                  </span>
                 </p>
               </div>
-              <Calculator className="w-8 h-8 text-emerald-600 opacity-80" />
+              <div>
+                <span className="text-slate-500">Next Approver:</span>
+                <p className="font-bold text-slate-900 mt-0.5">
+                  {bill.next_approver || '—'}
+                </p>
+              </div>
+              <div>
+                <span className="text-slate-500">Tally Status:</span>
+                <p className="font-bold text-slate-900 mt-0.5">
+                  {bill.tally_status || 'WAITING'}
+                </p>
+              </div>
+              <div>
+                <span className="text-slate-500">Tally Exported Date:</span>
+                <p className="font-mono text-slate-800 mt-0.5">
+                  {bill.tally_exported_date
+                    ? new Date(bill.tally_exported_date).toLocaleDateString()
+                    : '—'}
+                </p>
+              </div>
+              <div>
+                <span className="text-slate-500">Bill Status:</span>
+                <p className="font-bold text-slate-900 mt-0.5">{bill.bill_status}</p>
+              </div>
+              <div>
+                <span className="text-slate-500">DFR Tracking Status:</span>
+                <p className="font-bold text-slate-900 mt-0.5">{bill.dfr_status}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Section 3: REJECTION DETAILS (If applicable) */}
+          {(bill.rejected_by || bill.rejection_reason || bill.approval_status === 'REJECTED') && (
+            <div className="bg-red-50 border border-red-200 rounded-2xl p-4 space-y-2">
+              <h3 className="text-xs font-bold text-red-800 uppercase tracking-wider flex items-center gap-1.5">
+                <XCircle className="w-3.5 h-3.5 text-red-600" />
+                Rejection Details
+              </h3>
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div>
+                  <span className="text-red-700 font-semibold">Rejected By:</span>
+                  <p className="font-bold text-red-950 mt-0.5">{bill.rejected_by || '—'}</p>
+                </div>
+                <div>
+                  <span className="text-red-700 font-semibold">Rejection Reason:</span>
+                  <p className="font-medium text-red-950 mt-0.5 italic">
+                    {bill.rejection_reason || '—'}
+                  </p>
+                </div>
+              </div>
             </div>
           )}
 
-          {/* Custody Info */}
-          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
-            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Custody & Ownership</h3>
-            <div className="grid grid-cols-2 gap-4 text-xs">
+          {/* Section 4: DFR INTERNAL TRACKING */}
+          <div className="bg-sky-50/60 border border-sky-200 rounded-2xl p-4 space-y-3">
+            <h3 className="text-xs font-bold text-sky-800 uppercase tracking-wider flex items-center gap-1.5">
+              <User className="w-3.5 h-3.5 text-sky-600" />
+              DFR Holder Tracking
+            </h3>
+            <div className="grid grid-cols-2 gap-3 text-xs">
               <div>
-                <span className="text-slate-500">Responsible Person (RP / Owner):</span>
-                <p className="font-bold text-slate-900 mt-0.5 flex items-center gap-1.5">
+                <span className="text-slate-500">Current Holder:</span>
+                <p className="font-extrabold text-sky-800 mt-0.5 flex items-center gap-1.5">
                   <User className="w-3.5 h-3.5 text-sky-600" />
-                  {bill.owner_name}
-                </p>
-              </div>
-              <div>
-                <span className="text-slate-500">Current Custodian:</span>
-                <p className="font-extrabold text-sky-700 mt-0.5 flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5 text-indigo-600" />
                   {bill.current_holder_name}
                 </p>
               </div>
               <div>
-                <span className="text-slate-500">Current Pipeline Stage:</span>
-                <p className="font-bold text-slate-900 mt-0.5">{bill.current_stage}</p>
+                <span className="text-slate-500">Current Stage:</span>
+                <p className="font-bold text-slate-900 mt-0.5">
+                  {STAGE_DISPLAY_NAMES[bill.current_stage] || bill.current_stage}
+                </p>
               </div>
               <div>
-                <span className="text-slate-500">Payment Status:</span>
-                <p className="font-bold text-slate-900 mt-0.5">{bill.payment_status}</p>
+                <span className="text-slate-500">Age from BR Date:</span>
+                <p className="font-bold text-slate-900 mt-0.5 flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5 text-slate-400" />
+                  {bill.age_days} Days
+                </p>
+              </div>
+              <div>
+                <span className="text-slate-500">Ageing Band:</span>
+                <p className="font-bold text-slate-900 mt-0.5">
+                  <span className={`px-2 py-0.5 rounded text-[10px] border ${ageBandColors[bill.age_band]}`}>
+                    {bill.age_band}
+                  </span>
+                </p>
               </div>
             </div>
           </div>
@@ -168,7 +266,7 @@ export const BillDetailDrawer: React.FC<BillDetailDrawerProps> = ({
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
                 <Tag className="w-3.5 h-3.5 text-sky-600" />
-                Multi-Labels ({bill.labels.length})
+                Custom Multi-Labels ({bill.labels.length})
               </h3>
               <button
                 onClick={() => setShowLabelPicker(!showLabelPicker)}
@@ -191,10 +289,7 @@ export const BillDetailDrawer: React.FC<BillDetailDrawerProps> = ({
                     style={{ backgroundColor: l.color }}
                   >
                     {l.name}
-                    <button
-                      onClick={() => handleToggleLabel(l.id)}
-                      className="hover:opacity-75"
-                    >
+                    <button onClick={() => handleToggleLabel(l.id)} className="hover:opacity-75">
                       ×
                     </button>
                   </span>
@@ -229,18 +324,20 @@ export const BillDetailDrawer: React.FC<BillDetailDrawerProps> = ({
             )}
           </div>
 
-          {/* Custody History Timeline */}
+          {/* Section 5: HOLDER HISTORY TIMELINE */}
           <div className="space-y-3">
             <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
               <History className="w-3.5 h-3.5 text-sky-600" />
-              Custody Timeline (dfr.holder_history)
+              Holder Movement Timeline (dfr_holder_history)
             </h3>
 
             <div className="relative pl-6 space-y-4 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
-              {history.map((item, idx) => {
-                const changedByName = userMap.get(item.changed_by) || 'User';
+              {history.map(item => {
+                const changedByName = userMap.get(item.changed_by) || 'System';
                 const toHolderName = userMap.get(item.to_holder_id) || 'User';
-                const fromHolderName = item.from_holder_id ? userMap.get(item.from_holder_id) : 'Intake';
+                const fromHolderName = item.from_holder_id
+                  ? userMap.get(item.from_holder_id)
+                  : 'Bill Inward';
 
                 return (
                   <div key={item.id} className="relative">
@@ -255,7 +352,10 @@ export const BillDetailDrawer: React.FC<BillDetailDrawerProps> = ({
                         </span>
                       </div>
                       <p className="text-slate-600">
-                        Stage: <strong className="text-slate-900">{item.to_stage}</strong>
+                        Stage:{' '}
+                        <strong className="text-slate-900">
+                          {STAGE_DISPLAY_NAMES[item.to_stage] || item.to_stage}
+                        </strong>
                       </p>
                       {item.note && (
                         <p className="text-slate-700 bg-white p-2 rounded-lg border border-slate-200 italic text-[11px]">
@@ -275,8 +375,7 @@ export const BillDetailDrawer: React.FC<BillDetailDrawerProps> = ({
 
         {/* Drawer Actions Footer */}
         <div className="p-4 border-t border-slate-200 bg-slate-50 space-y-3">
-          {/* Action Note optional text */}
-          {bill.dfr_status !== 'PAID' && bill.dfr_status !== 'CLOSED' && (
+          {bill.bill_status !== 'PAID' && (
             <input
               type="text"
               placeholder="Action note (optional)..."
@@ -287,7 +386,7 @@ export const BillDetailDrawer: React.FC<BillDetailDrawerProps> = ({
           )}
 
           <div className="flex items-center gap-2">
-            {bill.dfr_status !== 'PAID' && bill.dfr_status !== 'CLOSED' && (
+            {bill.bill_status !== 'PAID' && (
               <>
                 <button
                   onClick={onOpenHandover}
@@ -297,7 +396,7 @@ export const BillDetailDrawer: React.FC<BillDetailDrawerProps> = ({
                   Handover Custody
                 </button>
 
-                {!bill.moved_to_tally && (
+                {bill.tally_status !== 'EXPORTED' && bill.tally_status !== 'POSTED' && (
                   <button
                     onClick={handleMoveToTally}
                     className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs"
@@ -307,19 +406,19 @@ export const BillDetailDrawer: React.FC<BillDetailDrawerProps> = ({
                   </button>
                 )}
 
-                {bill.moved_to_tally && bill.payment_status !== 'COMPLETED' && (
+                {(bill.tally_status === 'EXPORTED' || bill.tally_status === 'POSTED') && (
                   <button
                     onClick={handleCompletePayment}
                     className="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs"
                   >
-                    <CreditCard className="w-3.5 h-3.5" />
-                    Complete Payment
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    Mark Paid & Close
                   </button>
                 )}
               </>
             )}
 
-            {bill.dfr_status === 'PAID' && (
+            {bill.bill_status === 'PAID' && (
               <div className="w-full py-2.5 bg-emerald-100 border border-emerald-300 text-emerald-800 rounded-xl text-xs font-bold text-center flex items-center justify-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                 Payment Completed & Closed

@@ -5,10 +5,9 @@ import { DashboardView } from './components/dashboard/DashboardView';
 import { BillRegisterView } from './components/register/BillRegisterView';
 import { CriticalA10View } from './components/views/CriticalA10View';
 import { ByHolderView } from './components/views/ByHolderView';
-import { ByOwnerView } from './components/views/ByOwnerView';
 import { TallyTrackerView } from './components/views/TallyTrackerView';
-import { PaymentTrackerView } from './components/views/PaymentTrackerView';
 import { LabelsManagerView } from './components/views/LabelsManagerView';
+import { CategoryMappingView } from './components/views/CategoryMappingView';
 import { ReportsView } from './components/views/ReportsView';
 import { SqlSchemaView } from './components/views/SqlSchemaView';
 import { BillDetailDrawer } from './components/drawers/BillDetailDrawer';
@@ -28,9 +27,12 @@ export const App: React.FC = () => {
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Subscribe to service changes
+  // Subscribe to service changes and trigger initial live sync
   const [, setTick] = useState(0);
   useEffect(() => {
+    // Initial live sync from Selsoft ERP API
+    dfrService.syncErpBillsNow(true);
+
     return dfrService.subscribe(() => {
       setTick(t => t + 1);
     });
@@ -42,7 +44,11 @@ export const App: React.FC = () => {
   const syncState = dfrService.getSyncState();
 
   const criticalCount = bills.filter(
-    b => b.age_band === 'A-10' && b.dfr_status !== 'PAID' && b.dfr_status !== 'CLOSED'
+    b =>
+      b.age_band === 'A-10' &&
+      b.bill_status !== 'PAID' &&
+      b.bill_status !== 'CLOSED' &&
+      b.dfr_status !== 'PAID'
   ).length;
 
   const showToast = (msg: string) => {
@@ -51,15 +57,15 @@ export const App: React.FC = () => {
   };
 
   const handleSyncNow = async () => {
-    showToast('Triggering near-real-time Selsoft ERP API synchronization...');
+    showToast('Triggering Selsoft ERP API GetBillsInward synchronization...');
     await dfrService.syncErpBillsNow();
     showToast('ERP Sync completed! Bill register updated.');
   };
 
   const handleConfirmHandover = (toHolderId: string, toStage: ProcessStage, note: string) => {
     if (!handoverBill) return;
-    dfrService.confirmHandover(handoverBill.gb_no, toHolderId, toStage, currentUser.id, note);
-    showToast(`Custody of GB #${handoverBill.gb_no} handed over successfully!`);
+    dfrService.confirmHandover(handoverBill.header_id, toHolderId, toStage, currentUser.id, note);
+    showToast(`Custody of ${handoverBill.br_no} handed over successfully!`);
     setHandoverBill(null);
     setSelectedBill(null);
   };
@@ -142,26 +148,8 @@ export const App: React.FC = () => {
             />
           )}
 
-          {currentTab === 'by_owner' && (
-            <ByOwnerView
-              bills={bills}
-              users={users}
-              onSelectTab={setCurrentTab}
-              onSelectBill={setSelectedBill}
-            />
-          )}
-
           {currentTab === 'tally' && (
             <TallyTrackerView
-              bills={bills}
-              currentUser={currentUser}
-              onSelectBill={setSelectedBill}
-              onRefresh={() => setTick(t => t + 1)}
-            />
-          )}
-
-          {currentTab === 'payment' && (
-            <PaymentTrackerView
               bills={bills}
               currentUser={currentUser}
               onSelectBill={setSelectedBill}
@@ -177,9 +165,15 @@ export const App: React.FC = () => {
             />
           )}
 
-          {currentTab === 'reports' && (
-            <ReportsView bills={bills} users={users} />
+          {currentTab === 'category_mapping' && (
+            <CategoryMappingView
+              mappings={dfrService.getCategoryMappings()}
+              users={users}
+              onRefresh={() => setTick(t => t + 1)}
+            />
           )}
+
+          {currentTab === 'reports' && <ReportsView bills={bills} users={users} />}
 
           {currentTab === 'sql_schema' && <SqlSchemaView />}
         </main>
@@ -188,7 +182,7 @@ export const App: React.FC = () => {
       {/* Bill Detail Drawer */}
       {selectedBill && (
         <BillDetailDrawer
-          bill={bills.find(b => b.gb_no === selectedBill.gb_no) || selectedBill}
+          bill={bills.find(b => b.header_id === selectedBill.header_id) || selectedBill}
           users={users}
           labels={labels}
           currentUser={currentUser}

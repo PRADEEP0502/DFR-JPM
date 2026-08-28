@@ -4,12 +4,12 @@ import {
   FileSpreadsheet,
   AlertTriangle,
   Users,
-  UserCheck,
   Calculator,
   CreditCard,
   Tags,
   FileText,
-  Database
+  Database,
+  GitFork,
 } from 'lucide-react';
 
 export type ViewTab =
@@ -17,10 +17,9 @@ export type ViewTab =
   | 'register'
   | 'critical'
   | 'by_holder'
-  | 'by_owner'
   | 'tally'
-  | 'payment'
   | 'labels'
+  | 'category_mapping'
   | 'reports'
   | 'sql_schema';
 
@@ -39,13 +38,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onSelectTab, criti
       label: 'Critical (A-10)',
       icon: AlertTriangle,
       badge: criticalCount > 0 ? criticalCount : undefined,
-      badgeColor: 'bg-red-500 text-white animate-pulse'
+      badgeColor: 'bg-red-500 text-white animate-pulse',
     },
     { id: 'by_holder', label: 'By Holder', icon: Users },
-    { id: 'by_owner', label: 'By Owner', icon: UserCheck },
     { id: 'tally', label: 'Tally Tracker', icon: Calculator },
-    { id: 'payment', label: 'Payment Tracker', icon: CreditCard },
     { id: 'labels', label: 'Labels Manager', icon: Tags },
+    { id: 'category_mapping', label: 'Category Mappings', icon: GitFork },
     { id: 'reports', label: 'Reports / Export', icon: FileText },
     { id: 'sql_schema', label: 'Supabase SQL', icon: Database },
   ];
@@ -100,7 +98,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onSelectTab, criti
           );
         })}
       </nav>
-
     </aside>
   );
 };
