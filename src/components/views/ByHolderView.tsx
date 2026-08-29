@@ -23,18 +23,18 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
   const activeUsers = users.filter(u => u.id !== 'user-000');
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-6 pb-16 max-w-full overflow-hidden">
       <div>
-        <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-          <Users className="w-6 h-6 text-sky-600" />
+        <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+          <Users className="w-5 h-5 sm:w-6 sm:h-6 text-sky-600" />
           Pending Bills by Current Holder
         </h1>
-        <p className="text-sm text-slate-500 mt-1">
+        <p className="text-xs sm:text-sm text-slate-500 mt-1">
           Person-wise workload summary showing pending bill count, total exposure amount, and oldest sitting bill based on BR Date
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
         {activeUsers.map(user => {
           const personBills = activeBills.filter(b => b.current_holder_id === user.id);
           const totalAmount = personBills.reduce((sum, b) => sum + b.amount, 0);

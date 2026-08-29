@@ -65,22 +65,22 @@ export const LabelsManagerView: React.FC<LabelsManagerViewProps> = ({
   };
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-6 pb-16 max-w-full overflow-hidden">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <Tags className="w-6 h-6 text-sky-600" />
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+            <Tags className="w-5 h-5 sm:w-6 sm:h-6 text-sky-600" />
             Multi-Label Tag Taxonomy Console
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">
             Create, edit, and manage custom multi-label tags for attaching to bill records (<code className="text-sky-700 font-semibold">dfr.labels</code> + <code className="text-sky-700 font-semibold">dfr.bill_labels</code>)
           </p>
         </div>
 
         <button
           onClick={handleStartCreate}
-          className="px-4 py-2 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-bold text-xs rounded-xl shadow-md shadow-sky-500/20 transition flex items-center gap-2"
+          className="w-full sm:w-auto px-4 py-2.5 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-bold text-xs rounded-xl shadow-md shadow-sky-500/20 transition flex items-center justify-center gap-2 min-h-[44px] touch-manipulation"
         >
           <Plus className="w-4 h-4" />
           Create New Label
@@ -89,7 +89,7 @@ export const LabelsManagerView: React.FC<LabelsManagerViewProps> = ({
 
       {/* Label Creation / Edit Form Modal */}
       {isCreating && (
-        <form onSubmit={handleSave} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xl space-y-4 max-w-lg text-slate-900">
+        <form onSubmit={handleSave} className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 shadow-xl space-y-4 max-w-lg text-slate-900">
           <h3 className="text-base font-extrabold text-slate-900">
             {editingId ? 'Edit Multi-Label' : 'Create Multi-Label'}
           </h3>

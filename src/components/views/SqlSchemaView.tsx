@@ -156,29 +156,29 @@ export const SqlSchemaView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 pb-12">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-6 pb-16 max-w-full overflow-hidden">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <Database className="w-6 h-6 text-sky-600" />
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+            <Database className="w-5 h-5 sm:w-6 sm:h-6 text-sky-600" />
             Supabase Production PostgreSQL Schema
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">
             Complete SQL migration DDL script creating <code className="text-sky-700 font-semibold">erp</code> mirror schema, <code className="text-sky-700 font-semibold">dfr</code> internal tracking schema, and BR Date calculated views
           </p>
         </div>
 
         <button
           onClick={handleCopy}
-          className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-2"
+          className="w-full sm:w-auto px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center justify-center gap-2 min-h-[44px] touch-manipulation"
         >
           {copied ? <CheckCircle2 className="w-4 h-4 text-emerald-300" /> : <Copy className="w-4 h-4" />}
           {copied ? 'Copied to Clipboard!' : 'Copy SQL Migration Script'}
         </button>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs relative">
-        <div className="flex items-center justify-between border-b border-slate-200 pb-3 mb-4 text-xs text-slate-500 font-mono">
+      <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 shadow-xs relative">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 pb-3 mb-4 text-xs text-slate-500 font-mono gap-1">
           <span className="flex items-center gap-2">
             <FileCode className="w-4 h-4 text-sky-600" />
             supabase/schema.sql
@@ -186,7 +186,7 @@ export const SqlSchemaView: React.FC = () => {
           <span className="text-emerald-700 font-bold">PostgreSQL 15+ Compatible</span>
         </div>
 
-        <pre className="text-xs text-slate-800 font-mono overflow-x-auto p-4 bg-slate-50 rounded-xl border border-slate-200 leading-relaxed max-h-[600px]">
+        <pre className="text-[11px] sm:text-xs text-slate-800 font-mono overflow-x-auto p-3 sm:p-4 bg-slate-50 rounded-xl border border-slate-200 leading-relaxed max-h-[600px]">
           {SQL_CODE}
         </pre>
       </div>

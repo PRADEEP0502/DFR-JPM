@@ -22,28 +22,28 @@ export const CriticalA10View: React.FC<CriticalA10ViewProps> = ({
   const criticalAmount = criticalBills.reduce((sum, b) => sum + b.amount, 0);
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-6 pb-16 max-w-full overflow-hidden">
       {/* Header Banner */}
-      <div className="bg-gradient-to-r from-red-600 via-rose-700 to-slate-900 p-6 rounded-2xl border border-red-500 text-white shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-white text-red-600 flex items-center justify-center font-black shadow-md animate-pulse">
-            <AlertOctagon className="w-7 h-7" />
+      <div className="bg-gradient-to-r from-red-600 via-rose-700 to-slate-900 p-4 sm:p-6 rounded-2xl border border-red-500 text-white shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-start gap-3 sm:gap-4">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-white text-red-600 flex items-center justify-center font-black shadow-md shrink-0 animate-pulse">
+            <AlertOctagon className="w-6 h-6 sm:w-7 sm:h-7" />
           </div>
           <div>
-            <h1 className="text-2xl font-black tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight">
               Critical (A-10) Escalation Register
             </h1>
-            <p className="text-sm text-red-100/90 mt-1">
+            <p className="text-xs sm:text-sm text-red-100/90 mt-1">
               Bills pending ≥ 10 days from BR Date requiring explicit human acknowledgement & escalation
             </p>
           </div>
         </div>
 
-        <div className="bg-white/10 backdrop-blur border border-white/20 rounded-xl px-4 py-2 text-right">
-          <span className="text-xs text-red-100 font-bold uppercase tracking-wider">
+        <div className="bg-white/10 backdrop-blur border border-white/20 rounded-xl px-4 py-2 text-left md:text-right shrink-0">
+          <span className="text-[11px] sm:text-xs text-red-100 font-bold uppercase tracking-wider">
             Total Critical Exposure
           </span>
-          <p className="text-2xl font-black text-white">
+          <p className="text-xl sm:text-2xl font-black text-white">
             ₹{criticalAmount.toLocaleString('en-IN')}
           </p>
         </div>
@@ -51,15 +51,15 @@ export const CriticalA10View: React.FC<CriticalA10ViewProps> = ({
 
       {/* Grid of Critical Cards */}
       {criticalBills.length === 0 ? (
-        <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center space-y-3 shadow-xs">
-          <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto" />
-          <h3 className="text-lg font-bold text-slate-900">Zero Critical A-10 Overdue Bills!</h3>
+        <div className="bg-white border border-slate-200 rounded-2xl p-8 sm:p-12 text-center space-y-3 shadow-xs">
+          <CheckCircle2 className="w-10 h-10 sm:w-12 sm:h-12 text-emerald-500 mx-auto" />
+          <h3 className="text-base sm:text-lg font-bold text-slate-900">Zero Critical A-10 Overdue Bills!</h3>
           <p className="text-xs text-slate-500 max-w-md mx-auto">
             All active bills are currently moving through holders within the acceptable 0–9 day timeframe from BR Date.
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
           {criticalBills.map(bill => {
             const alertObj = alerts.find(
               a => a.header_id === bill.header_id && a.band === 'A-10'

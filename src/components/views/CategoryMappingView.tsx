@@ -101,18 +101,18 @@ export const CategoryMappingView: React.FC<CategoryMappingViewProps> = ({
   };
 
   return (
-    <div className="space-y-6 pb-16">
+    <div className="space-y-6 pb-16 max-w-full overflow-hidden">
       {/* Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-sky-950 to-slate-900 p-6 rounded-3xl text-white shadow-xl">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-sky-950 to-slate-900 p-4 sm:p-6 rounded-2xl sm:rounded-3xl text-white shadow-xl">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-sky-400">
-            <GitFork className="w-6 h-6" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-sky-400 shrink-0">
+            <GitFork className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
           <div>
-            <h1 className="text-2xl font-black tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight">
               Category → Initial Holder Configuration
             </h1>
-            <p className="text-xs text-sky-200/80 mt-0.5">
+            <p className="text-[11px] sm:text-xs text-sky-200/80 mt-0.5">
               Configurable intake routing rules assigning initial holders when bills arrive from Selsoft ERP
             </p>
           </div>
@@ -120,7 +120,7 @@ export const CategoryMappingView: React.FC<CategoryMappingViewProps> = ({
 
         <button
           onClick={handleOpenCreate}
-          className="px-5 py-2.5 bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-bold text-xs rounded-2xl shadow-lg transition flex items-center gap-2"
+          className="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-bold text-xs rounded-xl sm:rounded-2xl shadow-lg transition flex items-center justify-center gap-2 min-h-[44px] touch-manipulation"
         >
           <Plus className="w-4 h-4" />
           Add Category Mapping
@@ -128,13 +128,13 @@ export const CategoryMappingView: React.FC<CategoryMappingViewProps> = ({
       </div>
 
       {/* Business Rule Notice Callout */}
-      <div className="bg-sky-50 border border-sky-200/80 rounded-2xl p-4 flex items-start gap-3 text-xs text-sky-950">
+      <div className="bg-sky-50 border border-sky-200/80 rounded-2xl p-3.5 sm:p-4 flex items-start gap-3 text-xs text-sky-950">
         <ShieldCheck className="w-5 h-5 text-sky-600 shrink-0 mt-0.5" />
         <div className="space-y-1">
           <p className="font-extrabold text-sky-900">
             Automated Inward Rule & Historical Protection Policy:
           </p>
-          <p className="text-slate-700 leading-relaxed">
+          <p className="text-slate-700 leading-relaxed text-[11px] sm:text-xs">
             These rules determine the <strong>initial Current Holder</strong> automatically assigned when a new bill is ingested from the Selsoft ERP API.
             Editing or deleting a mapping <strong>will NOT modify</strong> the Current Holder of existing bills that have already been inwarded.
           </p>
@@ -142,19 +142,19 @@ export const CategoryMappingView: React.FC<CategoryMappingViewProps> = ({
       </div>
 
       {/* Mappings Table */}
-      <div className="bg-white border border-slate-200/90 rounded-3xl shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+      <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden">
+        <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
           <div className="flex items-center gap-2">
             <Layers className="w-4 h-4 text-sky-600" />
             <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">
               Active Routing Rules ({mappings.length})
             </span>
           </div>
-          <span className="text-xs text-slate-500 font-medium">Applied strictly on initial intake</span>
+          <span className="text-[11px] text-slate-500 font-medium">Applied strictly on initial intake</span>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
+          <table className="w-full text-left text-xs min-w-[650px] border-collapse">
             <thead className="bg-slate-100/80 text-slate-600 uppercase tracking-wider font-extrabold text-[11px] border-b border-slate-200">
               <tr>
                 <th className="py-3.5 px-5">ERP Category</th>
@@ -248,21 +248,22 @@ export const CategoryMappingView: React.FC<CategoryMappingViewProps> = ({
 
       {/* Add / Edit Mapping Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 text-slate-900">
-            <div className="p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-150">
+          <div className="bg-white border border-slate-200 rounded-2xl sm:rounded-3xl w-full max-w-md shadow-2xl overflow-hidden max-h-[92vh] flex flex-col animate-in zoom-in-95 duration-150 text-slate-900">
+            <div className="p-4 sm:p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50 shrink-0">
               <h3 className="text-base font-extrabold text-slate-900">
                 {editingId ? 'Edit Category Mapping' : 'Add Category Mapping'}
               </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="w-8 h-8 rounded-xl bg-slate-200/80 hover:bg-slate-300 text-slate-600 flex items-center justify-center transition"
+                className="w-8 h-8 rounded-xl bg-slate-200/80 hover:bg-slate-300 text-slate-600 flex items-center justify-center transition shrink-0 min-h-[36px] min-w-[36px]"
+                aria-label="Close modal"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleSave} className="p-6 space-y-4 text-xs">
+            <form onSubmit={handleSave} className="p-4 sm:p-6 space-y-4 text-xs overflow-y-auto flex-1">
               {/* Category Input / Presets */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">

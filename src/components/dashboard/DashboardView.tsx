@@ -110,32 +110,31 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   ];
 
   return (
-    <div className="space-y-8 pb-16">
-      {/* Hero Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-sky-950 to-slate-900 p-8 border border-sky-800/80 text-white shadow-2xl shadow-sky-950/40">
-        <div className="absolute inset-0 opacity-10 bg-[linear-gradient(to_right,#0284c7_1px,transparent_1px),linear-gradient(to_bottom,#0284c7_1px,transparent_1px)] bg-[size:24px_24px]" />
-
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="flex items-center gap-5">
+    <div className="space-y-6 sm:space-y-8 pb-16 max-w-full overflow-hidden">
+      {/* Executive Hero Banner */}
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-slate-900 via-sky-950 to-slate-900 p-4 sm:p-6 md:p-8 text-white shadow-2xl border border-sky-500/20">
+        <div className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 sm:w-96 sm:h-96 rounded-full bg-gradient-to-br from-sky-500/20 to-indigo-500/0 blur-3xl pointer-events-none" />
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
+          <div className="flex items-center gap-3 sm:gap-4">
             <img
               src="/jpm_logo.jpg"
               alt="Junior Processing Mill"
-              className="relative w-16 h-16 rounded-full object-cover border-2 border-white shadow-2xl p-0.5 bg-white shrink-0"
+              className="relative w-12 h-12 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-white shadow-2xl p-0.5 bg-white shrink-0"
             />
             <div>
-              <h1 className="text-2xl md:text-3xl font-black tracking-tight">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight leading-tight">
                 Junior Processing Mill — Executive Dashboard
               </h1>
-              <p className="text-sm text-sky-100/80 mt-1 max-w-xl">
+              <p className="text-xs sm:text-sm text-sky-100/80 mt-1 max-w-xl">
                 Real-time bill tracking from Bill Inward to Tally, BR Date ageing, and physical custody analytics
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 shrink-0">
             <button
               onClick={() => onSelectTab('register')}
-              className="px-5 py-2.5 bg-white hover:bg-sky-50 text-sky-950 rounded-2xl font-black text-xs shadow-xl shadow-white/10 transition transform-gpu hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-2"
+              className="w-full sm:w-auto px-4 sm:px-5 py-2.5 bg-white hover:bg-sky-50 text-sky-950 rounded-xl sm:rounded-2xl font-black text-xs shadow-xl shadow-white/10 transition transform-gpu active:scale-95 flex items-center justify-center gap-2 min-h-[44px] touch-manipulation"
             >
               <FileText className="w-4 h-4 text-sky-600" />
               Open Bill Register ({totalPendingCount})
@@ -145,7 +144,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       </div>
 
       {/* Row 1: KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3.5 sm:gap-5">
         {/* Total Pending Bills */}
         <Card3D glowColor="rgba(2, 132, 199, 0.2)" className="p-5">
           <div className="flex items-center justify-between">
@@ -266,9 +265,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       </div>
 
       {/* Row 2: 3D Charts (Holder Workload, Stage Distribution, Ageing Distribution) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
         {/* Holder Workload Distribution */}
-        <Card3D noTilt={true} className="p-6" glowColor="rgba(2, 132, 199, 0.18)">
+        <Card3D noTilt={true} className="p-4 sm:p-6" glowColor="rgba(2, 132, 199, 0.18)">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-2">
             <div>
               <h3 className="text-sm font-extrabold text-slate-900">Holder Workload Distribution</h3>
@@ -284,11 +283,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </Card3D>
 
         {/* Current Stage Pipeline Distribution (Bill Inward to Tally) */}
-        <Card3D noTilt={true} className="p-6" glowColor="rgba(139, 92, 246, 0.18)">
+        <Card3D noTilt={true} className="p-4 sm:p-6" glowColor="rgba(139, 92, 246, 0.18)">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-2">
             <div>
               <h3 className="text-sm font-extrabold text-slate-900">Pipeline Stage Distribution</h3>
-              <p className="text-xs text-slate-400">Bill Inward → IAD → AO → JMD → Accounts → Tally</p>
+              <p className="text-xs text-slate-400">Bill Inward → IAD → AO → JMD → Accounts / Tally</p>
             </div>
             <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
               <Layers className="w-4 h-4" />
@@ -300,7 +299,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </Card3D>
 
         {/* Ageing Band Distribution (BR Date) */}
-        <Card3D noTilt={true} className="p-6" glowColor="rgba(16, 185, 129, 0.2)">
+        <Card3D noTilt={true} className="p-4 sm:p-6 md:col-span-2 xl:col-span-1" glowColor="rgba(16, 185, 129, 0.2)">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-2">
             <div>
               <h3 className="text-sm font-extrabold text-slate-900">Ageing Band Distribution</h3>
@@ -317,12 +316,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       </div>
 
       {/* Row 3: Pipeline Tiles (Tally & Payment/Posting) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
         {/* Tally Pending Tile */}
         <Card3D
           glowColor="rgba(16, 185, 129, 0.2)"
           onClick={() => onSelectTab('tally')}
-          className="p-6 group cursor-pointer"
+          className="p-4 sm:p-6 group cursor-pointer"
         >
           <div className="flex items-start justify-between">
             <div className="space-y-2">

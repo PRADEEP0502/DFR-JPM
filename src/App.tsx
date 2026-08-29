@@ -70,6 +70,8 @@ export const App: React.FC = () => {
     setSelectedBill(null);
   };
 
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
+
   const handleAcknowledgeAlert = (alertId: number) => {
     dfrService.acknowledgeAlert(alertId, currentUser.id);
     showToast('A-10 Critical alert acknowledged & logged.');
@@ -82,13 +84,16 @@ export const App: React.FC = () => {
         currentTab={currentTab}
         onSelectTab={tab => {
           setCurrentTab(tab);
+          setIsMobileMenuOpen(false);
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
         criticalCount={criticalCount}
+        isMobileOpen={isMobileMenuOpen}
+        onCloseMobile={() => setIsMobileMenuOpen(false)}
       />
 
       {/* Main Right Content Panel */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
+      <div className="flex-1 flex flex-col h-screen overflow-hidden min-w-0">
         {/* Top Header */}
         <TopBar
           currentUser={currentUser}
@@ -103,10 +108,11 @@ export const App: React.FC = () => {
               setCurrentTab('register');
             }
           }}
+          onToggleMobileMenu={() => setIsMobileMenuOpen(prev => !prev)}
         />
 
         {/* View Switcher Container */}
-        <main className="flex-1 overflow-y-auto p-6 md:p-8">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-5 md:p-6 lg:p-8 min-w-0">
           {currentTab === 'dashboard' && (
             <DashboardView
               bills={bills}

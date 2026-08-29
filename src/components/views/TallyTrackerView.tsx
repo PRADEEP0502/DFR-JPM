@@ -45,35 +45,35 @@ export const TallyTrackerView: React.FC<TallyTrackerViewProps> = ({
   };
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-6 pb-16 max-w-full overflow-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-r from-emerald-600 via-teal-700 to-slate-900 p-6 rounded-2xl border border-emerald-500 text-white shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-white text-emerald-600 flex items-center justify-center font-black shadow-md">
-            <Calculator className="w-7 h-7" />
+      <div className="bg-gradient-to-r from-emerald-600 via-teal-700 to-slate-900 p-4 sm:p-6 rounded-2xl border border-emerald-500 text-white shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-start gap-3 sm:gap-4">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-white text-emerald-600 flex items-center justify-center font-black shadow-md shrink-0">
+            <Calculator className="w-6 h-6 sm:w-7 sm:h-7" />
           </div>
           <div>
-            <h1 className="text-2xl font-black tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight">
               Tally Posting Tracker Pipeline
             </h1>
-            <p className="text-sm text-emerald-100/90 mt-1">
+            <p className="text-xs sm:text-sm text-emerald-100/90 mt-1">
               Tracking bills from ERP Selsoft to Tally export and accounts posting
             </p>
           </div>
         </div>
 
-        <div className="bg-white/10 backdrop-blur border border-white/20 rounded-xl px-4 py-2 text-right">
-          <span className="text-xs text-emerald-100 font-bold uppercase tracking-wider">
+        <div className="bg-white/10 backdrop-blur border border-white/20 rounded-xl px-4 py-2 text-left md:text-right shrink-0">
+          <span className="text-[11px] sm:text-xs text-emerald-100 font-bold uppercase tracking-wider">
             Total Tally Pending Value
           </span>
-          <p className="text-2xl font-black text-white">
+          <p className="text-xl sm:text-2xl font-black text-white">
             ₹{totalTallyPendingAmount.toLocaleString('en-IN')}
           </p>
         </div>
       </div>
 
       {/* Tabs / Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
         <div className="bg-emerald-50/60 border border-emerald-200 rounded-2xl p-4 flex items-center justify-between">
           <div>
             <span className="text-xs font-extrabold text-emerald-800 uppercase tracking-wider">
@@ -105,15 +105,15 @@ export const TallyTrackerView: React.FC<TallyTrackerViewProps> = ({
 
       {/* Tally Pending Table */}
       <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
-        <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-          <h2 className="text-sm font-extrabold text-slate-900">
+        <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+          <h2 className="text-xs sm:text-sm font-extrabold text-slate-900">
             Bills Waiting for Tally Posting ({tallyPendingBills.length})
           </h2>
-          <span className="text-xs text-slate-500 font-medium">Sorted by Age (BR Date)</span>
+          <span className="text-[11px] text-slate-500 font-medium">Sorted by Age (BR Date)</span>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+          <table className="w-full text-left text-xs min-w-[850px]">
             <thead className="bg-slate-100/90 text-slate-700 uppercase tracking-wider font-bold border-b border-slate-200">
               <tr>
                 <th className="py-3.5 px-4">Header ID</th>

@@ -265,51 +265,51 @@ export const BillRegisterView: React.FC<BillRegisterViewProps> = ({
   return (
     <div className="space-y-6 pb-16">
       {/* Top Header Title & Metrics Strip */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-sky-950 to-slate-900 p-6 rounded-3xl text-white shadow-xl">
-        <div>
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-sky-950 to-slate-900 p-4 sm:p-6 rounded-2xl sm:rounded-3xl text-white shadow-xl">
+        <div className="min-w-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-sky-400">
+            <div className="w-10 h-10 rounded-2xl bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-sky-400 shrink-0">
               <FileSpreadsheet className="w-5 h-5" />
             </div>
-            <div>
-              <h1 className="text-2xl font-black tracking-tight">Master Bill Register</h1>
-              <p className="text-xs text-sky-200/80 mt-0.5">
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl font-black tracking-tight truncate">Master Bill Register</h1>
+              <p className="text-[11px] sm:text-xs text-sky-200/80 mt-0.5">
                 Real-time Selsoft ERP pipeline tracking from Bill Inward to Tally
               </p>
             </div>
           </div>
         </div>
 
-        {/* Quick Summary Badges */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="bg-white/10 backdrop-blur border border-white/10 px-3.5 py-2 rounded-2xl">
+        {/* Quick Summary Badges Grid (2x2 on mobile, 4 columns on desktop) */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 shrink-0">
+          <div className="bg-white/10 backdrop-blur border border-white/10 px-3 py-2 rounded-xl sm:rounded-2xl">
             <span className="text-[10px] text-sky-200 uppercase font-bold tracking-wider block">
               Filtered Bills
             </span>
-            <p className="text-lg font-black text-white">{sortedBills.length}</p>
+            <p className="text-base sm:text-lg font-black text-white">{sortedBills.length}</p>
           </div>
 
-          <div className="bg-white/10 backdrop-blur border border-white/10 px-3.5 py-2 rounded-2xl">
+          <div className="bg-white/10 backdrop-blur border border-white/10 px-3 py-2 rounded-xl sm:rounded-2xl">
             <span className="text-[10px] text-emerald-200 uppercase font-bold tracking-wider block">
               Total Value
             </span>
-            <p className="text-lg font-black text-emerald-300">
+            <p className="text-base sm:text-lg font-black text-emerald-300">
               ₹{(totalFilteredAmount / 100000).toFixed(2)}L
             </p>
           </div>
 
-          <div className="bg-white/10 backdrop-blur border border-white/10 px-3.5 py-2 rounded-2xl">
+          <div className="bg-white/10 backdrop-blur border border-white/10 px-3 py-2 rounded-xl sm:rounded-2xl">
             <span className="text-[10px] text-amber-200 uppercase font-bold tracking-wider block">
               Avg Age
             </span>
-            <p className="text-lg font-black text-amber-300">{avgAgeDays} Days</p>
+            <p className="text-base sm:text-lg font-black text-amber-300">{avgAgeDays} Days</p>
           </div>
 
-          <div className="bg-white/10 backdrop-blur border border-white/10 px-3.5 py-2 rounded-2xl">
+          <div className="bg-white/10 backdrop-blur border border-white/10 px-3 py-2 rounded-xl sm:rounded-2xl">
             <span className="text-[10px] text-red-200 uppercase font-bold tracking-wider block">
               A-10 Critical
             </span>
-            <p className="text-lg font-black text-red-400">{criticalFilteredCount}</p>
+            <p className="text-base sm:text-lg font-black text-red-400">{criticalFilteredCount}</p>
           </div>
         </div>
       </div>
@@ -401,7 +401,7 @@ export const BillRegisterView: React.FC<BillRegisterViewProps> = ({
           )}
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3 text-xs">
           {/* Category */}
           <div>
             <label className="block text-[11px] text-slate-500 font-bold mb-1">Category (ERP)</label>
