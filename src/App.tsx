@@ -9,7 +9,6 @@ import { TallyTrackerView } from './components/views/TallyTrackerView';
 import { LabelsManagerView } from './components/views/LabelsManagerView';
 import { CategoryMappingView } from './components/views/CategoryMappingView';
 import { ReportsView } from './components/views/ReportsView';
-import { SqlSchemaView } from './components/views/SqlSchemaView';
 import { BillDetailDrawer } from './components/drawers/BillDetailDrawer';
 import { HandoverModal } from './components/modals/HandoverModal';
 import { dfrService } from './services/dfrService';
@@ -180,8 +179,6 @@ export const App: React.FC = () => {
           )}
 
           {currentTab === 'reports' && <ReportsView bills={bills} users={users} />}
-
-          {currentTab === 'sql_schema' && <SqlSchemaView />}
         </main>
       </div>
 

@@ -20,8 +20,7 @@ export type ViewTab =
   | 'tally'
   | 'labels'
   | 'category_mapping'
-  | 'reports'
-  | 'sql_schema';
+  | 'reports';
 
 interface SidebarProps {
   currentTab: ViewTab;
@@ -53,7 +52,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'labels', label: 'Labels Manager', icon: Tags },
     { id: 'category_mapping', label: 'Category Mappings', icon: GitFork },
     { id: 'reports', label: 'Reports / Export', icon: FileText },
-    { id: 'sql_schema', label: 'Supabase SQL', icon: Database },
   ];
 
   const handleItemClick = (tabId: ViewTab) => {
