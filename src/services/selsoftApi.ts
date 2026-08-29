@@ -9,7 +9,7 @@ export interface SelsoftApiConfig {
 }
 
 export const DEFAULT_SELSOFT_CONFIG: SelsoftApiConfig = {
-  baseUrl: '/api/selsoft',
+  baseUrl: ((import.meta as any).env?.VITE_SELSOFT_API_URL as string) || '/api/selsoft',
   endpoint: 'GetBillsInward',
   defaultPageSize: 50,
   useLiveApi: true, // Connects directly to live Selsoft API
@@ -102,7 +102,13 @@ class SelsoftApiClient {
     }
 
     try {
-      const url = new URL(`${this.config.baseUrl}/${this.config.endpoint}`, window.location.origin);
+      // Build request URL
+      const isAbsolute = this.config.baseUrl.startsWith('http://') || this.config.baseUrl.startsWith('https://');
+      const base = isAbsolute ? this.config.baseUrl : window.location.origin;
+      const pathPrefix = isAbsolute ? '' : this.config.baseUrl;
+      const cleanPath = `${pathPrefix}/${this.config.endpoint}`.replace(/\/+/g, '/');
+
+      const url = new URL(cleanPath, base);
       url.searchParams.set('pageNumber', pageNumber.toString());
       url.searchParams.set('pagesize', pageSize.toString());
 
@@ -118,13 +124,18 @@ class SelsoftApiClient {
       });
 
       if (!response.ok) {
-        throw new Error(`Selsoft API Error: HTTP ${response.status} - ${response.statusText}`);
+        throw new Error(`Selsoft API HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const contentType = response.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        throw new Error(`Expected JSON response from ERP endpoint, received '${contentType}'. Ensure proxy is active.`);
       }
 
       const json = await response.json();
 
       if (!json.Success && json.Data === undefined) {
-        throw new Error(json.ErrorMessage || 'Selsoft API returned error');
+        throw new Error(json.ErrorMessage || 'Selsoft ERP API returned an error');
       }
 
       // Map raw API fields to internal ErpBill schema
@@ -158,9 +169,8 @@ class SelsoftApiClient {
         Data: mappedData,
       };
     } catch (err: any) {
-      console.warn('Live API fetch failed, falling back to mock dataset:', err);
-      // Seamless fallback to mock dataset if network is offline or unproxied
-      return this.fetchMockBillsPage(pageNumber, pageSize);
+      console.error('Live Selsoft API fetch error:', err);
+      throw err;
     }
   }
 

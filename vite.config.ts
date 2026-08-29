@@ -12,4 +12,13 @@ export default defineConfig({
       },
     },
   },
+  preview: {
+    proxy: {
+      '/api/selsoft': {
+        target: 'http://103.168.241.16/BillpassingApplication/api/approval',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/selsoft/, ''),
+      },
+    },
+  },
 });

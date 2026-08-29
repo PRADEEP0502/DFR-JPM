@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/api/selsoft/GetBillsInward",
+      "destination": "/api/selsoft/GetBillsInward.js"
+    },
+    {
+      "source": "/api/selsoft/:match*",
+      "destination": "http://103.168.241.16/BillpassingApplication/api/approval/:match*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
