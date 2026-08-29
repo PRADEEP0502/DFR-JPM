@@ -63,10 +63,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   );
   const tallyDoneAmount = tallyDoneBills.reduce((sum, b) => sum + b.amount, 0);
 
-  // Group by Holder for 3D Bar Chart
+  // Group by Holder for 3D Bar Chart (Strictly Actual Person Names)
+  const excludedHolders = new Set(['IAD', 'AO', 'JMD', 'ACCOUNTS', 'UNASSIGNED']);
   const holderMap: Record<string, number> = {};
   activeBills.forEach(b => {
-    holderMap[b.current_holder_name] = (holderMap[b.current_holder_name] || 0) + 1;
+    const name = (b.current_holder_name || '').trim();
+    if (name && !excludedHolders.has(name.toUpperCase())) {
+      holderMap[name] = (holderMap[name] || 0) + 1;
+    }
   });
   const holderChartData: Bar3DItem[] = Object.keys(holderMap).map(name => ({
     name,
