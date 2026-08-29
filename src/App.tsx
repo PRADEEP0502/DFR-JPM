@@ -19,7 +19,7 @@ export const App: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   const users = dfrService.getUsers();
-  const [currentUser, setCurrentUser] = useState<DfrUser>(users[5] || users[0]); // Default JEYA SURIYA
+  const [currentUser, setCurrentUser] = useState<DfrUser>(users[0]); // Default VANITHA
 
   const [selectedBill, setSelectedBill] = useState<BillRegisterItem | null>(null);
   const [handoverBill, setHandoverBill] = useState<BillRegisterItem | null>(null);

@@ -5,12 +5,12 @@ export const MOCK_USERS: DfrUser[] = [
   { id: 'user-001', full_name: 'VANITHA', role: 'STAFF', active: true },
   { id: 'user-002', full_name: 'SURIYA', role: 'STAFF', active: true },
   { id: 'user-003', full_name: 'KIRUTHIKA', role: 'STAFF', active: true },
-  { id: 'user-004', full_name: 'KARUPPASAMY (IAD)', role: 'STAFF', active: true },
-  { id: 'user-005', full_name: 'SUGANYA (AO)', role: 'MANAGER', active: true },
-  { id: 'user-006', full_name: 'JANANI (JMD)', role: 'MD', active: true },
+  { id: 'user-004', full_name: 'IAD', role: 'STAFF', active: true },
+  { id: 'user-005', full_name: 'AO', role: 'MANAGER', active: true },
+  { id: 'user-006', full_name: 'JMD', role: 'MD', active: true },
   { id: 'user-007', full_name: 'HEMALATHA', role: 'STAFF', active: true },
   { id: 'user-008', full_name: 'ACCOUNTS', role: 'ACCOUNTS', active: true },
-  { id: 'user-009', full_name: 'MANAGEMENT (MD)', role: 'MD', active: true },
+  { id: 'user-009', full_name: 'MD', role: 'MD', active: true },
   { id: 'user-000', full_name: 'Unassigned', role: 'STAFF', active: true },
 ];
 
@@ -25,9 +25,9 @@ export const INITIAL_CATEGORY_MAPPINGS: CategoryHolderMapping[] = [
 ];
 
 export const INITIAL_STAGE_HOLDERS: StageHolderMapping[] = [
-  { stage: 'IAD', stage_name: 'Internal Audit Department (IAD)', default_holder_id: 'user-004', default_holder_name: 'KARUPPASAMY (IAD)', updated_at: '2026-08-27T00:00:00Z' },
-  { stage: 'AO', stage_name: 'Admin Officer (AO)', default_holder_id: 'user-005', default_holder_name: 'SUGANYA (AO)', updated_at: '2026-08-27T00:00:00Z' },
-  { stage: 'JMD', stage_name: 'Joint Managing Director (JMD)', default_holder_id: 'user-006', default_holder_name: 'JANANI (JMD)', updated_at: '2026-08-27T00:00:00Z' },
+  { stage: 'IAD', stage_name: 'Internal Audit Department (IAD)', default_holder_id: 'user-004', default_holder_name: 'IAD', updated_at: '2026-08-27T00:00:00Z' },
+  { stage: 'AO', stage_name: 'Admin Officer (AO)', default_holder_id: 'user-005', default_holder_name: 'AO', updated_at: '2026-08-27T00:00:00Z' },
+  { stage: 'JMD', stage_name: 'Joint Managing Director (JMD)', default_holder_id: 'user-006', default_holder_name: 'JMD', updated_at: '2026-08-27T00:00:00Z' },
   { stage: 'ACCOUNTS', stage_name: 'Accounts / Tally Stage', default_holder_id: 'user-008', default_holder_name: 'ACCOUNTS', updated_at: '2026-08-27T00:00:00Z' },
   { stage: 'TALLY', stage_name: 'Accounts / Tally Stage', default_holder_id: 'user-008', default_holder_name: 'ACCOUNTS', updated_at: '2026-08-27T00:00:00Z' },
 ];

@@ -16,7 +16,7 @@ import {
 import { MOCK_USERS, INITIAL_LABELS, INITIAL_CATEGORY_MAPPINGS, INITIAL_STAGE_HOLDERS } from './mockData';
 import { selsoftApiClient, mapErpToDfrStage } from './selsoftApi';
 
-const STORAGE_KEY = 'DFR_APP_STATE_ACCOUNTS_TALLY_V2';
+const STORAGE_KEY = 'DFR_APP_STATE_ACCOUNTS_TALLY_V3';
 
 interface AppStorage {
   users: DfrUser[];
