@@ -3,23 +3,26 @@ import {
   DfrUser,
   DfrLabel,
   CategoryHolderMapping,
+  StageHolderMapping,
   ErpBill,
   DfrBillTracking,
   HolderHistory,
   DfrAlert,
   SyncState,
   ProcessStage,
+  STAGE_DISPLAY_NAMES,
   AgeBand,
 } from '../types/dfr';
-import { MOCK_USERS, INITIAL_LABELS, INITIAL_CATEGORY_MAPPINGS } from './mockData';
+import { MOCK_USERS, INITIAL_LABELS, INITIAL_CATEGORY_MAPPINGS, INITIAL_STAGE_HOLDERS } from './mockData';
 import { selsoftApiClient, mapErpToDfrStage } from './selsoftApi';
 
-const STORAGE_KEY = 'DFR_APP_STATE_ACCOUNTS_TALLY_V1';
+const STORAGE_KEY = 'DFR_APP_STATE_ACCOUNTS_TALLY_V2';
 
 interface AppStorage {
   users: DfrUser[];
   labels: DfrLabel[];
   categoryMappings: CategoryHolderMapping[];
+  stageHolders: StageHolderMapping[];
   erpBills: ErpBill[];
   dfrBills: DfrBillTracking[];
   holderHistory: HolderHistory[];
@@ -42,6 +45,9 @@ class DfrService {
         this.state.users = MOCK_USERS; // Always ensure latest user definitions
         if (!this.state.categoryMappings || this.state.categoryMappings.length === 0) {
           this.state.categoryMappings = INITIAL_CATEGORY_MAPPINGS;
+        }
+        if (!this.state.stageHolders || this.state.stageHolders.length === 0) {
+          this.state.stageHolders = INITIAL_STAGE_HOLDERS;
         }
       } catch (e) {
         console.error('Failed to parse saved DFR state, resetting:', e);
@@ -68,6 +74,7 @@ class DfrService {
       users: MOCK_USERS,
       labels: INITIAL_LABELS,
       categoryMappings: INITIAL_CATEGORY_MAPPINGS,
+      stageHolders: INITIAL_STAGE_HOLDERS,
       erpBills: [],
       dfrBills: [],
       holderHistory: [],
@@ -126,6 +133,10 @@ class DfrService {
     return this.state.categoryMappings || INITIAL_CATEGORY_MAPPINGS;
   }
 
+  public getStageHolders(): StageHolderMapping[] {
+    return this.state.stageHolders || INITIAL_STAGE_HOLDERS;
+  }
+
   public getAlerts(): DfrAlert[] {
     return this.state.alerts;
   }
@@ -144,7 +155,7 @@ class DfrService {
 
   /**
    * Resolves the initial holder for a newly ingested ERP bill based on active category mappings.
-   * Applied strictly to new/incoming bills; existing bills' holders remain untouched.
+   * Applied strictly when a bill is at Bill Inward stage.
    */
   public resolveInitialHolderForCategory(categoryStr: string): DfrUser {
     const normalizedCat = (categoryStr || '').trim().toUpperCase();
@@ -176,6 +187,45 @@ class DfrService {
   }
 
   /**
+   * Resolves the designated Current Holder based on the ERP process stage:
+   * - BILL_INWARD: Uses Category → Holder mapping
+   * - IAD: Uses configured IAD holder
+   * - AO: Uses configured AO holder
+   * - JMD: Uses configured JMD holder
+   * - ACCOUNTS / TALLY: Uses configured Accounts / Tally holder
+   */
+  public resolveHolderForStage(stage: ProcessStage, categoryStr?: string): DfrUser {
+    if (stage === 'BILL_INWARD') {
+      return this.resolveInitialHolderForCategory(categoryStr || '');
+    }
+
+    const stageMappings = this.state.stageHolders || INITIAL_STAGE_HOLDERS;
+    const mapped = stageMappings.find(s => s.stage === stage || (stage === 'TALLY' && s.stage === 'ACCOUNTS'));
+
+    if (mapped) {
+      const u = this.state.users.find(x => x.id === mapped.default_holder_id);
+      if (u) return u;
+    }
+
+    // Fallback based on departmental role
+    if (stage === 'IAD') {
+      const iadUser = this.state.users.find(u => u.id === 'user-004' || u.full_name.includes('IAD'));
+      if (iadUser) return iadUser;
+    } else if (stage === 'AO') {
+      const aoUser = this.state.users.find(u => u.id === 'user-005' || u.full_name.includes('AO'));
+      if (aoUser) return aoUser;
+    } else if (stage === 'JMD') {
+      const jmdUser = this.state.users.find(u => u.id === 'user-006' || u.role === 'MD');
+      if (jmdUser) return jmdUser;
+    } else if (stage === 'ACCOUNTS' || stage === 'TALLY') {
+      const accUser = this.state.users.find(u => u.id === 'user-008' || u.role === 'ACCOUNTS');
+      if (accUser) return accUser;
+    }
+
+    return this.state.users[0];
+  }
+
+  /**
    * Master Bill Register View:
    * Dynamic computed view combining ERP read-only fields with DFR operational state
    */
@@ -194,13 +244,13 @@ class DfrService {
         continue; // Exclude closed bills from active views
       }
 
-      // Default holder if not yet explicitly created
-      const initialHolder = this.resolveInitialHolderForCategory(erp.category);
+      const stage = mapErpToDfrStage(erp);
+      const defaultHolder = this.resolveHolderForStage(stage, erp.category);
 
       const dfr = dfrMap.get(erp.header_id) || {
         header_id: erp.header_id,
-        current_holder_id: initialHolder.id,
-        current_stage: mapErpToDfrStage(erp),
+        current_holder_id: defaultHolder.id,
+        current_stage: stage,
         dfr_status: isClosed ? 'PAID' : 'OPEN',
         created_at: new Date(erp.br_date).toISOString(),
         updated_at: erp.last_modified_datetime,
@@ -233,7 +283,7 @@ class DfrService {
         amount: erp.amount,
         category: erp.category,
         current_holder_id: dfr.current_holder_id,
-        current_holder_name: userMap.get(dfr.current_holder_id) || initialHolder.full_name,
+        current_holder_name: userMap.get(dfr.current_holder_id) || defaultHolder.full_name,
         current_stage: dfr.current_stage,
         age_days: ageDays,
         age_band: ageBand,
@@ -297,6 +347,22 @@ class DfrService {
 
   public deleteCategoryMapping(id: string) {
     this.state.categoryMappings = (this.state.categoryMappings || []).filter(m => m.id !== id);
+    this.saveStateToStorage();
+  }
+
+  public updateStageHolder(stage: ProcessStage, defaultHolderId: string) {
+    const user = this.state.users.find(u => u.id === defaultHolderId);
+    this.state.stageHolders = (this.state.stageHolders || INITIAL_STAGE_HOLDERS).map(s => {
+      if (s.stage === stage || (stage === 'TALLY' && s.stage === 'ACCOUNTS')) {
+        return {
+          ...s,
+          default_holder_id: defaultHolderId,
+          default_holder_name: user?.full_name || s.default_holder_name,
+          updated_at: new Date().toISOString(),
+        };
+      }
+      return s;
+    });
     this.saveStateToStorage();
   }
 
@@ -477,16 +543,20 @@ class DfrService {
 
         const existingDfrMap = new Map(this.state.dfrBills.map(b => [b.header_id, b]));
 
-        // Upsert DFR tracking records using HeaderId, resolving initial holder strictly from configured mappings
+        let maxHistoryId = this.state.holderHistory.reduce((max, h) => Math.max(max, h.id), 0);
+
+        // Process all incoming bills: new intakes + automated stage/holder transitions
         for (const incomingBill of result.allBills) {
+          const erpStage = mapErpToDfrStage(incomingBill);
+
           if (!existingDfrMap.has(incomingBill.header_id)) {
-            const initialHolder = this.resolveInitialHolderForCategory(incomingBill.category);
-            const stage = mapErpToDfrStage(incomingBill);
+            // CASE 1: Brand New Bill Ingestion
+            const designatedHolder = this.resolveHolderForStage(erpStage, incomingBill.category);
 
             const newDfr: DfrBillTracking = {
               header_id: incomingBill.header_id,
-              current_holder_id: initialHolder.id,
-              current_stage: stage,
+              current_holder_id: designatedHolder.id,
+              current_stage: erpStage,
               dfr_status: incomingBill.bill_status === 'PAID' ? 'PAID' : 'OPEN',
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
@@ -495,18 +565,53 @@ class DfrService {
             this.state.dfrBills.push(newDfr);
             existingDfrMap.set(incomingBill.header_id, newDfr);
 
-            const maxHistoryId = this.state.holderHistory.reduce((max, h) => Math.max(max, h.id), 0);
             this.state.holderHistory.push({
-              id: maxHistoryId + 1,
+              id: ++maxHistoryId,
               header_id: incomingBill.header_id,
               from_holder_id: null,
-              to_holder_id: initialHolder.id,
+              to_holder_id: designatedHolder.id,
               from_stage: null,
-              to_stage: stage,
-              changed_by: initialHolder.id,
-              note: `Initial holder assigned by Category Mapping (${incomingBill.category} → ${initialHolder.full_name})`,
+              to_stage: erpStage,
+              changed_by: 'ERP_SYNC',
+              source: 'ERP Sync',
+              note: erpStage === 'BILL_INWARD'
+                ? `Initial intake assigned via Category Mapping (${incomingBill.category} → ${designatedHolder.full_name})`
+                : `Initial intake detected at ${STAGE_DISPLAY_NAMES[erpStage]} (${designatedHolder.full_name})`,
               changed_at: new Date().toISOString(),
             });
+          } else {
+            // CASE 2: Existing Bill — Check for ERP Process Stage Progression
+            const existingDfr = existingDfrMap.get(incomingBill.header_id)!;
+
+            if (existingDfr.current_stage !== erpStage) {
+              // Stage has progressed in Selsoft ERP (e.g. Bill Inward -> IAD -> AO -> JMD -> Accounts/Tally)
+              const previousStage = existingDfr.current_stage;
+              const previousHolderId = existingDfr.current_holder_id;
+              const newDesignatedHolder = this.resolveHolderForStage(erpStage, incomingBill.category);
+
+              // Update DFR tracking record
+              existingDfr.current_stage = erpStage;
+              existingDfr.current_holder_id = newDesignatedHolder.id;
+              existingDfr.updated_at = new Date().toISOString();
+
+              if (incomingBill.bill_status === 'PAID') {
+                existingDfr.dfr_status = 'PAID';
+              }
+
+              // Append permanent audit record to Holder History
+              this.state.holderHistory.push({
+                id: ++maxHistoryId,
+                header_id: incomingBill.header_id,
+                from_holder_id: previousHolderId,
+                to_holder_id: newDesignatedHolder.id,
+                from_stage: previousStage,
+                to_stage: erpStage,
+                changed_by: 'ERP_SYNC',
+                source: 'ERP Sync',
+                note: `Automatic transition based on ERP process stage (${STAGE_DISPLAY_NAMES[previousStage] || previousStage} → ${STAGE_DISPLAY_NAMES[erpStage]}) [Assigned: ${newDesignatedHolder.full_name}]`,
+                changed_at: new Date().toISOString(),
+              });
+            }
           }
         }
       }

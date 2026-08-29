@@ -344,13 +344,20 @@ export const BillDetailDrawer: React.FC<BillDetailDrawerProps> = ({
                   <div key={item.id} className="relative">
                     <div className="absolute -left-6 top-1 w-3 h-3 rounded-full bg-sky-500 border-2 border-white ring-2 ring-sky-200" />
                     <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs space-y-1">
-                      <div className="flex items-center justify-between">
-                        <span className="font-extrabold text-slate-900">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-extrabold text-slate-900 truncate">
                           {fromHolderName} → {toHolderName}
                         </span>
-                        <span className="text-[10px] text-slate-500">
-                          {new Date(item.changed_at).toLocaleString()}
-                        </span>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {item.source === 'ERP Sync' && (
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-indigo-50 text-indigo-700 border border-indigo-200 uppercase tracking-wider">
+                              ERP Sync
+                            </span>
+                          )}
+                          <span className="text-[10px] text-slate-500">
+                            {new Date(item.changed_at).toLocaleString()}
+                          </span>
+                        </div>
                       </div>
                       <p className="text-slate-600">
                         Stage:{' '}
@@ -364,7 +371,7 @@ export const BillDetailDrawer: React.FC<BillDetailDrawerProps> = ({
                         </p>
                       )}
                       <p className="text-[10px] text-slate-500 font-semibold pt-1">
-                        Confirmed by: {changedByName}
+                        Source / Actor: {item.source === 'ERP Sync' ? 'Selsoft ERP Sync Automation' : changedByName}
                       </p>
                     </div>
                   </div>

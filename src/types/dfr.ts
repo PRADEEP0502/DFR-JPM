@@ -23,6 +23,14 @@ export interface CategoryHolderMapping {
   updated_at: string;
 }
 
+export interface StageHolderMapping {
+  stage: ProcessStage;
+  stage_name: string;
+  default_holder_id: string;
+  default_holder_name: string;
+  updated_at: string;
+}
+
 // Canonical DFR process stages: Bill Inward → IAD → AO → JMD → Accounts / Tally
 export type ProcessStage = 'BILL_INWARD' | 'IAD' | 'AO' | 'JMD' | 'ACCOUNTS' | 'TALLY';
 
@@ -62,7 +70,7 @@ export interface ErpBill {
 // 2. DFR Internal Tracking Record (Separated from ERP data)
 export interface DfrBillTracking {
   header_id: number;
-  current_holder_id: string; // Maintained strictly via DFR human checkpoints
+  current_holder_id: string; // Maintained strictly via DFR human checkpoints or ERP stage transitions
   current_stage: ProcessStage;
   dfr_status: DfrStatus;
   notes?: string;
@@ -81,6 +89,7 @@ export interface HolderHistory {
   changed_by: string;
   note: string;
   changed_at: string;
+  source?: 'ERP Sync' | 'Manual Handover' | 'System Initial';
 }
 
 // 4. Ageing Alerts Log

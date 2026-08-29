@@ -246,6 +246,77 @@ export const CategoryMappingView: React.FC<CategoryMappingViewProps> = ({
         </div>
       </div>
 
+      {/* Stage → Automated Holder Pipeline Configuration */}
+      <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden p-5 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-slate-100 pb-3">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="w-5 h-5 text-sky-600" />
+            <div>
+              <h2 className="text-sm font-extrabold text-slate-900 uppercase tracking-wider">
+                ERP Process Stage → Automated Holder Routing
+              </h2>
+              <p className="text-[11px] text-slate-500 font-medium">
+                When Selsoft ERP moves a bill to subsequent stages, the Current Holder automatically updates to these designated departmental holders.
+              </p>
+            </div>
+          </div>
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 uppercase tracking-wider">
+            Auto-sync rules
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5">
+          {dfrService.getStageHolders().filter(s => s.stage !== 'TALLY').map(stageMapping => {
+            const stageBadgeColors: Record<string, string> = {
+              IAD: 'bg-sky-50 text-sky-700 border-sky-200',
+              AO: 'bg-blue-50 text-blue-700 border-blue-200',
+              JMD: 'bg-purple-50 text-purple-700 border-purple-200',
+              ACCOUNTS: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+            };
+
+            return (
+              <div
+                key={stageMapping.stage}
+                className="bg-slate-50/80 border border-slate-200 rounded-2xl p-4 space-y-3"
+              >
+                <div className="flex items-center justify-between">
+                  <span className={`px-2.5 py-1 rounded-xl text-xs font-black border ${stageBadgeColors[stageMapping.stage] || 'bg-slate-100'}`}>
+                    {stageMapping.stage} Stage
+                  </span>
+                  <span className="text-[10px] font-mono text-slate-400">
+                    {new Date(stageMapping.updated_at).toLocaleDateString()}
+                  </span>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] text-slate-500 font-bold uppercase tracking-wider mb-1">
+                    Designated Holder:
+                  </label>
+                  <select
+                    value={stageMapping.default_holder_id}
+                    onChange={e => {
+                      dfrService.updateStageHolder(stageMapping.stage, e.target.value);
+                      onRefresh();
+                    }}
+                    className="w-full bg-white border border-slate-300 rounded-xl p-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-sky-500"
+                  >
+                    {users.filter(u => u.id !== 'user-000').map(u => (
+                      <option key={u.id} value={u.id}>
+                        {u.full_name} ({u.role})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <p className="text-[10px] text-slate-500 italic">
+                  Bills entering {stageMapping.stage} in ERP will auto-assign to {stageMapping.default_holder_name}.
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Add / Edit Mapping Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-150">

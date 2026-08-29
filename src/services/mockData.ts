@@ -1,13 +1,13 @@
-import { DfrUser, DfrLabel, CategoryHolderMapping, ErpBill, DfrBillTracking, HolderHistory, DfrAlert, ProcessStage } from '../types/dfr';
+import { DfrUser, DfrLabel, CategoryHolderMapping, StageHolderMapping, ErpBill, DfrBillTracking, HolderHistory, DfrAlert, ProcessStage } from '../types/dfr';
 import { mapErpToDfrStage } from './selsoftApi';
 
 export const MOCK_USERS: DfrUser[] = [
   { id: 'user-001', full_name: 'VANITHA', role: 'STAFF', active: true },
   { id: 'user-002', full_name: 'SURIYA', role: 'STAFF', active: true },
   { id: 'user-003', full_name: 'KIRUTHIKA', role: 'STAFF', active: true },
-  { id: 'user-004', full_name: 'KARUPPASAMY', role: 'STAFF', active: true },
-  { id: 'user-005', full_name: 'SUGANYA', role: 'STAFF', active: true },
-  { id: 'user-006', full_name: 'JANANI', role: 'STAFF', active: true },
+  { id: 'user-004', full_name: 'KARUPPASAMY (IAD)', role: 'STAFF', active: true },
+  { id: 'user-005', full_name: 'SUGANYA (AO)', role: 'MANAGER', active: true },
+  { id: 'user-006', full_name: 'JANANI (JMD)', role: 'MD', active: true },
   { id: 'user-007', full_name: 'HEMALATHA', role: 'STAFF', active: true },
   { id: 'user-008', full_name: 'ACCOUNTS', role: 'ACCOUNTS', active: true },
   { id: 'user-009', full_name: 'MANAGEMENT (MD)', role: 'MD', active: true },
@@ -22,6 +22,14 @@ export const INITIAL_CATEGORY_MAPPINGS: CategoryHolderMapping[] = [
   { id: 'map-5', category: 'ELECTRICAL', holder_id: 'user-002', holder_name: 'SURIYA', is_active: true, updated_at: '2026-08-27T00:00:00Z' },
   { id: 'map-6', category: 'STATIONARY', holder_id: 'user-003', holder_name: 'KIRUTHIKA', is_active: true, updated_at: '2026-08-27T00:00:00Z' },
   { id: 'map-7', category: 'CLEANING PURPOSE', holder_id: 'user-003', holder_name: 'KIRUTHIKA', is_active: true, updated_at: '2026-08-27T00:00:00Z' },
+];
+
+export const INITIAL_STAGE_HOLDERS: StageHolderMapping[] = [
+  { stage: 'IAD', stage_name: 'Internal Audit Department (IAD)', default_holder_id: 'user-004', default_holder_name: 'KARUPPASAMY (IAD)', updated_at: '2026-08-27T00:00:00Z' },
+  { stage: 'AO', stage_name: 'Admin Officer (AO)', default_holder_id: 'user-005', default_holder_name: 'SUGANYA (AO)', updated_at: '2026-08-27T00:00:00Z' },
+  { stage: 'JMD', stage_name: 'Joint Managing Director (JMD)', default_holder_id: 'user-006', default_holder_name: 'JANANI (JMD)', updated_at: '2026-08-27T00:00:00Z' },
+  { stage: 'ACCOUNTS', stage_name: 'Accounts / Tally Stage', default_holder_id: 'user-008', default_holder_name: 'ACCOUNTS', updated_at: '2026-08-27T00:00:00Z' },
+  { stage: 'TALLY', stage_name: 'Accounts / Tally Stage', default_holder_id: 'user-008', default_holder_name: 'ACCOUNTS', updated_at: '2026-08-27T00:00:00Z' },
 ];
 
 export const INITIAL_LABELS: DfrLabel[] = [
