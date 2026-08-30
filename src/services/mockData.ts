@@ -1,17 +1,9 @@
 import { DfrUser, DfrLabel, CategoryHolderMapping, ErpBill, DfrBillTracking, HolderHistory, DfrAlert, ProcessStage } from '../types/dfr';
 import { mapErpToDfrStage } from './selsoftApi';
 
-export const MOCK_USERS: DfrUser[] = [
-  { id: 'user-001', full_name: 'VANITHA', role: 'STAFF', active: true },
-  { id: 'user-002', full_name: 'SURIYA', role: 'STAFF', active: true },
-  { id: 'user-003', full_name: 'KIRUTHIKA', role: 'STAFF', active: true },
-  { id: 'user-004', full_name: 'KARUPPASAMY', role: 'STAFF', active: true },
-  { id: 'user-005', full_name: 'SUGANYA', role: 'MANAGER', active: true },
-  { id: 'user-006', full_name: 'JANANI', role: 'MD', active: true },
-  { id: 'user-007', full_name: 'HEMALATHA', role: 'STAFF', active: true },
-  { id: 'user-008', full_name: 'NITHYA', role: 'ACCOUNTS', active: true },
-  { id: 'user-000', full_name: 'Unassigned', role: 'STAFF', active: true },
-];
+import { DEFAULT_USERS } from './authService';
+
+export const MOCK_USERS: DfrUser[] = DEFAULT_USERS;
 
 export const INITIAL_CATEGORY_MAPPINGS: CategoryHolderMapping[] = [
   { id: 'map-1', category: 'CHEMICAL', holder_id: 'user-001', holder_name: 'VANITHA', is_active: true, updated_at: '2026-08-27T00:00:00Z' },

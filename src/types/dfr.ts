@@ -1,10 +1,66 @@
-export type UserRole = 'MD' | 'MANAGER' | 'STAFF' | 'ACCOUNTS';
+export type UserRole = 'ADMIN' | 'MD' | 'MANAGER' | 'STAFF' | 'ACCOUNTS';
+
+export type UserDepartment =
+  | 'PURCHASE'
+  | 'IAD'
+  | 'AO'
+  | 'GM'
+  | 'JMD'
+  | 'MD'
+  | 'ACCOUNTS'
+  | 'SYSTEM ADMIN';
+
+export type AccessLevel = 'FULL_ACCESS' | 'FULL_EDIT' | 'DEPARTMENT_ACCESS';
 
 export interface DfrUser {
   id: string;
+  username: string;
   full_name: string;
   role: UserRole;
+  department: UserDepartment;
+  access_level: AccessLevel;
   active: boolean;
+  password_hash?: string;
+  created_at?: string;
+  last_login_at?: string;
+}
+
+export interface AuthSession {
+  token: string;
+  user: DfrUser;
+  created_at: string;
+  expires_at: string;
+}
+
+export type AuditAction =
+  | 'LOGIN'
+  | 'LOGOUT'
+  | 'HANDOVER'
+  | 'STAGE_CHANGE'
+  | 'LABEL_CHANGE'
+  | 'USER_CREATE'
+  | 'USER_UPDATE'
+  | 'USER_DISABLE'
+  | 'PASSWORD_RESET'
+  | 'CATEGORY_MAP_CREATE'
+  | 'CATEGORY_MAP_UPDATE'
+  | 'CATEGORY_MAP_DELETE'
+  | 'ERP_SYNC'
+  | 'MANUAL_SYNC'
+  | 'ALERT_ACKNOWLEDGE'
+  | 'SETTINGS_UPDATE';
+
+export interface AuditLogEntry {
+  id: number;
+  user_id: string;
+  user_name: string;
+  user_role: string;
+  action: AuditAction;
+  details: string;
+  header_id?: number;
+  previous_value?: string;
+  new_value?: string;
+  timestamp: string;
 }
 
 export interface DfrLabel {

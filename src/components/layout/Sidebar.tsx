@@ -7,10 +7,13 @@ import {
   Calculator,
   Tags,
   FileText,
-  Database,
   GitFork,
+  Settings,
+  LogOut,
+  Shield,
   X,
 } from 'lucide-react';
+import { DfrUser } from '../../types/dfr';
 
 export type ViewTab =
   | 'dashboard'
@@ -20,12 +23,15 @@ export type ViewTab =
   | 'tally'
   | 'labels'
   | 'category_mapping'
-  | 'reports';
+  | 'reports'
+  | 'settings';
 
 interface SidebarProps {
   currentTab: ViewTab;
   onSelectTab: (tab: ViewTab) => void;
   criticalCount: number;
+  currentUser: DfrUser;
+  onLogout: () => void;
   isMobileOpen?: boolean;
   onCloseMobile?: () => void;
 }
@@ -34,9 +40,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
   currentTab,
   onSelectTab,
   criticalCount,
+  currentUser,
+  onLogout,
   isMobileOpen = false,
   onCloseMobile,
 }) => {
+  const isAdminOrMd = currentUser.role === 'ADMIN' || currentUser.role === 'MD' || currentUser.access_level === 'FULL_ACCESS';
+
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'register', label: 'Bill Register', icon: FileSpreadsheet },
@@ -52,6 +62,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'labels', label: 'Labels Manager', icon: Tags },
     { id: 'category_mapping', label: 'Category Mappings', icon: GitFork },
     { id: 'reports', label: 'Reports / Export', icon: FileText },
+    ...(isAdminOrMd
+      ? [
+          {
+            id: 'settings',
+            label: 'Admin Settings',
+            icon: Settings,
+          },
+        ]
+      : []),
   ];
 
   const handleItemClick = (tabId: ViewTab) => {
@@ -125,11 +144,38 @@ export const Sidebar: React.FC<SidebarProps> = ({
         })}
       </nav>
 
-      {/* Footer info */}
-      <div className="p-3 border-t border-slate-100 text-center">
-        <span className="text-[10px] font-semibold text-slate-400">
-          DFR v2.4 • Live Selsoft ERP Sync
-        </span>
+      {/* Authenticated User Profile & Logout */}
+      <div className="p-3 border-t border-slate-200/80 bg-slate-50/70 space-y-2">
+        <div className="flex items-center justify-between p-2 bg-white border border-slate-200 rounded-xl shadow-xs">
+          <div className="flex items-center gap-2.5 overflow-hidden">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 text-white font-black flex items-center justify-center text-xs shrink-0 shadow-xs">
+              {currentUser.full_name.charAt(0)}
+            </div>
+            <div className="overflow-hidden">
+              <span className="font-black text-slate-900 text-xs truncate block">
+                {currentUser.full_name}
+              </span>
+              <span className="text-[10px] text-slate-500 font-bold uppercase truncate block">
+                {currentUser.department} • {currentUser.role}
+              </span>
+            </div>
+          </div>
+
+          <button
+            onClick={onLogout}
+            title="Log out"
+            className="p-1.5 rounded-lg bg-slate-100 text-slate-500 hover:text-red-600 hover:bg-red-50 transition shrink-0"
+            aria-label="Logout"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="text-center">
+          <span className="text-[10px] font-semibold text-slate-400">
+            DFR Enterprise v2.5 • Live ERP
+          </span>
+        </div>
       </div>
     </div>
   );

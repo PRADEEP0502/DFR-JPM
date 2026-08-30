@@ -9,34 +9,58 @@ import { TallyTrackerView } from './components/views/TallyTrackerView';
 import { LabelsManagerView } from './components/views/LabelsManagerView';
 import { CategoryMappingView } from './components/views/CategoryMappingView';
 import { ReportsView } from './components/views/ReportsView';
+import { AdminSettingsView } from './components/views/AdminSettingsView';
+import { LoginView } from './components/auth/LoginView';
 import { BillDetailDrawer } from './components/drawers/BillDetailDrawer';
 import { HandoverModal } from './components/modals/HandoverModal';
 import { dfrService } from './services/dfrService';
+import { authService } from './services/authService';
 import { BillRegisterItem, DfrUser, ProcessStage } from './types/dfr';
 
 export const App: React.FC = () => {
   const [currentTab, setCurrentTab] = useState<ViewTab>('dashboard');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  const users = dfrService.getUsers();
-  const [currentUser, setCurrentUser] = useState<DfrUser>(users[0]); // Default VANITHA
+  const [currentUser, setCurrentUser] = useState<DfrUser | null>(() => {
+    const session = authService.restoreSession();
+    return session ? session.user : null;
+  });
 
   const [selectedBill, setSelectedBill] = useState<BillRegisterItem | null>(null);
   const [handoverBill, setHandoverBill] = useState<BillRegisterItem | null>(null);
-
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
 
   // Subscribe to service changes and trigger initial live sync
   const [, setTick] = useState(0);
+
   useEffect(() => {
+    // Check and restore persistent authenticated session
+    const session = authService.restoreSession();
+    if (session) {
+      setCurrentUser(session.user);
+    }
+
     // Initial live sync from Selsoft ERP API
     dfrService.syncErpBillsNow(true);
 
-    return dfrService.subscribe(() => {
+    const unsubDfr = dfrService.subscribe(() => {
       setTick(t => t + 1);
     });
+
+    const unsubAuth = authService.subscribe(() => {
+      const sess = authService.getCurrentSession();
+      setCurrentUser(sess ? sess.user : null);
+      setTick(t => t + 1);
+    });
+
+    return () => {
+      unsubDfr();
+      unsubAuth();
+    };
   }, []);
 
+  const users = dfrService.getUsers();
   const bills = dfrService.getBillRegister(true);
   const labels = dfrService.getLabels();
   const alerts = dfrService.getAlerts();
@@ -62,19 +86,36 @@ export const App: React.FC = () => {
   };
 
   const handleConfirmHandover = (toHolderId: string, toStage: ProcessStage, note: string) => {
-    if (!handoverBill) return;
+    if (!handoverBill || !currentUser) return;
     dfrService.confirmHandover(handoverBill.header_id, toHolderId, toStage, currentUser.id, note);
     showToast(`Custody of ${handoverBill.br_no} handed over successfully!`);
     setHandoverBill(null);
     setSelectedBill(null);
   };
 
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
-
   const handleAcknowledgeAlert = (alertId: number) => {
+    if (!currentUser) return;
     dfrService.acknowledgeAlert(alertId, currentUser.id);
     showToast('A-10 Critical alert acknowledged & logged.');
   };
+
+  const handleLogout = () => {
+    authService.logout();
+    setCurrentUser(null);
+    showToast('You have been signed out.');
+  };
+
+  // If user is not authenticated, render Login View
+  if (!currentUser) {
+    return (
+      <LoginView
+        onLoginSuccess={user => {
+          setCurrentUser(user);
+          showToast(`Welcome back, ${user.full_name}!`);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-slate-50 text-slate-900 font-sans selection:bg-sky-500 selection:text-white">
@@ -87,6 +128,8 @@ export const App: React.FC = () => {
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
         criticalCount={criticalCount}
+        currentUser={currentUser}
+        onLogout={handleLogout}
         isMobileOpen={isMobileMenuOpen}
         onCloseMobile={() => setIsMobileMenuOpen(false)}
       />
@@ -101,6 +144,7 @@ export const App: React.FC = () => {
           syncState={syncState}
           onSyncNow={handleSyncNow}
           searchQuery={searchQuery}
+          onLogout={handleLogout}
           onSearchChange={q => {
             setSearchQuery(q);
             if (q.trim() && currentTab !== 'register') {
@@ -179,6 +223,13 @@ export const App: React.FC = () => {
           )}
 
           {currentTab === 'reports' && <ReportsView bills={bills} users={users} />}
+
+          {currentTab === 'settings' && (
+            <AdminSettingsView
+              currentUser={currentUser}
+              onRefresh={() => setTick(t => t + 1)}
+            />
+          )}
         </main>
       </div>
 

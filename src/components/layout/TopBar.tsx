@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { RefreshCw, Search, Clock, UserCheck, Menu } from 'lucide-react';
+import { RefreshCw, Search, Clock, UserCheck, Menu, Shield, LogOut } from 'lucide-react';
 import { DfrUser, UserRole, SyncState } from '../../types/dfr';
 
 interface TopBarProps {
@@ -10,6 +10,7 @@ interface TopBarProps {
   onSyncNow: () => void;
   searchQuery: string;
   onSearchChange: (q: string) => void;
+  onLogout?: () => void;
   onToggleMobileMenu?: () => void;
 }
 
@@ -21,6 +22,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   onSyncNow,
   searchQuery,
   onSearchChange,
+  onLogout,
   onToggleMobileMenu,
 }) => {
   const [minutesAgo, setMinutesAgo] = useState<number>(0);
@@ -47,10 +49,11 @@ export const TopBar: React.FC<TopBarProps> = ({
   }, [syncState.last_synced_at, syncState.next_sync_at]);
 
   const roleColors: Record<UserRole, string> = {
-    MD: 'bg-purple-100 text-purple-700 border-purple-200',
-    MANAGER: 'bg-indigo-100 text-indigo-700 border-indigo-200',
-    STAFF: 'bg-sky-100 text-sky-700 border-sky-200',
-    ACCOUNTS: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+    ADMIN: 'bg-red-50 text-red-700 border-red-200',
+    MD: 'bg-purple-50 text-purple-700 border-purple-200',
+    MANAGER: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+    STAFF: 'bg-sky-50 text-sky-700 border-sky-200',
+    ACCOUNTS: 'bg-emerald-50 text-emerald-700 border-emerald-200',
   };
 
   return (
@@ -116,38 +119,37 @@ export const TopBar: React.FC<TopBarProps> = ({
           </button>
         </div>
 
-        {/* Role Selector (Demo Mode) */}
-        <div className="flex items-center gap-1 sm:gap-2 bg-slate-100 border border-slate-200 rounded-xl px-2 sm:px-3 py-1.5 text-xs shadow-2xs">
-          <div className="hidden xl:flex items-center gap-1 text-slate-500 font-medium border-r border-slate-300 pr-2">
-            <UserCheck className="w-3.5 h-3.5 text-sky-600" />
-            <span className="text-[11px] text-amber-700 font-bold uppercase tracking-wider">Role:</span>
+        {/* Authenticated User Badge */}
+        <div className="flex items-center gap-1.5 sm:gap-2 bg-slate-100 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs shadow-2xs">
+          <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-sky-500 to-indigo-600 text-white font-black flex items-center justify-center text-[10px]">
+            {currentUser.full_name.charAt(0)}
           </div>
-
-          <select
-            value={currentUser.id}
-            onChange={e => {
-              const u = users.find(x => x.id === e.target.value);
-              if (u) onSwitchUser(u);
-            }}
-            className="bg-transparent text-slate-800 font-bold focus:outline-none cursor-pointer text-xs max-w-[90px] sm:max-w-[130px] md:max-w-none truncate min-h-[32px]"
-          >
-            {users
-              .filter(u => u.id !== 'user-000')
-              .map(u => (
-                <option key={u.id} value={u.id} className="bg-white text-slate-900">
-                  {u.full_name} ({u.role})
-                </option>
-              ))}
-          </select>
-
+          <div className="hidden sm:block">
+            <span className="font-extrabold text-slate-900 block leading-tight">
+              {currentUser.full_name}
+            </span>
+            <span className="text-[9px] text-slate-500 font-bold uppercase block">
+              {currentUser.department}
+            </span>
+          </div>
           <span
-            className={`hidden sm:inline-block px-2 py-0.5 rounded border text-[10px] font-extrabold ${
-              roleColors[currentUser.role]
+            className={`px-1.5 py-0.5 rounded border text-[9px] font-black uppercase ${
+              roleColors[currentUser.role] || 'bg-slate-200'
             }`}
           >
             {currentUser.role}
           </span>
         </div>
+
+        {onLogout && (
+          <button
+            onClick={onLogout}
+            title="Logout from session"
+            className="p-2 rounded-xl bg-slate-100 border border-slate-200 text-slate-500 hover:text-red-600 hover:bg-red-50 transition flex items-center justify-center min-h-[36px] min-w-[36px]"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        )}
       </div>
     </header>
   );

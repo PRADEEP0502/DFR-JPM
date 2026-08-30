@@ -12,10 +12,12 @@ import {
   STAGE_DISPLAY_NAMES,
   AgeBand,
 } from '../types/dfr';
-import { MOCK_USERS, INITIAL_LABELS, INITIAL_CATEGORY_MAPPINGS } from './mockData';
+import { INITIAL_LABELS, INITIAL_CATEGORY_MAPPINGS } from './mockData';
+import { authService } from './authService';
+import { auditService } from './auditService';
 import { selsoftApiClient, mapErpToDfrStage } from './selsoftApi';
 
-const STORAGE_KEY = 'DFR_APP_STATE_HOLDERS_PERSONS_V5';
+const STORAGE_KEY = 'DFR_APP_STATE_ENTERPRISE_V6';
 
 interface AppStorage {
   users: DfrUser[];
@@ -40,7 +42,7 @@ class DfrService {
     if (saved) {
       try {
         this.state = JSON.parse(saved);
-        this.state.users = MOCK_USERS; // Always ensure latest user definitions
+        this.state.users = authService.getUsers(); // Always ensure latest user definitions
         if (!this.state.categoryMappings || this.state.categoryMappings.length === 0) {
           this.state.categoryMappings = INITIAL_CATEGORY_MAPPINGS;
         }
@@ -51,6 +53,12 @@ class DfrService {
     } else {
       this.state = this.initFreshState();
     }
+
+    // Subscribe to auth changes to keep user list in sync
+    authService.subscribe(() => {
+      this.state.users = authService.getUsers();
+      this.notifyListeners();
+    });
 
     this.startAutoSyncSchedule();
 
@@ -66,7 +74,7 @@ class DfrService {
     const nextSync = new Date(now.getTime() + intervalMins * 60 * 1000).toISOString();
 
     const state: AppStorage = {
-      users: MOCK_USERS,
+      users: authService.getUsers(),
       labels: INITIAL_LABELS,
       categoryMappings: INITIAL_CATEGORY_MAPPINGS,
       erpBills: [],
@@ -265,7 +273,7 @@ class DfrService {
   // MUTATIONS (Category Mappings & Human Checkpoints)
   // ============================================================================
 
-  public addCategoryMapping(category: string, holderId: string): CategoryHolderMapping {
+  public addCategoryMapping(category: string, holderId: string) {
     const user = this.state.users.find(u => u.id === holderId);
     const newMapping: CategoryHolderMapping = {
       id: `map-${Date.now()}`,
@@ -275,9 +283,14 @@ class DfrService {
       is_active: true,
       updated_at: new Date().toISOString(),
     };
-    this.state.categoryMappings = [...(this.state.categoryMappings || []), newMapping];
+    this.state.categoryMappings.push(newMapping);
     this.saveStateToStorage();
-    return newMapping;
+
+    auditService.log(
+      'CATEGORY_MAP_CREATE',
+      `Added category mapping: ${newMapping.category} → ${newMapping.holder_name}`,
+      authService.getCurrentUser()
+    );
   }
 
   public updateCategoryMapping(id: string, category: string, holderId: string, isActive: boolean = true) {
@@ -296,11 +309,24 @@ class DfrService {
       return m;
     });
     this.saveStateToStorage();
+
+    auditService.log(
+      'CATEGORY_MAP_UPDATE',
+      `Updated category mapping: ${category.trim().toUpperCase()} → ${user?.full_name || holderId} (${isActive ? 'Active' : 'Inactive'})`,
+      authService.getCurrentUser()
+    );
   }
 
   public deleteCategoryMapping(id: string) {
-    this.state.categoryMappings = (this.state.categoryMappings || []).filter(m => m.id !== id);
+    const m = (this.state.categoryMappings || []).find(x => x.id === id);
+    this.state.categoryMappings = (this.state.categoryMappings || []).filter(item => item.id !== id);
     this.saveStateToStorage();
+
+    auditService.log(
+      'CATEGORY_MAP_DELETE',
+      `Deleted category mapping for ${m?.category || id}`,
+      authService.getCurrentUser()
+    );
   }
 
   public createLabel(name: string, color: string, description?: string): DfrLabel {
@@ -312,6 +338,13 @@ class DfrService {
     };
     this.state.labels.push(newLabel);
     this.saveStateToStorage();
+
+    auditService.log(
+      'LABEL_CHANGE',
+      `Created custom label "${name}" (${color})`,
+      authService.getCurrentUser()
+    );
+
     return newLabel;
   }
 
@@ -322,10 +355,17 @@ class DfrService {
       lbl.color = color;
       lbl.description = description;
       this.saveStateToStorage();
+
+      auditService.log(
+        'LABEL_CHANGE',
+        `Updated custom label "${name}"`,
+        authService.getCurrentUser()
+      );
     }
   }
 
   public deleteLabel(id: string) {
+    const lbl = this.state.labels.find(l => l.id === id);
     this.state.labels = this.state.labels.filter(l => l.id !== id);
     // Clean up bill associations
     Object.keys(this.state.billLabelsMap).forEach(headerIdStr => {
@@ -335,6 +375,12 @@ class DfrService {
       );
     });
     this.saveStateToStorage();
+
+    auditService.log(
+      'LABEL_CHANGE',
+      `Deleted custom label "${lbl?.name || id}"`,
+      authService.getCurrentUser()
+    );
   }
 
   public toggleBillLabel(headerId: number, labelId: string) {
@@ -383,11 +429,42 @@ class DfrService {
       from_stage: fromStage,
       to_stage: toStage,
       changed_by: actorUserId,
+      source: 'Manual Handover',
       note: note || 'Physical custody handover confirmed',
       changed_at: new Date().toISOString(),
     });
 
     this.saveStateToStorage();
+
+    const actor = authService.getCurrentUser();
+    const fromUser = this.state.users.find(u => u.id === fromHolderId);
+    const toUser = this.state.users.find(u => u.id === toHolderId);
+
+    auditService.log(
+      'HANDOVER',
+      `Confirmed custody handover for bill #${headerId}: ${fromUser?.full_name || 'Inward'} → ${toUser?.full_name || toHolderId} (${STAGE_DISPLAY_NAMES[toStage]})`,
+      actor,
+      {
+        header_id: headerId,
+        previous_value: fromUser?.full_name,
+        new_value: toUser?.full_name,
+      }
+    );
+  }
+
+  public setSyncInterval(minutes: number) {
+    const mins = Math.max(1, minutes);
+    this.state.syncState.sync_interval_mins = mins;
+    const now = new Date();
+    this.state.syncState.next_sync_at = new Date(now.getTime() + mins * 60 * 1000).toISOString();
+    this.saveStateToStorage();
+    this.startAutoSyncSchedule();
+
+    auditService.log(
+      'SETTINGS_UPDATE',
+      `Updated Selsoft ERP auto-sync schedule interval to ${mins} minutes`,
+      authService.getCurrentUser()
+    );
   }
 
   public markMovedToTally(headerId: number, actorUserId: string, note?: string) {
@@ -583,6 +660,12 @@ class DfrService {
         total_pages: Math.ceil(this.state.erpBills.length / 50),
         sync_errors_count: this.state.syncErrors.length,
       };
+
+      auditService.log(
+        forceFullSync ? 'MANUAL_SYNC' : 'ERP_SYNC',
+        `Successfully synchronized ${result.allBills.length} records from Selsoft ERP API (Total Active Bills: ${this.state.erpBills.length})`,
+        authService.getCurrentUser()
+      );
     } catch (err: any) {
       console.error('Sync failed:', err);
       this.state.syncState.is_syncing = false;
