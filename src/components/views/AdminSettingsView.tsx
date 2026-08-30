@@ -664,7 +664,6 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({ currentUse
                     <option value="GM">GM</option>
                     <option value="JMD">JMD</option>
                     <option value="MD">MD</option>
-                    <option value="ACCOUNTS">ACCOUNTS</option>
                     <option value="SYSTEM ADMIN">SYSTEM ADMIN</option>
                   </select>
                 </div>

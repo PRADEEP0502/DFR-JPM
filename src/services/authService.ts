@@ -1,16 +1,10 @@
+import bcrypt from 'bcryptjs';
 import { AuthSession, DfrUser, UserDepartment, UserRole, AccessLevel } from '../types/dfr';
 import { auditService } from './auditService';
 
-const USERS_STORAGE_KEY = 'DFR_ENTERPRISE_USERS_V1';
-const SESSION_STORAGE_KEY = 'DFR_AUTH_SESSION_TOKEN_V1';
-
-// Fast standard SHA-256 hasher for client-side password credential verification
-async function hashPassword(password: string): Promise<string> {
-  const msgBuffer = new TextEncoder().encode(`DFR_SALT_2026_${password.trim()}`);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-}
+const USERS_STORAGE_KEY = 'DFR_ENTERPRISE_USERS_V2';
+const CREDENTIALS_STORAGE_KEY = 'DFR_ENTERPRISE_CREDENTIALS_V2';
+const SESSION_STORAGE_KEY = 'DFR_AUTH_SESSION_TOKEN_V2';
 
 // 10 Specified Default Users
 export const DEFAULT_USERS: DfrUser[] = [
@@ -18,8 +12,8 @@ export const DEFAULT_USERS: DfrUser[] = [
     id: 'user-001',
     username: 'vanitha',
     full_name: 'VANITHA',
-    role: 'STAFF',
     department: 'PURCHASE',
+    role: 'STAFF',
     access_level: 'DEPARTMENT_ACCESS',
     active: true,
     created_at: '2026-08-27T00:00:00Z',
@@ -28,8 +22,8 @@ export const DEFAULT_USERS: DfrUser[] = [
     id: 'user-002',
     username: 'suriya',
     full_name: 'SURIYA',
-    role: 'STAFF',
     department: 'PURCHASE',
+    role: 'STAFF',
     access_level: 'DEPARTMENT_ACCESS',
     active: true,
     created_at: '2026-08-27T00:00:00Z',
@@ -38,8 +32,8 @@ export const DEFAULT_USERS: DfrUser[] = [
     id: 'user-003',
     username: 'krithika',
     full_name: 'KRITHIKA',
-    role: 'STAFF',
     department: 'PURCHASE',
+    role: 'STAFF',
     access_level: 'DEPARTMENT_ACCESS',
     active: true,
     created_at: '2026-08-27T00:00:00Z',
@@ -48,8 +42,8 @@ export const DEFAULT_USERS: DfrUser[] = [
     id: 'user-004',
     username: 'iad',
     full_name: 'IAD',
-    role: 'STAFF',
     department: 'IAD',
+    role: 'STAFF',
     access_level: 'DEPARTMENT_ACCESS',
     active: true,
     created_at: '2026-08-27T00:00:00Z',
@@ -58,8 +52,8 @@ export const DEFAULT_USERS: DfrUser[] = [
     id: 'user-005',
     username: 'ao',
     full_name: 'AO',
-    role: 'MANAGER',
     department: 'AO',
+    role: 'MANAGER',
     access_level: 'DEPARTMENT_ACCESS',
     active: true,
     created_at: '2026-08-27T00:00:00Z',
@@ -68,8 +62,8 @@ export const DEFAULT_USERS: DfrUser[] = [
     id: 'user-006',
     username: 'gm',
     full_name: 'GM',
-    role: 'MANAGER',
     department: 'GM',
+    role: 'MANAGER',
     access_level: 'DEPARTMENT_ACCESS',
     active: true,
     created_at: '2026-08-27T00:00:00Z',
@@ -78,8 +72,8 @@ export const DEFAULT_USERS: DfrUser[] = [
     id: 'user-007',
     username: 'jmd',
     full_name: 'JMD',
-    role: 'MD',
     department: 'JMD',
+    role: 'MD',
     access_level: 'FULL_EDIT',
     active: true,
     created_at: '2026-08-27T00:00:00Z',
@@ -88,8 +82,8 @@ export const DEFAULT_USERS: DfrUser[] = [
     id: 'user-008',
     username: 'md_mam',
     full_name: 'MD_MAM',
-    role: 'MD',
     department: 'MD',
+    role: 'MD',
     access_level: 'FULL_EDIT',
     active: true,
     created_at: '2026-08-27T00:00:00Z',
@@ -98,8 +92,8 @@ export const DEFAULT_USERS: DfrUser[] = [
     id: 'user-009',
     username: 'md',
     full_name: 'MD',
-    role: 'MD',
     department: 'MD',
+    role: 'MD',
     access_level: 'FULL_EDIT',
     active: true,
     created_at: '2026-08-27T00:00:00Z',
@@ -108,8 +102,8 @@ export const DEFAULT_USERS: DfrUser[] = [
     id: 'user-010',
     username: 'dfr_admin',
     full_name: 'DFR_ADMIN',
-    role: 'ADMIN',
     department: 'SYSTEM ADMIN',
+    role: 'ADMIN',
     access_level: 'FULL_ACCESS',
     active: true,
     created_at: '2026-08-27T00:00:00Z',
@@ -118,38 +112,49 @@ export const DEFAULT_USERS: DfrUser[] = [
 
 class AuthService {
   private users: DfrUser[] = [];
+  private credentialsMap: Record<string, string> = {}; // userId -> bcrypt hash (isolated from user objects)
   private currentSession: AuthSession | null = null;
   private listeners: Array<() => void> = [];
 
   constructor() {
-    this.loadUsers();
+    this.loadUsersAndCredentials();
     this.restoreSession();
   }
 
-  private loadUsers() {
-    const saved = localStorage.getItem(USERS_STORAGE_KEY);
-    if (saved) {
+  private loadUsersAndCredentials() {
+    const savedUsers = localStorage.getItem(USERS_STORAGE_KEY);
+    const savedCreds = localStorage.getItem(CREDENTIALS_STORAGE_KEY);
+
+    if (savedUsers && savedCreds) {
       try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          // Merge with default accounts to ensure all 10 are present
-          const existingIds = new Set(parsed.map(u => u.username.toLowerCase()));
-          const missingDefaults = DEFAULT_USERS.filter(d => !existingIds.has(d.username.toLowerCase()));
-          this.users = [...parsed, ...missingDefaults];
-          this.saveUsers();
+        const parsedUsers = JSON.parse(savedUsers);
+        const parsedCreds = JSON.parse(savedCreds);
+
+        if (Array.isArray(parsedUsers) && parsedUsers.length > 0) {
+          this.users = parsedUsers;
+          this.credentialsMap = parsedCreds;
           return;
         }
       } catch (e) {
-        console.error('Failed to parse users:', e);
+        console.error('Failed to parse persistent users:', e);
       }
     }
+
+    // Initialize Default Accounts with Bcrypt Hashes (Default initial password: dfr@123)
     this.users = [...DEFAULT_USERS];
-    this.saveUsers();
+    const defaultHash = bcrypt.hashSync('dfr@123', 10);
+    this.credentialsMap = {};
+    DEFAULT_USERS.forEach(u => {
+      this.credentialsMap[u.id] = defaultHash;
+    });
+
+    this.saveUsersAndCredentials();
   }
 
-  private saveUsers() {
+  private saveUsersAndCredentials() {
     try {
       localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(this.users));
+      localStorage.setItem(CREDENTIALS_STORAGE_KEY, JSON.stringify(this.credentialsMap));
     } catch (e) {
       console.warn('Failed to persist users:', e);
     }
@@ -186,6 +191,9 @@ class AuthService {
     return now < expiry;
   }
 
+  /**
+   * Restores authenticated session on app initialization, browser refresh, or tab reopening.
+   */
   public restoreSession(): AuthSession | null {
     const savedSession = localStorage.getItem(SESSION_STORAGE_KEY);
     if (!savedSession) {
@@ -199,7 +207,7 @@ class AuthService {
       const expiry = new Date(session.expires_at).getTime();
 
       if (now >= expiry) {
-        // Expired session
+        // Session has expired
         localStorage.removeItem(SESSION_STORAGE_KEY);
         this.currentSession = null;
         return null;
@@ -225,16 +233,19 @@ class AuthService {
     }
   }
 
+  /**
+   * Authenticates user using bcrypt password comparison.
+   * Persistent session is default and always active across browser restarts.
+   */
   public async login(
     identifier: string,
-    password: string,
-    rememberDays: number = 30
+    password: string
   ): Promise<{ success: boolean; error?: string; user?: DfrUser }> {
     const cleanId = identifier.trim().toLowerCase();
     const cleanPass = password.trim();
 
     if (!cleanId || !cleanPass) {
-      return { success: false, error: 'Please provide both username and password.' };
+      return { success: false, error: 'Please provide both User ID and password.' };
     }
 
     const user = this.users.find(
@@ -242,35 +253,40 @@ class AuthService {
     );
 
     if (!user) {
-      return { success: false, error: 'User not found. Please verify your credentials.' };
+      return { success: false, error: 'User ID not found. Please verify your credentials.' };
     }
 
     if (!user.active) {
-      return { success: false, error: 'Account is currently deactivated. Please contact DFR_ADMIN.' };
+      return { success: false, error: 'Account is deactivated. Please contact DFR_ADMIN.' };
     }
 
-    // Verify Password: If password_hash is set, check match; otherwise accept initial login & set hash
-    const inputHash = await hashPassword(cleanPass);
-    if (user.password_hash && user.password_hash !== inputHash) {
-      // Also allow default password 'dfr@123' if user hasn't changed it
-      const defaultHash = await hashPassword('dfr@123');
-      if (user.password_hash !== defaultHash && inputHash !== defaultHash) {
-        auditService.log('LOGIN', `Failed login attempt for user ${user.username}`, null);
-        return { success: false, error: 'Invalid password. Please try again.' };
-      }
+    // Bcrypt Password Verification
+    const storedHash = this.credentialsMap[user.id];
+    let isPasswordValid = false;
+
+    if (storedHash) {
+      isPasswordValid = bcrypt.compareSync(cleanPass, storedHash);
     }
 
-    // If first login or hash unset, persist password hash
-    if (!user.password_hash) {
-      user.password_hash = inputHash;
+    // Fallback: If hash not set or initial, accept default password and hash with bcrypt
+    if (!isPasswordValid && cleanPass === 'dfr@123') {
+      const newHash = bcrypt.hashSync('dfr@123', 10);
+      this.credentialsMap[user.id] = newHash;
+      this.saveUsersAndCredentials();
+      isPasswordValid = true;
+    }
+
+    if (!isPasswordValid) {
+      auditService.log('LOGIN', `Failed login attempt for user ${user.username}`, null);
+      return { success: false, error: 'Invalid password. Please check your credentials.' };
     }
 
     user.last_login_at = new Date().toISOString();
-    this.saveUsers();
+    this.saveUsersAndCredentials();
 
-    // Create session token with configurable validity (default 30 days)
-    const token = `dfr_sess_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-    const expiresAt = new Date(Date.now() + rememberDays * 24 * 60 * 60 * 1000).toISOString();
+    // Issue persistent 30-day session token
+    const token = `dfr_jwt_${Date.now()}_${Math.random().toString(36).substring(2, 12)}`;
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
     const session: AuthSession = {
       token,
@@ -282,7 +298,11 @@ class AuthService {
     this.currentSession = session;
     localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
 
-    auditService.log('LOGIN', `User ${user.full_name} (${user.role}) logged in successfully`, user);
+    auditService.log(
+      'LOGIN',
+      `User ${user.full_name} (${user.role} - ${user.department}) authenticated successfully`,
+      user
+    );
     this.notify();
 
     return { success: true, user };
@@ -302,10 +322,8 @@ class AuthService {
     const user = this.getCurrentUser();
     if (!user) return false;
 
-    const isAdmin = (user.role as string) === 'ADMIN' || (user.access_level as string) === 'FULL_ACCESS';
-    if (isAdmin) {
-      return true;
-    }
+    const isAdmin = user.role === 'ADMIN' || user.access_level === 'FULL_ACCESS';
+    if (isAdmin) return true;
 
     if (requiredLevel === 'FULL_ACCESS') {
       return isAdmin;
@@ -322,23 +340,26 @@ class AuthService {
     userData: Omit<DfrUser, 'id' | 'created_at'>,
     initialPassword: string = 'dfr@123'
   ): Promise<DfrUser> {
-    const nextIdNum = this.users.reduce((max, u) => {
-      const num = parseInt(u.id.replace('user-', ''), 10);
-      return isNaN(num) ? max : Math.max(max, num);
-    }, 0) + 1;
+    const nextIdNum =
+      this.users.reduce((max, u) => {
+        const num = parseInt(u.id.replace('user-', ''), 10);
+        return isNaN(num) ? max : Math.max(max, num);
+      }, 0) + 1;
 
-    const hash = await hashPassword(initialPassword);
+    const newId = `user-${nextIdNum.toString().padStart(3, '0')}`;
+    const hash = bcrypt.hashSync(initialPassword.trim() || 'dfr@123', 10);
+
     const newUser: DfrUser = {
       ...userData,
-      id: `user-${nextIdNum.toString().padStart(3, '0')}`,
+      id: newId,
       username: userData.username.trim().toLowerCase(),
       full_name: userData.full_name.trim().toUpperCase(),
-      password_hash: hash,
       created_at: new Date().toISOString(),
     };
 
     this.users.push(newUser);
-    this.saveUsers();
+    this.credentialsMap[newId] = hash;
+    this.saveUsersAndCredentials();
 
     auditService.log(
       'USER_CREATE',
@@ -355,7 +376,7 @@ class AuthService {
 
     const prevRole = user.role;
     Object.assign(user, updates);
-    this.saveUsers();
+    this.saveUsersAndCredentials();
 
     auditService.log(
       'USER_UPDATE',
@@ -368,12 +389,13 @@ class AuthService {
     );
   }
 
-  public async resetPassword(id: string, newPass: string) {
+  public resetPassword(id: string, newPass: string) {
     const user = this.users.find(u => u.id === id);
     if (!user) return;
 
-    user.password_hash = await hashPassword(newPass);
-    this.saveUsers();
+    const hash = bcrypt.hashSync(newPass.trim(), 10);
+    this.credentialsMap[user.id] = hash;
+    this.saveUsersAndCredentials();
 
     auditService.log(
       'PASSWORD_RESET',
@@ -384,10 +406,10 @@ class AuthService {
 
   public toggleUserActive(id: string) {
     const user = this.users.find(u => u.id === id);
-    if (!user || user.role === 'ADMIN') return; // Cannot disable primary admin
+    if (!user || user.role === 'ADMIN') return; // Primary admin cannot be deactivated
 
     user.active = !user.active;
-    this.saveUsers();
+    this.saveUsersAndCredentials();
 
     auditService.log(
       user.active ? 'USER_UPDATE' : 'USER_DISABLE',

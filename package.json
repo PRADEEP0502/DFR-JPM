@@ -11,13 +11,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "canvas-confetti": "^1.9.2",
     "lucide-react": "^0.344.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "recharts": "^2.12.2",
-    "canvas-confetti": "^1.9.2"
+    "recharts": "^2.12.2"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@types/canvas-confetti": "^1.9.0",
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",

@@ -7,22 +7,20 @@ export type UserDepartment =
   | 'GM'
   | 'JMD'
   | 'MD'
-  | 'ACCOUNTS'
   | 'SYSTEM ADMIN';
 
-export type AccessLevel = 'FULL_ACCESS' | 'FULL_EDIT' | 'DEPARTMENT_ACCESS';
+export type AccessLevel = 'DEPARTMENT_ACCESS' | 'FULL_EDIT' | 'FULL_ACCESS';
 
 export interface DfrUser {
   id: string;
   username: string;
   full_name: string;
-  role: UserRole;
   department: UserDepartment;
+  role: UserRole;
   access_level: AccessLevel;
   active: boolean;
-  password_hash?: string;
-  created_at?: string;
   last_login_at?: string;
+  created_at?: string;
 }
 
 export interface AuthSession {

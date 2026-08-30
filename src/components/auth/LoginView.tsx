@@ -6,14 +6,12 @@ import {
   Eye,
   EyeOff,
   ArrowRight,
-  Sparkles,
   Layers,
   CheckCircle2,
   AlertCircle,
-  Building2,
   KeyRound,
 } from 'lucide-react';
-import { authService, DEFAULT_USERS } from '../../services/authService';
+import { authService } from '../../services/authService';
 import { DfrUser } from '../../types/dfr';
 
 interface LoginViewProps {
@@ -21,10 +19,9 @@ interface LoginViewProps {
 }
 
 export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
-  const [username, setUsername] = useState<string>('dfr_admin');
-  const [password, setPassword] = useState<string>('dfr@123');
+  const [username, setUsername] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [rememberMe, setRememberMe] = useState<boolean>(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -34,8 +31,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
     setIsLoading(true);
 
     try {
-      const rememberDays = rememberMe ? 30 : 1;
-      const res = await authService.login(username, password, rememberDays);
+      const res = await authService.login(username, password);
 
       if (res.success && res.user) {
         onLoginSuccess(res.user);
@@ -49,12 +45,6 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
     }
   };
 
-  const handleQuickSelect = (user: DfrUser) => {
-    setUsername(user.username);
-    setPassword('dfr@123');
-    setErrorMessage(null);
-  };
-
   return (
     <div className="min-h-screen w-screen bg-gradient-to-br from-slate-950 via-slate-900 to-sky-950 text-slate-100 flex flex-col justify-center items-center p-4 sm:p-6 lg:p-8 relative overflow-hidden font-sans selection:bg-sky-500 selection:text-white">
       {/* 3D Background Decorative Glows */}
@@ -64,7 +54,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
       {/* Main Container Card */}
       <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-12 bg-slate-900/90 backdrop-blur-xl border border-slate-800/80 rounded-3xl shadow-2xl overflow-hidden z-10 animate-in fade-in zoom-in-95 duration-200">
         
-        {/* Left Side: Brand & Feature Highlights */}
+        {/* Left Side: Brand & Pipeline Highlights */}
         <div className="lg:col-span-5 bg-gradient-to-br from-sky-950 via-slate-900 to-indigo-950 p-6 sm:p-8 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-slate-800 relative overflow-hidden">
           <div className="space-y-6 relative z-10">
             {/* Logo Badge */}
@@ -107,7 +97,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
               </div>
               <div className="flex items-center gap-2.5 text-xs text-slate-300">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>Persistent 30-day session security</span>
+                <span>Persistent enterprise session authentication</span>
               </div>
             </div>
           </div>
@@ -117,12 +107,12 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
               <ShieldCheck className="w-4 h-4 text-sky-400" />
               Role-Based Access Control
             </span>
-            <span className="font-mono text-slate-400">v2.0 Enterprise</span>
+            <span className="font-mono text-slate-400">v2.5 Enterprise</span>
           </div>
         </div>
 
-        {/* Right Side: Login Form & Quick Accounts */}
-        <div className="lg:col-span-7 p-6 sm:p-8 flex flex-col justify-between space-y-6">
+        {/* Right Side: Secure Login Form */}
+        <div className="lg:col-span-7 p-6 sm:p-8 flex flex-col justify-center space-y-6">
           <div>
             <div className="flex items-center justify-between mb-6">
               <div>
@@ -159,7 +149,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                     required
                     value={username}
                     onChange={e => setUsername(e.target.value)}
-                    placeholder="e.g. dfr_admin, vanitha, jmd"
+                    placeholder="Enter your User ID (e.g. dfr_admin, vanitha, jmd)"
                     className="w-full bg-slate-800/90 border border-slate-700 rounded-xl pl-10 pr-4 py-2.5 text-xs sm:text-sm font-semibold text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition min-h-[44px]"
                   />
                 </div>
@@ -176,7 +166,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                     required
                     value={password}
                     onChange={e => setPassword(e.target.value)}
-                    placeholder="Enter password"
+                    placeholder="Enter your password"
                     className="w-full bg-slate-800/90 border border-slate-700 rounded-xl pl-10 pr-10 py-2.5 text-xs sm:text-sm font-semibold text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition min-h-[44px]"
                   />
                   <button
@@ -190,24 +180,11 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                 </div>
               </div>
 
-              {/* Remember Me Checkbox */}
-              <div className="flex items-center justify-between pt-1">
-                <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-300">
-                  <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={e => setRememberMe(e.target.checked)}
-                    className="rounded border-slate-700 bg-slate-800 text-sky-500 focus:ring-sky-400 focus:ring-offset-slate-900 w-4 h-4"
-                  />
-                  <span className="font-semibold">Keep me signed in (Persistent Session)</span>
-                </label>
-              </div>
-
               {/* Login Button */}
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full mt-2 py-3 bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-extrabold text-sm rounded-xl sm:rounded-2xl shadow-lg shadow-sky-500/20 transition flex items-center justify-center gap-2 min-h-[46px] touch-manipulation disabled:opacity-50"
+                className="w-full mt-3 py-3 bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-extrabold text-sm rounded-xl sm:rounded-2xl shadow-lg shadow-sky-500/20 transition flex items-center justify-center gap-2 min-h-[46px] touch-manipulation disabled:opacity-50"
               >
                 {isLoading ? (
                   <span className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
@@ -219,37 +196,6 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                 )}
               </button>
             </form>
-          </div>
-
-          {/* Quick Account Selector Grid (For Easy Testing & Demonstration) */}
-          <div className="pt-4 border-t border-slate-800">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-sky-400" />
-                Quick Persona Switcher (Demo / Testing)
-              </span>
-              <span className="text-[10px] text-slate-400 font-mono">Default Pass: dfr@123</span>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5 max-h-36 overflow-y-auto pr-1">
-              {DEFAULT_USERS.map(u => (
-                <button
-                  key={u.id}
-                  type="button"
-                  onClick={() => handleQuickSelect(u)}
-                  className={`p-2 rounded-xl text-left border text-xs transition flex flex-col justify-between ${
-                    username.toLowerCase() === u.username.toLowerCase()
-                      ? 'bg-sky-950/80 border-sky-500 text-sky-200 ring-1 ring-sky-500'
-                      : 'bg-slate-800/60 border-slate-700/80 hover:bg-slate-800 text-slate-300'
-                  }`}
-                >
-                  <span className="font-extrabold truncate text-[11px]">{u.full_name}</span>
-                  <span className="text-[9px] text-slate-400 font-bold uppercase truncate">
-                    {u.department}
-                  </span>
-                </button>
-              ))}
-            </div>
           </div>
         </div>
       </div>
