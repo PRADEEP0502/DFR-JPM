@@ -300,10 +300,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       </div>
 
       {/* ========================================================================= */}
-      {/* FULL-WIDTH ROW 1: PIPELINE STAGE DISTRIBUTION (Bill Inward to Tally)      */}
+      {/* FULL-WIDTH ROW 1: PIPELINE STAGE DISTRIBUTION                             */}
       {/* ========================================================================= */}
       <Card3D noTilt={true} className="p-5 sm:p-7 shadow-sm border border-slate-200" glowColor="rgba(139, 92, 246, 0.15)">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4 mb-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold">
               <Layers className="w-5 h-5" />
@@ -321,60 +321,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
 
-        {/* 5 Stage Metric Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
-          {stageOrder.map((st, i) => {
-            const count = stageStats[st].count;
-            const amt = stageStats[st].amount;
-            const pct = totalPendingCount > 0 ? ((count / totalPendingCount) * 100).toFixed(0) : '0';
-
-            const colors = [
-              { border: 'border-sky-200', bg: 'bg-sky-50/50', badge: 'bg-sky-100 text-sky-700', text: 'text-sky-700' },
-              { border: 'border-indigo-200', bg: 'bg-indigo-50/50', badge: 'bg-indigo-100 text-indigo-700', text: 'text-indigo-700' },
-              { border: 'border-purple-200', bg: 'bg-purple-50/50', badge: 'bg-purple-100 text-purple-700', text: 'text-purple-700' },
-              { border: 'border-amber-200', bg: 'bg-amber-50/50', badge: 'bg-amber-100 text-amber-700', text: 'text-amber-700' },
-              { border: 'border-emerald-200', bg: 'bg-emerald-50/50', badge: 'bg-emerald-100 text-emerald-700', text: 'text-emerald-700' },
-            ][i];
-
-            return (
-              <div
-                key={st}
-                className={`p-3.5 rounded-2xl border ${colors.border} ${colors.bg} flex flex-col justify-between space-y-3 transition hover:shadow-sm`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md ${colors.badge}`}>
-                    Stage {i + 1}
-                  </span>
-                  <span className="text-[11px] font-extrabold text-slate-500">{pct}%</span>
-                </div>
-
-                <div>
-                  <h4 className="text-xs font-black text-slate-900 truncate">
-                    {STAGE_DISPLAY_NAMES[st]}
-                  </h4>
-                  <p className={`text-2xl font-black mt-1 ${colors.text}`}>
-                    {count} <span className="text-xs font-semibold text-slate-500">bills</span>
-                  </p>
-                  <p className="text-[11px] font-bold text-slate-500 mt-0.5">
-                    ₹{(amt / 100000).toFixed(2)}L
-                  </p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
         {/* Dedicated 3D Bar Visualizer for Stages */}
-        <div className="h-64 sm:h-72 w-full pt-2">
+        <div className="w-full pt-2">
           <BarChart3D data={stageChartData} colorScheme="purple" />
         </div>
       </Card3D>
 
       {/* ========================================================================= */}
-      {/* FULL-WIDTH ROW 2: HOLDER WORKLOAD DISTRIBUTION (Staff Physical Custody)    */}
+      {/* FULL-WIDTH ROW 2: HOLDER WORKLOAD DISTRIBUTION                            */}
       {/* ========================================================================= */}
       <Card3D noTilt={true} className="p-5 sm:p-7 shadow-sm border border-slate-200" glowColor="rgba(2, 132, 199, 0.15)">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4 mb-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-sky-100 text-sky-700 flex items-center justify-center font-bold">
               <Users className="w-5 h-5" />
@@ -383,71 +340,29 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <h2 className="text-base font-extrabold text-slate-900">
                 Holder Workload & Custody Distribution
               </h2>
-              <p className="text-xs text-slate-500">
-                Active bills physically held by operational staff members
-              </p>
             </div>
           </div>
 
           <button
             onClick={() => onSelectTab('by_holder')}
-            className="text-xs text-sky-600 font-bold hover:underline flex items-center gap-1 bg-sky-50 border border-sky-200 px-3 py-1.5 rounded-xl self-start sm:self-auto"
+            className="text-xs text-sky-600 font-bold hover:underline flex items-center gap-1 bg-sky-50 border border-sky-200 px-3 py-1.5 rounded-xl self-start sm:self-auto cursor-pointer"
           >
             View Holder Matrix
             <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
 
-        {/* Staff Custody Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5 mb-6">
-          {Object.keys(holderStats).map(name => {
-            const h = holderStats[name];
-            return (
-              <div
-                key={name}
-                className="p-4 bg-slate-50/80 border border-slate-200 rounded-2xl flex flex-col justify-between space-y-3 hover:bg-slate-100/70 transition"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-xl bg-sky-600 text-white font-extrabold text-xs flex items-center justify-center shadow-xs">
-                      {name.charAt(0)}
-                    </div>
-                    <span className="font-extrabold text-slate-900 text-xs">{name}</span>
-                  </div>
-
-                  {h.a10Count > 0 && (
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-red-100 text-red-700 border border-red-200">
-                      {h.a10Count} Critical
-                    </span>
-                  )}
-                </div>
-
-                <div className="flex items-baseline justify-between pt-1">
-                  <div>
-                    <span className="text-[10px] text-slate-400 uppercase font-bold">Active Custody</span>
-                    <p className="text-xl font-black text-slate-900">{h.count} Bills</p>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold">Total Value</span>
-                    <p className="text-sm font-extrabold text-sky-700">₹{(h.amount / 100000).toFixed(2)}L</p>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
         {/* Dedicated 3D Bar Visualizer for Holders */}
-        <div className="h-64 sm:h-72 w-full pt-2">
+        <div className="w-full pt-2">
           <BarChart3D data={holderChartData} colorScheme="blue" />
         </div>
       </Card3D>
 
       {/* ========================================================================= */}
-      {/* FULL-WIDTH ROW 3: AGEING BAND DISTRIBUTION (Strictly BR Date Basis)       */}
+      {/* FULL-WIDTH ROW 3: AGEING BAND DISTRIBUTION                                */}
       {/* ========================================================================= */}
       <Card3D noTilt={true} className="p-5 sm:p-7 shadow-sm border border-slate-200" glowColor="rgba(16, 185, 129, 0.15)">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4 mb-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
               <Clock className="w-5 h-5" />
@@ -456,9 +371,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <h2 className="text-base font-extrabold text-slate-900">
                 Ageing Band Distribution (BR Date Basis)
               </h2>
-              <p className="text-xs text-slate-500">
-                Calculated strictly from Bill Receipt Date (Age = Current Date - BR Date)
-              </p>
             </div>
           </div>
 
@@ -469,67 +381,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
 
-        {/* 4 Ageing Metric Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          {/* Normal 0-2d */}
-          <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-black uppercase text-emerald-800 tracking-wider">
-                Normal (0–2 Days)
-              </span>
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-            </div>
-            <p className="text-2xl font-black text-emerald-700">{normalBills.length} Bills</p>
-            <p className="text-xs font-bold text-slate-500">
-              ₹{(normalBills.reduce((s, b) => s + b.amount, 0) / 100000).toFixed(2)}L Value
-            </p>
-          </div>
-
-          {/* A-3 3-4d */}
-          <div className="p-4 rounded-2xl bg-yellow-50/70 border border-yellow-200 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-black uppercase text-yellow-800 tracking-wider">
-                A-3 (3–4 Days)
-              </span>
-              <span className="w-2.5 h-2.5 rounded-full bg-yellow-500" />
-            </div>
-            <p className="text-2xl font-black text-yellow-700">{a3Bills.length} Bills</p>
-            <p className="text-xs font-bold text-slate-500">
-              ₹{(a3Bills.reduce((s, b) => s + b.amount, 0) / 100000).toFixed(2)}L Value
-            </p>
-          </div>
-
-          {/* A-5 5-9d */}
-          <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-black uppercase text-amber-800 tracking-wider">
-                A-5 (5–9 Days)
-              </span>
-              <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-            </div>
-            <p className="text-2xl font-black text-amber-700">{a5Bills.length} Bills</p>
-            <p className="text-xs font-bold text-slate-500">
-              ₹{(a5Bills.reduce((s, b) => s + b.amount, 0) / 100000).toFixed(2)}L Value
-            </p>
-          </div>
-
-          {/* A-10 >=10d */}
-          <div className="p-4 rounded-2xl bg-red-50/90 border border-red-300 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-black uppercase text-red-800 tracking-wider">
-                A-10 Critical (≥10 Days)
-              </span>
-              <span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-ping" />
-            </div>
-            <p className="text-2xl font-black text-red-600">{a10Bills.length} Bills</p>
-            <p className="text-xs font-bold text-red-700">
-              ₹{(criticalPendingAmount / 100000).toFixed(2)}L Escalation
-            </p>
-          </div>
-        </div>
-
         {/* 3D Ageing Donut Chart */}
-        <div className="h-64 sm:h-72 w-full pt-2 flex items-center justify-center">
+        <div className="w-full pt-2 flex items-center justify-center">
           <PieChart3D data={ageDistributionData} totalBills={totalPendingCount} />
         </div>
       </Card3D>
