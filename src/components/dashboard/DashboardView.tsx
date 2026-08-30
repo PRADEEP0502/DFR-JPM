@@ -1,16 +1,25 @@
 import React from 'react';
 import {
   FileText,
-  IndianRupee,
   Clock,
-  AlertOctagon,
   AlertTriangle,
-  Calculator,
-  CreditCard,
-  CheckCircle2,
-  ChevronRight,
+  AlertOctagon,
+  Users,
   Layers,
+  ChevronRight,
+  TrendingUp,
+  CreditCard,
+  IndianRupee,
+  CheckCircle2,
+  Calendar,
   Sparkles,
+  ArrowRight,
+  Filter,
+  BarChart3,
+  PieChart as PieChartIcon,
+  Activity,
+  Calculator,
+  UserCheck,
 } from 'lucide-react';
 import {
   BillRegisterItem,
@@ -18,11 +27,12 @@ import {
   DfrAlert,
   ProcessStage,
   STAGE_DISPLAY_NAMES,
+  AgeBand,
 } from '../../types/dfr';
 import { ViewTab } from '../layout/Sidebar';
 import { Card3D } from '../ui/Card3D';
-import { PieChart3D, Pie3DSlice } from '../ui/PieChart3D';
 import { BarChart3D, Bar3DItem } from '../ui/BarChart3D';
+import { PieChart3D, Pie3DSlice } from '../ui/PieChart3D';
 
 interface DashboardViewProps {
   bills: BillRegisterItem[];
@@ -36,25 +46,29 @@ interface DashboardViewProps {
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
   bills,
+  users,
   alerts,
+  currentUser,
   onSelectTab,
   onSelectBill,
   onAcknowledgeAlert,
 }) => {
-  // STRICT RULE: Dashboard KPI counts strictly ONLY include active pending bills (EXCLUDE PAID/CLOSED)
-  const activeBills = bills.filter(
-    b => b.bill_status !== 'PAID' && b.bill_status !== 'CLOSED' && b.dfr_status !== 'PAID'
-  );
+  // Filter active/open bills
+  const activeBills = bills.filter(b => b.bill_status !== 'PAID' && b.bill_status !== 'CLOSED');
 
-  const totalPendingCount = activeBills.length;
-  const totalPendingAmount = activeBills.reduce((sum, b) => sum + b.amount, 0);
-
+  // Strict Ageing metrics
+  const normalBills = activeBills.filter(b => b.age_band === 'NORMAL');
   const a3Bills = activeBills.filter(b => b.age_band === 'A-3');
   const a5Bills = activeBills.filter(b => b.age_band === 'A-5');
   const a10Bills = activeBills.filter(b => b.age_band === 'A-10');
 
+  const totalPendingAmount = activeBills.reduce((sum, b) => sum + b.amount, 0);
+  const totalPendingCount = activeBills.length;
+  const criticalPendingAmount = a10Bills.reduce((sum, b) => sum + b.amount, 0);
+
+  // Tally stats
   const tallyPendingBills = activeBills.filter(
-    b => b.tally_status !== 'EXPORTED' && b.tally_status !== 'POSTED'
+    b => b.tally_status === 'WAITING' || b.tally_status === 'PENDING'
   );
   const tallyPendingAmount = tallyPendingBills.reduce((sum, b) => sum + b.amount, 0);
 
@@ -63,48 +77,60 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   );
   const tallyDoneAmount = tallyDoneBills.reduce((sum, b) => sum + b.amount, 0);
 
-  // Group by Holder for 3D Bar Chart (Strictly Actual Person Names)
+  // Group by Holder (Staff Persons)
   const excludedHolders = new Set(['IAD', 'AO', 'JMD', 'ACCOUNTS', 'UNASSIGNED']);
-  const holderMap: Record<string, number> = {};
+  const holderStats: Record<string, { count: number; amount: number; a10Count: number }> = {};
+  
   activeBills.forEach(b => {
     const name = (b.current_holder_name || '').trim();
     if (name && !excludedHolders.has(name.toUpperCase())) {
-      holderMap[name] = (holderMap[name] || 0) + 1;
+      if (!holderStats[name]) {
+        holderStats[name] = { count: 0, amount: 0, a10Count: 0 };
+      }
+      holderStats[name].count += 1;
+      holderStats[name].amount += b.amount;
+      if (b.age_band === 'A-10') {
+        holderStats[name].a10Count += 1;
+      }
     }
   });
-  const holderChartData: Bar3DItem[] = Object.keys(holderMap).map(name => ({
+
+  const holderChartData: Bar3DItem[] = Object.keys(holderStats).map(name => ({
     name,
-    bills: holderMap[name],
+    bills: holderStats[name].count,
   }));
 
-  // Group by Current Stage for 3D Bar Chart (Bill Inward → IAD → AO → JMD → Accounts / Tally)
+  // Group by Process Stage
   const stageOrder: ProcessStage[] = ['BILL_INWARD', 'IAD', 'AO', 'JMD', 'ACCOUNTS'];
-  const stageMap: Record<ProcessStage, number> = {
-    BILL_INWARD: 0,
-    IAD: 0,
-    AO: 0,
-    JMD: 0,
-    ACCOUNTS: 0,
-    TALLY: 0,
+  const stageStats: Record<ProcessStage, { count: number; amount: number }> = {
+    BILL_INWARD: { count: 0, amount: 0 },
+    IAD: { count: 0, amount: 0 },
+    AO: { count: 0, amount: 0 },
+    JMD: { count: 0, amount: 0 },
+    ACCOUNTS: { count: 0, amount: 0 },
+    TALLY: { count: 0, amount: 0 },
   };
+
   activeBills.forEach(b => {
     if (b.current_stage === 'TALLY') {
-      stageMap.ACCOUNTS++;
-    } else if (stageMap[b.current_stage] !== undefined) {
-      stageMap[b.current_stage]++;
+      stageStats.ACCOUNTS.count++;
+      stageStats.ACCOUNTS.amount += b.amount;
+    } else if (stageStats[b.current_stage]) {
+      stageStats[b.current_stage].count++;
+      stageStats[b.current_stage].amount += b.amount;
     }
   });
 
   const stageChartData: Bar3DItem[] = stageOrder.map(st => ({
     name: STAGE_DISPLAY_NAMES[st],
-    bills: stageMap[st],
+    bills: stageStats[st].count,
   }));
 
-  // 3D Ageing Distribution Donut Data (strictly from BRDate)
+  // 3D Ageing Distribution Donut Data
   const ageDistributionData: Pie3DSlice[] = [
     {
       name: 'Normal (0-2d)',
-      value: activeBills.filter(b => b.age_band === 'NORMAL').length,
+      value: normalBills.length,
       color: '#10b981',
       darkColor: '#047857',
     },
@@ -114,7 +140,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   ];
 
   return (
-    <div className="space-y-6 sm:space-y-8 pb-16 max-w-full overflow-hidden">
+    <div className="space-y-6 sm:space-y-8 pb-16 max-w-full overflow-hidden text-slate-900 font-sans">
+      
       {/* Executive Hero Banner */}
       <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-slate-900 via-sky-950 to-slate-900 p-4 sm:p-6 md:p-8 text-white shadow-2xl border border-sky-500/20">
         <div className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 sm:w-96 sm:h-96 rounded-full bg-gradient-to-br from-sky-500/20 to-indigo-500/0 blur-3xl pointer-events-none" />
@@ -138,7 +165,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="flex items-center gap-3 shrink-0">
             <button
               onClick={() => onSelectTab('register')}
-              className="w-full sm:w-auto px-4 sm:px-5 py-2.5 bg-white hover:bg-sky-50 text-sky-950 rounded-xl sm:rounded-2xl font-black text-xs shadow-xl shadow-white/10 transition transform-gpu active:scale-95 flex items-center justify-center gap-2 min-h-[44px] touch-manipulation"
+              className="w-full sm:w-auto px-4 sm:px-5 py-2.5 bg-white hover:bg-sky-50 text-sky-950 rounded-xl sm:rounded-2xl font-black text-xs shadow-xl shadow-white/10 transition transform-gpu active:scale-95 flex items-center justify-center gap-2 min-h-[44px] touch-manipulation cursor-pointer"
             >
               <FileText className="w-4 h-4 text-sky-600" />
               Open Bill Register ({totalPendingCount})
@@ -147,7 +174,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
       </div>
 
-      {/* Row 1: KPI Cards */}
+      {/* Row 1: KPI Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3.5 sm:gap-5">
         {/* Total Pending Bills */}
         <Card3D glowColor="rgba(2, 132, 199, 0.2)" className="p-5">
@@ -178,51 +205,55 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <IndianRupee className="w-4 h-4" />
             </div>
           </div>
-          <p className="text-3xl font-black text-emerald-600 mt-4 tracking-tight">
+          <p className="text-3xl font-black text-slate-900 mt-4 tracking-tight">
             ₹{(totalPendingAmount / 100000).toFixed(2)}L
           </p>
           <p className="text-xs text-slate-500 mt-1 font-semibold">
-            ₹{totalPendingAmount.toLocaleString('en-IN')}
+            ₹{totalPendingAmount.toLocaleString('en-IN')} Total
           </p>
         </Card3D>
 
-        {/* A-3 Early Warning */}
-        <Card3D glowColor="rgba(234, 179, 8, 0.2)" className="p-5">
+        {/* Normal (0-2d) */}
+        <Card3D glowColor="rgba(16, 185, 129, 0.2)" className="p-5">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-extrabold uppercase tracking-wider text-yellow-700">
-              A-3 (3–4 Days)
+            <span className="text-xs font-extrabold uppercase tracking-wider text-emerald-700">
+              Normal (0-2d)
             </span>
-            <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center text-white shadow-md shadow-yellow-500/30">
+            <div className="w-9 h-9 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
               <Clock className="w-4 h-4" />
             </div>
           </div>
-          <p className="text-3xl font-black text-yellow-600 mt-4 tracking-tight">
-            {a3Bills.length}
+          <p className="text-3xl font-black text-emerald-600 mt-4 tracking-tight">
+            {normalBills.length}
           </p>
-          <p className="text-xs text-yellow-700 mt-1 font-bold">Early follow-up band</p>
+          <p className="text-xs text-slate-500 mt-1 font-semibold">
+            {totalPendingCount > 0 ? ((normalBills.length / totalPendingCount) * 100).toFixed(1) : 0}% of active
+          </p>
         </Card3D>
 
-        {/* A-5 Follow-Up */}
-        <Card3D glowColor="rgba(245, 158, 11, 0.25)" className="p-5">
+        {/* A-5 Warning Card */}
+        <Card3D glowColor="rgba(245, 158, 11, 0.2)" className="p-5">
           <div className="flex items-center justify-between">
             <span className="text-xs font-extrabold uppercase tracking-wider text-amber-700">
-              A-5 (5–9 Days)
+              A-5 (5-9 Days)
             </span>
-            <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center text-white shadow-md shadow-amber-500/30">
+            <div className="w-9 h-9 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold">
               <AlertTriangle className="w-4 h-4" />
             </div>
           </div>
           <p className="text-3xl font-black text-amber-600 mt-4 tracking-tight">
             {a5Bills.length}
           </p>
-          <p className="text-xs text-amber-700 mt-1 font-bold">Needs urgent push</p>
+          <p className="text-xs text-slate-500 mt-1 font-semibold">
+            Warning escalation zone
+          </p>
         </Card3D>
 
         {/* A-10 CRITICAL Card */}
         <Card3D
           glowColor="rgba(239, 68, 68, 0.4)"
           onClick={() => onSelectTab('critical')}
-          className={`p-5 transition ${
+          className={`p-5 transition cursor-pointer ${
             a10Bills.length > 0
               ? 'bg-gradient-to-br from-red-500 via-rose-600 to-red-700 text-white border-red-500 shadow-xl shadow-red-500/30'
               : ''
@@ -268,58 +299,245 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </Card3D>
       </div>
 
-      {/* Row 2: 3D Charts (Holder Workload, Stage Distribution, Ageing Distribution) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
-        {/* Holder Workload Distribution */}
-        <Card3D noTilt={true} className="p-4 sm:p-6" glowColor="rgba(2, 132, 199, 0.18)">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-2">
+      {/* ========================================================================= */}
+      {/* FULL-WIDTH ROW 1: PIPELINE STAGE DISTRIBUTION (Bill Inward to Tally)      */}
+      {/* ========================================================================= */}
+      <Card3D noTilt={true} className="p-5 sm:p-7 shadow-sm border border-slate-200" glowColor="rgba(139, 92, 246, 0.15)">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4 mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold">
+              <Layers className="w-5 h-5" />
+            </div>
             <div>
-              <h3 className="text-sm font-extrabold text-slate-900">Holder Workload Distribution</h3>
-              <p className="text-xs text-slate-400">Bills currently held per person</p>
-            </div>
-            <div className="w-8 h-8 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center font-bold">
-              <Layers className="w-4 h-4" />
+              <h2 className="text-base font-extrabold text-slate-900">
+                Pipeline Stage Distribution
+              </h2>
+              <p className="text-xs text-slate-500">
+                Process workflow: Bill Inward → IAD → AO → JMD → Accounts / Tally
+              </p>
             </div>
           </div>
-          <div className="h-64 flex items-center justify-center pt-2">
-            <BarChart3D data={holderChartData} colorScheme="blue" />
-          </div>
-        </Card3D>
 
-        {/* Current Stage Pipeline Distribution (Bill Inward to Tally) */}
-        <Card3D noTilt={true} className="p-4 sm:p-6" glowColor="rgba(139, 92, 246, 0.18)">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-2">
+          <div className="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 self-start sm:self-auto">
+            <span>Total Active in Pipeline:</span>
+            <span className="text-purple-700 font-extrabold">{totalPendingCount} Bills</span>
+          </div>
+        </div>
+
+        {/* 5 Stage Metric Cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
+          {stageOrder.map((st, i) => {
+            const count = stageStats[st].count;
+            const amt = stageStats[st].amount;
+            const pct = totalPendingCount > 0 ? ((count / totalPendingCount) * 100).toFixed(0) : '0';
+
+            const colors = [
+              { border: 'border-sky-200', bg: 'bg-sky-50/50', badge: 'bg-sky-100 text-sky-700', text: 'text-sky-700' },
+              { border: 'border-indigo-200', bg: 'bg-indigo-50/50', badge: 'bg-indigo-100 text-indigo-700', text: 'text-indigo-700' },
+              { border: 'border-purple-200', bg: 'bg-purple-50/50', badge: 'bg-purple-100 text-purple-700', text: 'text-purple-700' },
+              { border: 'border-amber-200', bg: 'bg-amber-50/50', badge: 'bg-amber-100 text-amber-700', text: 'text-amber-700' },
+              { border: 'border-emerald-200', bg: 'bg-emerald-50/50', badge: 'bg-emerald-100 text-emerald-700', text: 'text-emerald-700' },
+            ][i];
+
+            return (
+              <div
+                key={st}
+                className={`p-3.5 rounded-2xl border ${colors.border} ${colors.bg} flex flex-col justify-between space-y-3 transition hover:shadow-sm`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md ${colors.badge}`}>
+                    Stage {i + 1}
+                  </span>
+                  <span className="text-[11px] font-extrabold text-slate-500">{pct}%</span>
+                </div>
+
+                <div>
+                  <h4 className="text-xs font-black text-slate-900 truncate">
+                    {STAGE_DISPLAY_NAMES[st]}
+                  </h4>
+                  <p className={`text-2xl font-black mt-1 ${colors.text}`}>
+                    {count} <span className="text-xs font-semibold text-slate-500">bills</span>
+                  </p>
+                  <p className="text-[11px] font-bold text-slate-500 mt-0.5">
+                    ₹{(amt / 100000).toFixed(2)}L
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Dedicated 3D Bar Visualizer for Stages */}
+        <div className="h-64 sm:h-72 w-full pt-2">
+          <BarChart3D data={stageChartData} colorScheme="purple" />
+        </div>
+      </Card3D>
+
+      {/* ========================================================================= */}
+      {/* FULL-WIDTH ROW 2: HOLDER WORKLOAD DISTRIBUTION (Staff Physical Custody)    */}
+      {/* ========================================================================= */}
+      <Card3D noTilt={true} className="p-5 sm:p-7 shadow-sm border border-slate-200" glowColor="rgba(2, 132, 199, 0.15)">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4 mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-sky-100 text-sky-700 flex items-center justify-center font-bold">
+              <Users className="w-5 h-5" />
+            </div>
             <div>
-              <h3 className="text-sm font-extrabold text-slate-900">Pipeline Stage Distribution</h3>
-              <p className="text-xs text-slate-400">Bill Inward → IAD → AO → JMD → Accounts / Tally</p>
-            </div>
-            <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
-              <Layers className="w-4 h-4" />
+              <h2 className="text-base font-extrabold text-slate-900">
+                Holder Workload & Custody Distribution
+              </h2>
+              <p className="text-xs text-slate-500">
+                Active bills physically held by operational staff members
+              </p>
             </div>
           </div>
-          <div className="h-64 flex items-center justify-center pt-2">
-            <BarChart3D data={stageChartData} colorScheme="purple" />
-          </div>
-        </Card3D>
 
-        {/* Ageing Band Distribution (BR Date) */}
-        <Card3D noTilt={true} className="p-4 sm:p-6 md:col-span-2 xl:col-span-1" glowColor="rgba(16, 185, 129, 0.2)">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-2">
+          <button
+            onClick={() => onSelectTab('by_holder')}
+            className="text-xs text-sky-600 font-bold hover:underline flex items-center gap-1 bg-sky-50 border border-sky-200 px-3 py-1.5 rounded-xl self-start sm:self-auto"
+          >
+            View Holder Matrix
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        {/* Staff Custody Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5 mb-6">
+          {Object.keys(holderStats).map(name => {
+            const h = holderStats[name];
+            return (
+              <div
+                key={name}
+                className="p-4 bg-slate-50/80 border border-slate-200 rounded-2xl flex flex-col justify-between space-y-3 hover:bg-slate-100/70 transition"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-xl bg-sky-600 text-white font-extrabold text-xs flex items-center justify-center shadow-xs">
+                      {name.charAt(0)}
+                    </div>
+                    <span className="font-extrabold text-slate-900 text-xs">{name}</span>
+                  </div>
+
+                  {h.a10Count > 0 && (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-red-100 text-red-700 border border-red-200">
+                      {h.a10Count} Critical
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-baseline justify-between pt-1">
+                  <div>
+                    <span className="text-[10px] text-slate-400 uppercase font-bold">Active Custody</span>
+                    <p className="text-xl font-black text-slate-900">{h.count} Bills</p>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[10px] text-slate-400 uppercase font-bold">Total Value</span>
+                    <p className="text-sm font-extrabold text-sky-700">₹{(h.amount / 100000).toFixed(2)}L</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Dedicated 3D Bar Visualizer for Holders */}
+        <div className="h-64 sm:h-72 w-full pt-2">
+          <BarChart3D data={holderChartData} colorScheme="blue" />
+        </div>
+      </Card3D>
+
+      {/* ========================================================================= */}
+      {/* FULL-WIDTH ROW 3: AGEING BAND DISTRIBUTION (Strictly BR Date Basis)       */}
+      {/* ========================================================================= */}
+      <Card3D noTilt={true} className="p-5 sm:p-7 shadow-sm border border-slate-200" glowColor="rgba(16, 185, 129, 0.15)">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4 mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+              <Clock className="w-5 h-5" />
+            </div>
             <div>
-              <h3 className="text-sm font-extrabold text-slate-900">Ageing Band Distribution</h3>
-              <p className="text-xs text-slate-400">Based strictly on BR Date</p>
-            </div>
-            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
-              <Sparkles className="w-4 h-4" />
+              <h2 className="text-base font-extrabold text-slate-900">
+                Ageing Band Distribution (BR Date Basis)
+              </h2>
+              <p className="text-xs text-slate-500">
+                Calculated strictly from Bill Receipt Date (Age = Current Date - BR Date)
+              </p>
             </div>
           </div>
-          <div className="h-64 flex items-center justify-center pt-2">
-            <PieChart3D data={ageDistributionData} totalBills={totalPendingCount} />
-          </div>
-        </Card3D>
-      </div>
 
-      {/* Row 3: Pipeline Tiles (Tally & Payment/Posting) */}
+          <div className="flex items-center gap-2">
+            <span className="px-3 py-1 rounded-full text-xs font-black bg-red-100 text-red-700 border border-red-200">
+              {a10Bills.length} Critical A-10 Bills
+            </span>
+          </div>
+        </div>
+
+        {/* 4 Ageing Metric Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          {/* Normal 0-2d */}
+          <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-black uppercase text-emerald-800 tracking-wider">
+                Normal (0–2 Days)
+              </span>
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+            </div>
+            <p className="text-2xl font-black text-emerald-700">{normalBills.length} Bills</p>
+            <p className="text-xs font-bold text-slate-500">
+              ₹{(normalBills.reduce((s, b) => s + b.amount, 0) / 100000).toFixed(2)}L Value
+            </p>
+          </div>
+
+          {/* A-3 3-4d */}
+          <div className="p-4 rounded-2xl bg-yellow-50/70 border border-yellow-200 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-black uppercase text-yellow-800 tracking-wider">
+                A-3 (3–4 Days)
+              </span>
+              <span className="w-2.5 h-2.5 rounded-full bg-yellow-500" />
+            </div>
+            <p className="text-2xl font-black text-yellow-700">{a3Bills.length} Bills</p>
+            <p className="text-xs font-bold text-slate-500">
+              ₹{(a3Bills.reduce((s, b) => s + b.amount, 0) / 100000).toFixed(2)}L Value
+            </p>
+          </div>
+
+          {/* A-5 5-9d */}
+          <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-black uppercase text-amber-800 tracking-wider">
+                A-5 (5–9 Days)
+              </span>
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+            </div>
+            <p className="text-2xl font-black text-amber-700">{a5Bills.length} Bills</p>
+            <p className="text-xs font-bold text-slate-500">
+              ₹{(a5Bills.reduce((s, b) => s + b.amount, 0) / 100000).toFixed(2)}L Value
+            </p>
+          </div>
+
+          {/* A-10 >=10d */}
+          <div className="p-4 rounded-2xl bg-red-50/90 border border-red-300 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-black uppercase text-red-800 tracking-wider">
+                A-10 Critical (≥10 Days)
+              </span>
+              <span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-ping" />
+            </div>
+            <p className="text-2xl font-black text-red-600">{a10Bills.length} Bills</p>
+            <p className="text-xs font-bold text-red-700">
+              ₹{(criticalPendingAmount / 100000).toFixed(2)}L Escalation
+            </p>
+          </div>
+        </div>
+
+        {/* 3D Ageing Donut Chart */}
+        <div className="h-64 sm:h-72 w-full pt-2 flex items-center justify-center">
+          <PieChart3D data={ageDistributionData} totalBills={totalPendingCount} />
+        </div>
+      </Card3D>
+
+      {/* Row 4: Pipeline Tiles (Tally Posting & Payment Workflow) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
         {/* Tally Pending Tile */}
         <Card3D
@@ -406,7 +624,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </Card3D>
       </div>
 
-      {/* Row 4: Critical (A-10) Urgent Action Table */}
+      {/* Row 5: Critical (A-10) Urgent Action Table */}
       <Card3D glowColor="rgba(239, 68, 68, 0.25)" className="p-6 border-red-200">
         <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
           <div className="flex items-center gap-3">
@@ -425,7 +643,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
           <button
             onClick={() => onSelectTab('critical')}
-            className="text-xs text-red-600 font-bold hover:underline flex items-center gap-1 bg-red-50 border border-red-200 px-3 py-1.5 rounded-xl"
+            className="text-xs text-red-600 font-bold hover:underline flex items-center gap-1 bg-red-50 border border-red-200 px-3 py-1.5 rounded-xl cursor-pointer"
           >
             View All Critical ({a10Bills.length})
             <ChevronRight className="w-3.5 h-3.5" />
@@ -439,7 +657,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+            <table className="w-full text-left text-xs min-w-[750px]">
               <thead className="bg-slate-100/90 text-slate-700 uppercase tracking-wider font-bold border-b border-slate-200">
                 <tr>
                   <th className="py-3 px-4">Header ID</th>
@@ -502,7 +720,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         ) : (
                           <button
                             onClick={() => alertObj && onAcknowledgeAlert(alertObj.id)}
-                            className="px-3.5 py-1.5 bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-500 hover:to-rose-600 text-white font-bold text-[11px] rounded-xl shadow-md transition"
+                            className="px-3.5 py-1.5 bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-500 hover:to-rose-600 text-white font-bold text-[11px] rounded-xl shadow-md transition cursor-pointer"
                           >
                             Acknowledge Alert
                           </button>
