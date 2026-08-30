@@ -312,9 +312,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <h2 className="text-base font-extrabold text-slate-900">
                 Pipeline Stage Distribution
               </h2>
-              <p className="text-xs text-slate-500">
-                Process workflow: Bill Inward → IAD → AO → JMD → Accounts / Tally
-              </p>
             </div>
           </div>
 
