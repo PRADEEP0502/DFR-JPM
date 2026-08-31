@@ -222,12 +222,16 @@ class DfrService {
       const diffTime = Math.max(0, now.getTime() - brDateObj.getTime());
       const ageDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-      // Business Rule: If Accounts Export status is completed/exported, exclude from A-10 Critical
+      // Business Rule: ONLY genuinely exported bills are excluded from A-10 Critical.
+      // Bills at pre-accounts stages (BILL_INWARD, IAD, AO, JMD) are NEVER excluded!
       const isAccountsExported =
-        erp.tally_status === 'EXPORTED' ||
-        erp.tally_status === 'POSTED' ||
-        !!erp.tally_exported_date ||
-        erp.bill_status === 'PAID';
+        (erp.tally_status?.toUpperCase() === 'EXPORTED' ||
+         erp.tally_status?.toUpperCase() === 'POSTED' ||
+         dfr.dfr_status === 'TALLY_DONE' ||
+         erp.bill_status === 'PAID') &&
+        (dfr.current_stage === 'TALLY' ||
+         erp.tally_status?.toUpperCase() === 'EXPORTED' ||
+         erp.tally_status?.toUpperCase() === 'POSTED');
 
       // Ageing Bands: 0-2: NORMAL, 3-4: A-3, 5-9: A-5, 10+: A-10 Critical (only if NOT Accounts Exported)
       let ageBand: AgeBand = 'NORMAL';
@@ -648,7 +652,6 @@ class DfrService {
             b =>
               b.tally_status === 'EXPORTED' ||
               b.tally_status === 'POSTED' ||
-              !!b.tally_exported_date ||
               b.bill_status === 'PAID' ||
               b.bill_status === 'CLOSED'
           )
