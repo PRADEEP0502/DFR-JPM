@@ -565,19 +565,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                           {bill.age_days} Days
                         </span>
                       </td>
-                      <td className="py-3.5 px-4 text-right" onClick={e => e.stopPropagation()}>
-                        {isAcked ? (
-                          <span className="text-[11px] text-emerald-700 font-bold bg-emerald-100 border border-emerald-200 px-3 py-1 rounded-lg">
-                            ✓ Acknowledged
-                          </span>
-                        ) : (
-                          <button
-                            onClick={() => alertObj && onAcknowledgeAlert(alertObj.id)}
-                            className="px-3.5 py-1.5 bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-500 hover:to-rose-600 text-white font-bold text-[11px] rounded-xl shadow-md transition cursor-pointer"
-                          >
-                            Acknowledge Alert
-                          </button>
-                        )}
+                      <td className="py-3.5 px-4 text-right">
+                        <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-100 hover:bg-sky-50 text-slate-700 hover:text-sky-700 font-bold text-[11px] rounded-xl border border-slate-200 hover:border-sky-300 transition shadow-2xs">
+                          <span>View Bill</span>
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </span>
                       </td>
                     </tr>
                   );

@@ -378,25 +378,12 @@ export const CriticalA10View: React.FC<CriticalA10ViewProps> = ({
                     </div>
                   </div>
 
-                  {/* Action Bar */}
-                  <div
-                    className="pt-1 flex items-center justify-between"
-                    onClick={e => e.stopPropagation()}
-                  >
-                    {isAcked ? (
-                      <div className="w-full py-2 px-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                        <span>Alert Acknowledged</span>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => alertObj && onAcknowledgeAlert(alertObj.id)}
-                        className="w-full py-2.5 px-4 bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 hover:border-rose-600 rounded-xl text-xs font-bold transition duration-150 flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
-                      >
-                        <ShieldAlert className="w-4 h-4" />
-                        <span>Acknowledge Alert</span>
-                      </button>
-                    )}
+                  {/* Clean Card Footer / Action Hint */}
+                  <div className="pt-1 flex items-center justify-between text-xs font-bold text-slate-500 group-hover:text-sky-700 transition">
+                    <span className="text-[11px] font-medium text-slate-400">Click to view custody timeline</span>
+                    <span className="flex items-center gap-1 text-sky-700 font-extrabold text-xs">
+                      View Details <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition" />
+                    </span>
                   </div>
                 </div>
               );
