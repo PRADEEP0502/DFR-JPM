@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { RefreshCw, Search, Clock, UserCheck, Menu, Shield, LogOut } from 'lucide-react';
+import { RefreshCw, Search, Clock, UserCheck, Menu, Shield, LogOut, User } from 'lucide-react';
 import { DfrUser, UserRole, SyncState } from '../../types/dfr';
 
 interface TopBarProps {
@@ -56,13 +56,12 @@ export const TopBar: React.FC<TopBarProps> = ({
     return () => clearInterval(interval);
   }, [syncState.last_synced_at]);
 
-  const roleColors: Record<UserRole, string> = {
-    ADMIN: 'bg-rose-50 text-rose-700 border-rose-200',
-    MD: 'bg-purple-50 text-purple-700 border-purple-200',
-    MANAGER: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-    STAFF: 'bg-sky-50 text-sky-700 border-sky-200',
-    ACCOUNTS: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  };
+  // Clean formatted name
+  const formattedName = currentUser.full_name.replace(/_/g, ' ');
+  const formattedDepartment =
+    currentUser.department === 'SYSTEM ADMIN'
+      ? 'System Administrator'
+      : `${currentUser.department.charAt(0) + currentUser.department.slice(1).toLowerCase()} Dept`;
 
   return (
     <header className="h-16 bg-white border-b border-slate-200/90 px-3 sm:px-6 flex items-center justify-between sticky top-0 z-20 shadow-xs shrink-0 gap-2 sm:gap-4 font-sans">
@@ -104,7 +103,7 @@ export const TopBar: React.FC<TopBarProps> = ({
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
         
         {/* Modern Sync Pill */}
-        <div className="flex items-center bg-slate-50 border border-slate-200/90 rounded-xl p-1 text-xs shadow-2xs">
+        <div className="flex items-center bg-slate-50 border border-slate-200/90 rounded-2xl p-1 text-xs shadow-2xs">
           <div className="flex items-center gap-1.5 px-2.5 py-1">
             <span className="relative flex h-2 w-2 shrink-0">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -120,7 +119,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           <button
             onClick={onSyncNow}
             disabled={syncState.is_syncing}
-            className="flex items-center gap-1.5 px-2.5 py-1 text-sky-600 hover:text-sky-700 hover:bg-sky-50/80 rounded-lg font-bold text-xs disabled:opacity-50 transition cursor-pointer"
+            className="flex items-center gap-1.5 px-2.5 py-1 text-sky-600 hover:text-sky-700 hover:bg-sky-50/80 rounded-xl font-bold text-xs disabled:opacity-50 transition cursor-pointer"
             title="Trigger Selsoft ERP Sync"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${syncState.is_syncing ? 'animate-spin text-sky-600' : ''}`} />
@@ -128,27 +127,18 @@ export const TopBar: React.FC<TopBarProps> = ({
           </button>
         </div>
 
-        {/* User Profile Pill */}
-        <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200/90 rounded-xl px-3 py-1.5 text-xs shadow-2xs">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-sky-500 to-indigo-600 text-white font-black flex items-center justify-center text-xs shadow-xs shrink-0">
-            {currentUser.full_name.charAt(0).toUpperCase()}
+        {/* Executive User Profile Capsule */}
+        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100/80 border border-slate-200/90 rounded-2xl pl-2 pr-3.5 py-1.5 text-xs shadow-2xs transition">
+          <div className="w-8 h-8 rounded-full bg-slate-900 text-white font-black flex items-center justify-center text-xs shadow-xs shrink-0 ring-2 ring-slate-100">
+            {formattedName.charAt(0).toUpperCase()}
           </div>
           
           <div className="hidden sm:block text-left">
-            <div className="flex items-center gap-1.5">
-              <span className="font-black text-slate-900 text-xs leading-none">
-                {currentUser.full_name}
-              </span>
-              <span
-                className={`px-1.5 py-0.5 rounded text-[9px] font-black uppercase border ${
-                  roleColors[currentUser.role] || 'bg-slate-100 text-slate-700 border-slate-200'
-                }`}
-              >
-                {currentUser.role}
-              </span>
-            </div>
-            <span className="text-[10px] text-slate-500 font-semibold block mt-0.5">
-              {currentUser.department}
+            <span className="font-extrabold text-slate-900 text-xs block leading-tight tracking-tight">
+              {formattedName}
+            </span>
+            <span className="text-[10px] text-slate-500 font-medium block">
+              {formattedDepartment}
             </span>
           </div>
         </div>
@@ -158,7 +148,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           <button
             onClick={onLogout}
             title="Logout from session"
-            className="p-2 rounded-xl bg-slate-50 border border-slate-200/90 text-slate-500 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-200 transition flex items-center justify-center min-h-[36px] min-w-[36px] cursor-pointer"
+            className="p-2 rounded-2xl bg-slate-50 border border-slate-200/90 text-slate-500 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-200 transition flex items-center justify-center min-h-[36px] min-w-[36px] cursor-pointer"
           >
             <LogOut className="w-4 h-4" />
           </button>
