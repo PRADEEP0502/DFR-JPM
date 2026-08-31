@@ -77,13 +77,21 @@ export const BillRegisterView: React.FC<BillRegisterViewProps> = ({
     return Array.from(set).sort();
   }, [bills]);
 
-  // Date range calculator for BR Date
+  // Date range calculator for BR Date (Dynamic Real-Time)
   const isWithinDateFilter = (brDateStr: string): boolean => {
     if (datePreset === 'ALL') return true;
 
     const brDate = new Date(brDateStr);
-    const now = new Date('2026-08-27T12:00:00Z');
-    const todayStr = now.toISOString().split('T')[0];
+    const now = new Date();
+
+    const formatDate = (d: Date) => {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    };
+
+    const todayStr = formatDate(now);
 
     if (datePreset === 'TODAY') {
       return brDateStr === todayStr;
@@ -91,17 +99,19 @@ export const BillRegisterView: React.FC<BillRegisterViewProps> = ({
 
     if (datePreset === 'YESTERDAY') {
       const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-      return brDateStr === yesterday.toISOString().split('T')[0];
+      return brDateStr === formatDate(yesterday);
     }
 
     if (datePreset === 'LAST_7_DAYS') {
       const cutoff = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-      return brDate >= cutoff && brDate <= now;
+      const cutoffStr = formatDate(cutoff);
+      return brDateStr >= cutoffStr && brDateStr <= todayStr;
     }
 
     if (datePreset === 'LAST_30_DAYS') {
       const cutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-      return brDate >= cutoff && brDate <= now;
+      const cutoffStr = formatDate(cutoff);
+      return brDateStr >= cutoffStr && brDateStr <= todayStr;
     }
 
     if (datePreset === 'THIS_MONTH') {

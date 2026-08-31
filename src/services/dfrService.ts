@@ -212,7 +212,7 @@ class DfrService {
   public getBillRegister(includeClosed: boolean = true): BillRegisterItem[] {
     const userMap = new Map(this.state.users.map(u => [u.id, u.full_name]));
     const labelMap = new Map(this.state.labels.map(l => [l.id, l]));
-    const now = new Date('2026-08-27T12:00:00Z');
+    const now = new Date();
 
     const dfrMap = new Map(this.state.dfrBills.map(d => [d.header_id, d]));
 
