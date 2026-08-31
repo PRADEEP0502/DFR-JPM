@@ -187,6 +187,25 @@ class DfrService {
 
 
   /**
+   * Resolves the operational holder for a bill based on its stage and category
+   */
+  public resolveHolderForBill(categoryStr: string, stage: ProcessStage): DfrUser {
+    if (stage === 'IAD') {
+      const u = this.state.users.find(x => x.id === 'user-004' || x.username === 'iad' || x.full_name === 'IAD');
+      if (u) return u;
+    }
+    if (stage === 'AO') {
+      const u = this.state.users.find(x => x.id === 'user-005' || x.username === 'ao' || x.full_name === 'AO');
+      if (u) return u;
+    }
+    if (stage === 'JMD') {
+      const u = this.state.users.find(x => x.id === 'user-007' || x.username === 'jmd' || x.full_name === 'JMD');
+      if (u) return u;
+    }
+    return this.resolveInitialHolderForCategory(categoryStr);
+  }
+
+  /**
    * Master Bill Register View:
    * Dynamic computed view combining ERP read-only fields with DFR operational state
    */
@@ -206,11 +225,11 @@ class DfrService {
       }
 
       const stage = mapErpToDfrStage(erp);
-      const initialHolder = this.resolveInitialHolderForCategory(erp.category);
+      const stageHolder = this.resolveHolderForBill(erp.category, stage);
 
       const dfr = dfrMap.get(erp.header_id) || {
         header_id: erp.header_id,
-        current_holder_id: initialHolder.id,
+        current_holder_id: stageHolder.id,
         current_stage: stage,
         dfr_status: isClosed ? 'PAID' : 'OPEN',
         created_at: new Date(erp.br_date).toISOString(),
@@ -259,7 +278,7 @@ class DfrService {
         amount: erp.amount,
         category: erp.category,
         current_holder_id: dfr.current_holder_id,
-        current_holder_name: userMap.get(dfr.current_holder_id) || initialHolder.full_name,
+        current_holder_name: userMap.get(dfr.current_holder_id) || stageHolder.full_name,
         current_stage: dfr.current_stage,
         age_days: ageDays,
         age_band: ageBand,

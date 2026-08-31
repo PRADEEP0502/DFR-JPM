@@ -66,7 +66,18 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
         {activeUsers.map(user => {
-          const personBills = activeBills.filter(b => b.current_holder_id === user.id);
+          const isIad = user.username?.toLowerCase() === 'iad' || user.full_name?.toUpperCase() === 'IAD' || user.id === 'user-004';
+          const isAo = user.username?.toLowerCase() === 'ao' || user.full_name?.toUpperCase() === 'AO' || user.id === 'user-005';
+          const isJmd = user.username?.toLowerCase() === 'jmd' || user.full_name?.toUpperCase() === 'JMD' || user.id === 'user-007';
+
+          const personBills = activeBills.filter(
+            b =>
+              b.current_holder_id === user.id ||
+              b.current_holder_name?.toUpperCase() === user.full_name?.toUpperCase() ||
+              (isIad && b.current_stage === 'IAD') ||
+              (isAo && b.current_stage === 'AO') ||
+              (isJmd && b.current_stage === 'JMD')
+          );
           const totalAmount = personBills.reduce((sum, b) => sum + b.amount, 0);
           const oldestAge = personBills.reduce((max, b) => Math.max(max, b.age_days), 0);
           const criticalCount = personBills.filter(b => b.age_band === 'A-10').length;
