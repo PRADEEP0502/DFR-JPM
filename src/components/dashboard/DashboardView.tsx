@@ -313,13 +313,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
             <div>
               <h2 className="text-base font-extrabold text-slate-900">
-                Pipeline Stage Distribution
+                Bills by Stage
               </h2>
             </div>
           </div>
 
           <div className="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 self-start sm:self-auto">
-            <span>Total Active in Pipeline:</span>
+            <span>Total Active:</span>
             <span className="text-purple-700 font-extrabold">{totalPendingCount} Bills</span>
           </div>
         </div>
@@ -341,7 +341,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
             <div>
               <h2 className="text-base font-extrabold text-slate-900">
-                Holder Workload & Custody Distribution
+                Bills by Holder
               </h2>
             </div>
           </div>
@@ -372,7 +372,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
             <div>
               <h2 className="text-base font-extrabold text-slate-900">
-                Ageing Band Distribution (BR Date Basis)
+                Bills by Ageing
               </h2>
             </div>
           </div>
