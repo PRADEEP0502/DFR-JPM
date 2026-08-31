@@ -273,65 +273,65 @@ export const BillRegisterView: React.FC<BillRegisterViewProps> = ({
   };
 
   return (
-    <div className="space-y-6 pb-16">
+    <div className="space-y-5 pb-16">
       {/* Top Header Title & Metrics Strip */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-sky-950 to-slate-900 p-4 sm:p-6 rounded-2xl sm:rounded-3xl text-white shadow-xl">
+      <div className="bg-slate-900 border border-slate-800/90 rounded-2xl sm:rounded-3xl p-5 sm:p-6 text-white shadow-xl flex flex-col lg:flex-row lg:items-center justify-between gap-5">
         <div className="min-w-0">
-          <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-sky-400 shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-sky-500/15 border border-sky-400/30 flex items-center justify-center text-sky-400 shrink-0 shadow-xs">
               <FileSpreadsheet className="w-5 h-5" />
             </div>
             <div className="min-w-0">
               <h1 className="text-xl sm:text-2xl font-black tracking-tight truncate">Master Bill Register</h1>
-              <p className="text-[11px] sm:text-xs text-sky-200/80 mt-0.5">
+              <p className="text-xs text-slate-400 mt-0.5 font-medium">
                 Real-time Selsoft ERP pipeline tracking from Bill Inward to Tally
               </p>
             </div>
           </div>
         </div>
 
-        {/* Quick Summary Badges Grid (2x2 on mobile, 4 columns on desktop) */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 shrink-0">
-          <div className="bg-white/10 backdrop-blur border border-white/10 px-3 py-2 rounded-xl sm:rounded-2xl">
-            <span className="text-[10px] text-sky-200 uppercase font-bold tracking-wider block">
+        {/* Executive Summary Metrics Badges (4 Columns) */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 shrink-0">
+          <div className="bg-slate-800/80 border border-slate-700/80 px-4 py-2.5 rounded-2xl shadow-2xs">
+            <span className="text-[10px] text-slate-400 uppercase font-extrabold tracking-wider block">
               Filtered Bills
             </span>
-            <p className="text-base sm:text-lg font-black text-white">{sortedBills.length}</p>
+            <p className="text-lg sm:text-xl font-black text-white font-mono mt-0.5">{sortedBills.length}</p>
           </div>
 
-          <div className="bg-white/10 backdrop-blur border border-white/10 px-3 py-2 rounded-xl sm:rounded-2xl">
-            <span className="text-[10px] text-emerald-200 uppercase font-bold tracking-wider block">
+          <div className="bg-slate-800/80 border border-slate-700/80 px-4 py-2.5 rounded-2xl shadow-2xs">
+            <span className="text-[10px] text-emerald-400 uppercase font-extrabold tracking-wider block">
               Total Value
             </span>
-            <p className="text-base sm:text-lg font-black text-emerald-300">
+            <p className="text-lg sm:text-xl font-black text-emerald-400 font-mono mt-0.5">
               ₹{(totalFilteredAmount / 100000).toFixed(2)}L
             </p>
           </div>
 
-          <div className="bg-white/10 backdrop-blur border border-white/10 px-3 py-2 rounded-xl sm:rounded-2xl">
-            <span className="text-[10px] text-amber-200 uppercase font-bold tracking-wider block">
+          <div className="bg-slate-800/80 border border-slate-700/80 px-4 py-2.5 rounded-2xl shadow-2xs">
+            <span className="text-[10px] text-amber-400 uppercase font-extrabold tracking-wider block">
               Avg Age
             </span>
-            <p className="text-base sm:text-lg font-black text-amber-300">{avgAgeDays} Days</p>
+            <p className="text-lg sm:text-xl font-black text-amber-300 font-mono mt-0.5">{avgAgeDays} Days</p>
           </div>
 
-          <div className="bg-white/10 backdrop-blur border border-white/10 px-3 py-2 rounded-xl sm:rounded-2xl">
-            <span className="text-[10px] text-red-200 uppercase font-bold tracking-wider block">
+          <div className="bg-slate-800/80 border border-slate-700/80 px-4 py-2.5 rounded-2xl shadow-2xs">
+            <span className="text-[10px] text-rose-400 uppercase font-extrabold tracking-wider block">
               A-10 Critical
             </span>
-            <p className="text-base sm:text-lg font-black text-red-400">{criticalFilteredCount}</p>
+            <p className="text-lg sm:text-xl font-black text-rose-400 font-mono mt-0.5">{criticalFilteredCount}</p>
           </div>
         </div>
       </div>
 
       {/* Filter Controls Card */}
-      <div className="bg-white border border-slate-200/90 rounded-3xl p-5 shadow-sm space-y-4">
+      <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-5 shadow-xs space-y-4">
         {/* Date Filter Toolbar (Based on BR Date) */}
         <div className="border-b border-slate-100 pb-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2 text-xs font-bold text-slate-700 uppercase tracking-wider">
+            <div className="flex items-center gap-2 text-xs font-black text-slate-800 uppercase tracking-wider">
               <Calendar className="w-4 h-4 text-sky-600" />
-              BR Date / Inward Filter:
+              <span>BR Date / Inward Filter:</span>
             </div>
 
             <div className="flex flex-wrap items-center gap-1.5 text-xs">
@@ -350,10 +350,10 @@ export const BillRegisterView: React.FC<BillRegisterViewProps> = ({
                 <button
                   key={preset.id}
                   onClick={() => setDatePreset(preset.id)}
-                  className={`px-3 py-1.5 rounded-xl font-bold text-xs transition ${
+                  className={`px-3.5 py-1.5 rounded-xl font-extrabold text-xs transition cursor-pointer ${
                     datePreset === preset.id
                       ? 'bg-sky-600 text-white shadow-xs'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900'
+                      : 'bg-slate-100/80 text-slate-600 hover:bg-slate-200/90 hover:text-slate-900'
                   }`}
                 >
                   {preset.label}
@@ -371,7 +371,7 @@ export const BillRegisterView: React.FC<BillRegisterViewProps> = ({
                   type="date"
                   value={customFromDate}
                   onChange={e => setCustomFromDate(e.target.value)}
-                  className="bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-slate-900 focus:outline-none focus:border-sky-500"
+                  className="bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-slate-900 focus:outline-none focus:border-sky-500 font-mono"
                 />
               </div>
 
@@ -381,13 +381,13 @@ export const BillRegisterView: React.FC<BillRegisterViewProps> = ({
                   type="date"
                   value={customToDate}
                   onChange={e => setCustomToDate(e.target.value)}
-                  className="bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-slate-900 focus:outline-none focus:border-sky-500"
+                  className="bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-slate-900 focus:outline-none focus:border-sky-500 font-mono"
                 />
               </div>
 
               <button
                 onClick={handleApplyCustomDate}
-                className="px-3.5 py-1 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs rounded-xl transition flex items-center gap-1 shadow-2xs"
+                className="px-3.5 py-1 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs rounded-xl transition flex items-center gap-1 shadow-2xs cursor-pointer"
               >
                 <Check className="w-3.5 h-3.5" /> Apply
               </button>
@@ -397,14 +397,14 @@ export const BillRegisterView: React.FC<BillRegisterViewProps> = ({
 
         {/* Dropdown Filters Grid */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-xs font-bold text-slate-700 uppercase tracking-wider">
+          <div className="flex items-center gap-2 text-xs font-black text-slate-800 uppercase tracking-wider">
             <Filter className="w-3.5 h-3.5 text-sky-600" />
-            Field Filters
+            <span>Field Filters</span>
           </div>
           {hasActiveFilters && (
             <button
               onClick={clearFilters}
-              className="text-xs text-red-600 hover:underline font-bold flex items-center gap-1"
+              className="text-xs text-rose-600 hover:text-rose-700 hover:underline font-extrabold flex items-center gap-1 cursor-pointer bg-rose-50 border border-rose-200 px-2.5 py-0.5 rounded-lg"
             >
               <RotateCcw className="w-3 h-3" /> Reset Filters
             </button>
@@ -418,7 +418,7 @@ export const BillRegisterView: React.FC<BillRegisterViewProps> = ({
             <select
               value={categoryFilter}
               onChange={e => setCategoryFilter(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 focus:outline-none focus:border-sky-500 font-medium"
+              className="w-full bg-slate-50/90 border border-slate-200 rounded-xl p-2.5 text-slate-900 focus:outline-none focus:border-sky-500 font-semibold"
             >
               <option value="ALL">All Categories</option>
               {uniqueCategories.map(cat => (
@@ -435,11 +435,11 @@ export const BillRegisterView: React.FC<BillRegisterViewProps> = ({
             <select
               value={holderFilter}
               onChange={e => setHolderFilter(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 focus:outline-none focus:border-sky-500 font-medium"
+              className="w-full bg-slate-50/90 border border-slate-200 rounded-xl p-2.5 text-slate-900 focus:outline-none focus:border-sky-500 font-semibold"
             >
               <option value="ALL">All Holders</option>
               {users
-                .filter(u => u.id !== 'user-000')
+                .filter(u => u.id !== 'user-000' && u.id !== 'user-006' && u.id !== 'user-008' && u.id !== 'user-009' && u.id !== 'user-010')
                 .map(u => (
                   <option key={u.id} value={u.id}>
                     {u.full_name}
@@ -454,7 +454,7 @@ export const BillRegisterView: React.FC<BillRegisterViewProps> = ({
             <select
               value={stageFilter}
               onChange={e => setStageFilter(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 focus:outline-none focus:border-sky-500 font-medium"
+              className="w-full bg-slate-50/90 border border-slate-200 rounded-xl p-2.5 text-slate-900 focus:outline-none focus:border-sky-500 font-semibold"
             >
               <option value="ALL">All Stages</option>
               {(
