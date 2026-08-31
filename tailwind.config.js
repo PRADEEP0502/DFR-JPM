@@ -23,7 +23,8 @@ export default {
         }
       },
       fontFamily: {
-        sans: ['Inter', 'Outfit', 'system-ui', 'sans-serif'],
+        sans: ['"Plus Jakarta Sans"', 'Inter', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
       }
     },
   },
