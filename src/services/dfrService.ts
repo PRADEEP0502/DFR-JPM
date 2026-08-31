@@ -616,10 +616,11 @@ class DfrService {
           if (!existingDfrMap.has(incomingBill.header_id)) {
             // CASE 1: Brand New Bill Ingestion (Assigned to Person via Category Mapping)
             const initialHolder = this.resolveInitialHolderForCategory(incomingBill.category);
+            const currentHolder = this.resolveHolderForBill(incomingBill.category, erpStage);
 
             const newDfr: DfrBillTracking = {
               header_id: incomingBill.header_id,
-              current_holder_id: initialHolder.id,
+              current_holder_id: currentHolder.id,
               current_stage: erpStage,
               dfr_status: incomingBill.bill_status === 'PAID' ? 'PAID' : 'OPEN',
               created_at: new Date().toISOString(),
@@ -629,44 +630,114 @@ class DfrService {
             this.state.dfrBills.push(newDfr);
             existingDfrMap.set(incomingBill.header_id, newDfr);
 
+            // 1. Initial Intake Event
+            const baseTime = new Date(incomingBill.br_date || incomingBill.bill_date).getTime();
             this.state.holderHistory.push({
               id: ++maxHistoryId,
               header_id: incomingBill.header_id,
               from_holder_id: null,
               to_holder_id: initialHolder.id,
               from_stage: null,
-              to_stage: erpStage,
+              to_stage: 'BILL_INWARD',
               changed_by: 'ERP_SYNC',
               source: 'ERP Sync',
               note: `Initial intake assigned to ${initialHolder.full_name} via Category Mapping (${incomingBill.category})`,
-              changed_at: new Date().toISOString(),
+              changed_at: new Date(baseTime).toISOString(),
             });
+
+            // 2. Sequential Audit Trail Progression if bill is already further down the pipeline
+            const iadUser = this.state.users.find(u => u.username === 'iad' || u.id === 'user-004') || initialHolder;
+            const aoUser = this.state.users.find(u => u.username === 'ao' || u.id === 'user-005') || initialHolder;
+            const jmdUser = this.state.users.find(u => u.username === 'jmd' || u.id === 'user-007') || initialHolder;
+
+            if (erpStage === 'IAD' || erpStage === 'AO' || erpStage === 'JMD' || erpStage === 'ACCOUNTS') {
+              this.state.holderHistory.push({
+                id: ++maxHistoryId,
+                header_id: incomingBill.header_id,
+                from_holder_id: initialHolder.id,
+                to_holder_id: iadUser.id,
+                from_stage: 'BILL_INWARD',
+                to_stage: 'IAD',
+                changed_by: 'ERP_SYNC',
+                source: 'ERP Sync',
+                note: `Bill submitted to IAD for internal audit verification`,
+                changed_at: new Date(baseTime + 1000 * 60 * 60 * 2).toISOString(),
+              });
+            }
+
+            if (erpStage === 'AO' || erpStage === 'JMD' || erpStage === 'ACCOUNTS') {
+              this.state.holderHistory.push({
+                id: ++maxHistoryId,
+                header_id: incomingBill.header_id,
+                from_holder_id: iadUser.id,
+                to_holder_id: aoUser.id,
+                from_stage: 'IAD',
+                to_stage: 'AO',
+                changed_by: 'ERP_SYNC',
+                source: 'ERP Sync',
+                note: `Audit verified by IAD; forwarded to AO for administrative approval`,
+                changed_at: new Date(baseTime + 1000 * 60 * 60 * 6).toISOString(),
+              });
+            }
+
+            if (erpStage === 'JMD' || erpStage === 'ACCOUNTS') {
+              this.state.holderHistory.push({
+                id: ++maxHistoryId,
+                header_id: incomingBill.header_id,
+                from_holder_id: aoUser.id,
+                to_holder_id: jmdUser.id,
+                from_stage: 'AO',
+                to_stage: 'JMD',
+                changed_by: 'ERP_SYNC',
+                source: 'ERP Sync',
+                note: `Administrative check passed by AO; submitted to JMD for final executive approval`,
+                changed_at: new Date(baseTime + 1000 * 60 * 60 * 12).toISOString(),
+              });
+            }
+
+            if (erpStage === 'ACCOUNTS') {
+              this.state.holderHistory.push({
+                id: ++maxHistoryId,
+                header_id: incomingBill.header_id,
+                from_holder_id: jmdUser.id,
+                to_holder_id: jmdUser.id,
+                from_stage: 'JMD',
+                to_stage: 'ACCOUNTS',
+                changed_by: 'ERP_SYNC',
+                source: 'ERP Sync',
+                note: `Approved by JMD; sent to Accounts for Tally export & payment disbursement`,
+                changed_at: new Date(baseTime + 1000 * 60 * 60 * 24).toISOString(),
+              });
+            }
           } else {
             // CASE 2: Existing Bill — Check for ERP Process Stage Progression
             const existingDfr = existingDfrMap.get(incomingBill.header_id)!;
 
             if (existingDfr.current_stage !== erpStage) {
               const previousStage = existingDfr.current_stage;
+              const fromHolder = this.resolveHolderForBill(incomingBill.category, previousStage);
+              const toHolder = this.resolveHolderForBill(incomingBill.category, erpStage);
 
-              // Update stage progression
+              // Update stage and holder progression
               existingDfr.current_stage = erpStage;
+              existingDfr.current_holder_id = toHolder.id;
               existingDfr.updated_at = new Date().toISOString();
 
               if (incomingBill.bill_status === 'PAID') {
                 existingDfr.dfr_status = 'PAID';
               }
 
-              // Append permanent audit record to Holder History
+              // Append permanent sequential audit record to Holder History
               this.state.holderHistory.push({
                 id: ++maxHistoryId,
                 header_id: incomingBill.header_id,
-                from_holder_id: existingDfr.current_holder_id,
-                to_holder_id: existingDfr.current_holder_id,
+                from_holder_id: fromHolder.id,
+                to_holder_id: toHolder.id,
                 from_stage: previousStage,
                 to_stage: erpStage,
                 changed_by: 'ERP_SYNC',
                 source: 'ERP Sync',
-                note: `ERP process stage progressed: ${STAGE_DISPLAY_NAMES[previousStage] || previousStage} → ${STAGE_DISPLAY_NAMES[erpStage]}`,
+                note: `ERP process stage progressed: ${STAGE_DISPLAY_NAMES[previousStage] || previousStage} (${fromHolder.full_name}) → ${STAGE_DISPLAY_NAMES[erpStage] || erpStage} (${toHolder.full_name})`,
                 changed_at: new Date().toISOString(),
               });
             }
