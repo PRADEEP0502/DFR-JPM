@@ -40,7 +40,7 @@ export const TallyTrackerView: React.FC<TallyTrackerViewProps> = ({
     b =>
       b.tally_status !== 'EXPORTED' &&
       b.tally_status !== 'POSTED' &&
-      !b.tally_exported_date &&
+      b.dfr_status !== 'TALLY_DONE' &&
       b.bill_status !== 'PAID' &&
       b.bill_status !== 'CLOSED'
   );
@@ -48,8 +48,10 @@ export const TallyTrackerView: React.FC<TallyTrackerViewProps> = ({
   // 2. Exported to Tally (Exported, awaiting posting/completion)
   const exportedBills = bills.filter(
     b =>
-      (b.tally_status === 'EXPORTED' || (!!b.tally_exported_date && b.bill_status !== 'PAID')) &&
-      b.bill_status !== 'PAID'
+      (b.tally_status === 'EXPORTED' || b.dfr_status === 'TALLY_DONE') &&
+      b.tally_status !== 'POSTED' &&
+      b.bill_status !== 'PAID' &&
+      b.bill_status !== 'CLOSED'
   );
 
   // 3. Tally Posted / Completed
