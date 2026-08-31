@@ -20,7 +20,37 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
     b => b.bill_status !== 'PAID' && b.bill_status !== 'CLOSED' && b.dfr_status !== 'PAID'
   );
 
-  const activeUsers = users.filter(u => u.id !== 'user-000');
+  const excludedUsernames = new Set([
+    'gm',
+    'md_mam',
+    'md',
+    'dfr_admin',
+    'admin',
+  ]);
+
+  const excludedFullNames = new Set([
+    'GM',
+    'MD_MAM',
+    'MD MAM',
+    'MD',
+    'DFR_ADMIN',
+    'DFR ADMIN',
+    'SUPER ADMIN',
+    'SYSTEM ADMIN',
+  ]);
+
+  const activeUsers = users.filter(u => {
+    if (u.id === 'user-000' || u.id === 'user-006' || u.id === 'user-008' || u.id === 'user-009' || u.id === 'user-010') {
+      return false;
+    }
+    if (excludedUsernames.has(u.username?.toLowerCase().trim())) {
+      return false;
+    }
+    if (excludedFullNames.has(u.full_name?.toUpperCase().trim())) {
+      return false;
+    }
+    return true;
+  });
 
   return (
     <div className="space-y-6 pb-16 max-w-full overflow-hidden">
