@@ -30,6 +30,7 @@ export const App: React.FC = () => {
   const [handoverBill, setHandoverBill] = useState<BillRegisterItem | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
+  const [selectedLabelFilter, setSelectedLabelFilter] = useState<string>('ALL');
 
   // Subscribe to service changes and trigger initial live sync
   const [, setTick] = useState(0);
@@ -190,6 +191,7 @@ export const App: React.FC = () => {
               labels={labels}
               searchQuery={searchQuery}
               onSelectBill={setSelectedBill}
+              initialLabelFilter={selectedLabelFilter}
             />
           )}
 
@@ -226,6 +228,10 @@ export const App: React.FC = () => {
               labels={labels}
               bills={bills}
               onRefresh={() => setTick(t => t + 1)}
+              onSelectLabel={labelId => {
+                setSelectedLabelFilter(labelId);
+                setCurrentTab('register');
+              }}
             />
           )}
 

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   FileSpreadsheet,
   Filter,
@@ -30,6 +30,7 @@ interface BillRegisterViewProps {
   labels: DfrLabel[];
   searchQuery: string;
   onSelectBill: (bill: BillRegisterItem) => void;
+  initialLabelFilter?: string;
 }
 
 type DateFilterPreset =
@@ -48,6 +49,7 @@ export const BillRegisterView: React.FC<BillRegisterViewProps> = ({
   labels,
   searchQuery,
   onSelectBill,
+  initialLabelFilter,
 }) => {
   // Filter States
   const [holderFilter, setHolderFilter] = useState<string>('ALL');
@@ -55,7 +57,13 @@ export const BillRegisterView: React.FC<BillRegisterViewProps> = ({
   const [bandFilter, setBandFilter] = useState<string>('ALL');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
-  const [selectedLabelId, setSelectedLabelId] = useState<string>('ALL');
+  const [selectedLabelId, setSelectedLabelId] = useState<string>(initialLabelFilter || 'ALL');
+
+  useEffect(() => {
+    if (initialLabelFilter) {
+      setSelectedLabelId(initialLabelFilter);
+    }
+  }, [initialLabelFilter]);
 
   // Date Filter States (Based strictly on BR Date / Inward Date)
   const [datePreset, setDatePreset] = useState<DateFilterPreset>('ALL');
@@ -752,13 +760,18 @@ export const BillRegisterView: React.FC<BillRegisterViewProps> = ({
                           <span className="text-[11px] text-slate-400 italic">—</span>
                         ) : (
                           b.labels.map(l => (
-                            <span
+                            <button
                               key={l.id}
-                              className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white shadow-2xs"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedLabelId(l.id);
+                              }}
+                              className="text-[10px] font-bold px-2.5 py-0.5 rounded-full text-white shadow-2xs hover:scale-105 transition transform cursor-pointer"
                               style={{ backgroundColor: l.color }}
+                              title={`Filter bills by "${l.name}"`}
                             >
                               {l.name}
-                            </span>
+                            </button>
                           ))
                         )}
                       </div>
