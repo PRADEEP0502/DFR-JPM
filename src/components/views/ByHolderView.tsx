@@ -70,14 +70,18 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
           const isAo = user.username?.toLowerCase() === 'ao' || user.full_name?.toUpperCase() === 'AO' || user.id === 'user-005';
           const isJmd = user.username?.toLowerCase() === 'jmd' || user.full_name?.toUpperCase() === 'JMD' || user.id === 'user-007';
 
-          const personBills = activeBills.filter(
-            b =>
-              b.current_holder_id === user.id ||
-              b.current_holder_name?.toUpperCase() === user.full_name?.toUpperCase() ||
-              (isIad && b.current_stage === 'IAD') ||
-              (isAo && b.current_stage === 'AO') ||
-              (isJmd && b.current_stage === 'JMD')
-          );
+          const personBills = activeBills.filter(b => {
+            if (isIad) return b.current_stage === 'IAD' || b.current_holder_name === 'IAD';
+            if (isAo) return b.current_stage === 'AO' || b.current_holder_name === 'AO';
+            if (isJmd) return b.current_stage === 'JMD' || b.current_holder_name === 'JMD';
+            
+            // Purchase / Bill Inward Staff: ONLY show bills currently at Bill Inward stage!
+            // Any bill that has progressed to IAD, AO, or JMD is strictly excluded!
+            return (
+              (b.current_holder_id === user.id || b.current_holder_name?.toUpperCase() === user.full_name?.toUpperCase()) &&
+              b.current_stage === 'BILL_INWARD'
+            );
+          });
           const totalAmount = personBills.reduce((sum, b) => sum + b.amount, 0);
           const oldestAge = personBills.reduce((max, b) => Math.max(max, b.age_days), 0);
           const criticalCount = personBills.filter(b => b.age_band === 'A-10').length;

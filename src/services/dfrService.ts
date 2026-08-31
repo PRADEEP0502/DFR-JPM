@@ -227,13 +227,24 @@ class DfrService {
       const stage = mapErpToDfrStage(erp);
       const stageHolder = this.resolveHolderForBill(erp.category, stage);
 
-      const dfr = dfrMap.get(erp.header_id) || {
+      const dfrEntry = dfrMap.get(erp.header_id);
+      const effectiveStage = dfrEntry?.current_stage || stage;
+
+      // Business Rule: If a bill has moved to IAD, AO, or JMD, the custodian is strictly that stage/department
+      const effectiveHolder =
+        effectiveStage === 'IAD' || effectiveStage === 'AO' || effectiveStage === 'JMD'
+          ? this.resolveHolderForBill(erp.category, effectiveStage)
+          : dfrEntry?.current_holder_id
+          ? this.state.users.find(u => u.id === dfrEntry.current_holder_id) || stageHolder
+          : stageHolder;
+
+      const dfr = {
         header_id: erp.header_id,
-        current_holder_id: stageHolder.id,
-        current_stage: stage,
-        dfr_status: isClosed ? 'PAID' : 'OPEN',
-        created_at: new Date(erp.br_date).toISOString(),
-        updated_at: erp.last_modified_datetime,
+        current_holder_id: effectiveHolder.id,
+        current_stage: effectiveStage,
+        dfr_status: isClosed ? 'PAID' : (dfrEntry?.dfr_status || 'OPEN'),
+        created_at: dfrEntry?.created_at || new Date(erp.br_date).toISOString(),
+        updated_at: dfrEntry?.updated_at || erp.last_modified_datetime,
       };
 
       // Strict Ageing Formula: Age = Current Date - BRDate (BRDate is the ONLY basis for age_days)
@@ -277,9 +288,9 @@ class DfrService {
         supplier: erp.supplier,
         amount: erp.amount,
         category: erp.category,
-        current_holder_id: dfr.current_holder_id,
-        current_holder_name: userMap.get(dfr.current_holder_id) || stageHolder.full_name,
-        current_stage: dfr.current_stage,
+        current_holder_id: effectiveHolder.id,
+        current_holder_name: effectiveHolder.full_name,
+        current_stage: effectiveStage,
         age_days: ageDays,
         age_band: ageBand,
         approval_status: erp.approval_status,
