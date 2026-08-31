@@ -5,12 +5,12 @@ export interface Bar3DItem {
   bills: number;
 }
 
-interface BarChart3DProps {
+interface BarChartProps {
   data: Bar3DItem[];
   colorScheme?: 'blue' | 'purple' | 'emerald';
 }
 
-export const BarChart3D: React.FC<BarChart3DProps> = ({ data, colorScheme = 'blue' }) => {
+export const BarChart3D: React.FC<BarChartProps> = ({ data, colorScheme = 'purple' }) => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   if (!data || data.length === 0) return null;
@@ -18,88 +18,91 @@ export const BarChart3D: React.FC<BarChart3DProps> = ({ data, colorScheme = 'blu
   const maxVal = Math.max(...data.map(d => d.bills), 1);
   const totalBills = data.reduce((sum, d) => sum + d.bills, 0);
 
-  // Colors for 3D faces
-  const palette = {
-    blue: {
-      front: 'url(#blueFront)',
-      top: '#7dd3fc',
-      side: '#0369a1',
-      hoverFront: '#0284c7',
-    },
+  // Gradient themes for crisp modern bars
+  const themes = {
     purple: {
-      front: 'url(#purpleFront)',
-      top: '#e9d5ff',
-      side: '#6b21a8',
-      hoverFront: '#7e22ce',
+      gradientId: 'modernPurpleGrad',
+      startColor: '#818cf8',
+      endColor: '#4f46e5',
+      hoverColor: '#6366f1',
+      glow: 'rgba(79, 70, 229, 0.25)',
+      badgeBg: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+    },
+    blue: {
+      gradientId: 'modernBlueGrad',
+      startColor: '#38bdf8',
+      endColor: '#0284c7',
+      hoverColor: '#0369a1',
+      glow: 'rgba(2, 132, 199, 0.25)',
+      badgeBg: 'bg-sky-50 text-sky-700 border-sky-200',
     },
     emerald: {
-      front: 'url(#emeraldFront)',
-      top: '#a7f3d0',
-      side: '#047857',
-      hoverFront: '#059669',
+      gradientId: 'modernEmeraldGrad',
+      startColor: '#34d399',
+      endColor: '#059669',
+      hoverColor: '#047857',
+      glow: 'rgba(5, 150, 105, 0.25)',
+      badgeBg: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     },
   }[colorScheme];
 
-  const chartHeight = 160;
-  const chartWidth = 700;
+  const svgHeight = 240;
+  const svgWidth = 800;
+  const paddingTop = 45;
+  const paddingBottom = 45;
   const paddingLeft = 45;
-  const paddingRight = 30;
-  const paddingBottom = 40;
-  const barDepth = 10; // 3D depth offset
+  const paddingRight = 35;
 
-  const availableWidth = chartWidth - paddingLeft - paddingRight;
-  const barGap = availableWidth / data.length;
-  const barWidth = Math.min(barGap * 0.45, 60);
+  const chartHeight = svgHeight - paddingTop - paddingBottom;
+  const chartWidth = svgWidth - paddingLeft - paddingRight;
+  const colGap = chartWidth / data.length;
+  const barWidth = Math.min(colGap * 0.48, 54);
 
   return (
-    <div className="flex flex-col items-center justify-center w-full h-full">
-      <div className="relative w-full h-[240px] sm:h-[270px]">
+    <div className="w-full flex flex-col items-center justify-center py-2 select-none">
+      <div className="w-full h-[250px] sm:h-[290px]">
         <svg
-          viewBox={`0 0 ${chartWidth} ${chartHeight + paddingBottom}`}
+          viewBox={`0 0 ${svgWidth} ${svgHeight}`}
           className="w-full h-full overflow-visible"
         >
           <defs>
-            {/* Front Face Gradients */}
-            <linearGradient id="blueFront" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#38bdf8" />
-              <stop offset="100%" stopColor="#0284c7" />
+            {/* Crisp Linear Gradient */}
+            <linearGradient id={themes.gradientId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={themes.startColor} />
+              <stop offset="100%" stopColor={themes.endColor} />
             </linearGradient>
 
-            <linearGradient id="purpleFront" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#c084fc" />
-              <stop offset="100%" stopColor="#8b5cf6" />
-            </linearGradient>
+            {/* Ambient Drop Shadow on Bars */}
+            <filter id="barShadow" x="-20%" y="-10%" width="140%" height="130%">
+              <feDropShadow dx="0" dy="4" stdDeviation="5" floodColor="#0f172a" floodOpacity="0.12" />
+            </filter>
 
-            <linearGradient id="emeraldFront" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#34d399" />
-              <stop offset="100%" stopColor="#059669" />
-            </linearGradient>
-
-            {/* Drop Shadow filter under 3D bars */}
-            <filter id="bar3DShadow" x="-20%" y="-10%" width="140%" height="140%">
-              <feDropShadow dx="2" dy="8" stdDeviation="5" floodColor="#0f172a" floodOpacity="0.1" />
+            {/* Hover Glow */}
+            <filter id="hoverGlow" x="-30%" y="-20%" width="160%" height="150%">
+              <feDropShadow dx="0" dy="6" stdDeviation="8" floodColor={themes.hoverColor} floodOpacity="0.35" />
             </filter>
           </defs>
 
-          {/* Grid lines */}
+          {/* Background Grid Lines & Y-Axis Scale */}
           {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => {
-            const y = chartHeight - ratio * (chartHeight - 30);
+            const y = paddingTop + chartHeight * (1 - ratio);
             const val = Math.round(ratio * maxVal);
             return (
               <g key={i}>
                 <line
                   x1={paddingLeft}
                   y1={y}
-                  x2={chartWidth - paddingRight}
+                  x2={svgWidth - paddingRight}
                   y2={y}
-                  stroke="#e2e8f0"
+                  stroke="#f1f5f9"
+                  strokeWidth="1.5"
                   strokeDasharray="4 4"
                 />
                 <text
                   x={paddingLeft - 10}
                   y={y + 4}
                   textAnchor="end"
-                  className="text-[11px] font-extrabold fill-slate-400 font-mono"
+                  className="text-[11px] font-bold fill-slate-400 font-mono"
                 >
                   {val}
                 </text>
@@ -107,98 +110,106 @@ export const BarChart3D: React.FC<BarChart3DProps> = ({ data, colorScheme = 'blu
             );
           })}
 
-          {/* Render 3D Cuboid Bars */}
-          <g filter="url(#bar3DShadow)">
-            {data.map((item, idx) => {
-              const isHovered = hoveredIndex === idx;
-              const barH = (item.bills / maxVal) * (chartHeight - 30);
-              const x = paddingLeft + idx * barGap + (barGap - barWidth) / 2;
-              const y = chartHeight - barH;
-              const liftY = isHovered ? -5 : 0;
-              const pct = totalBills > 0 ? ((item.bills / totalBills) * 100).toFixed(0) : '0';
+          {/* Baseline */}
+          <line
+            x1={paddingLeft}
+            y1={paddingTop + chartHeight}
+            x2={svgWidth - paddingRight}
+            y2={paddingTop + chartHeight}
+            stroke="#e2e8f0"
+            strokeWidth="2"
+          />
 
-              return (
+          {/* Modern Flat-Bottom Vertical Bars */}
+          {data.map((item, idx) => {
+            const isHovered = hoveredIndex === idx;
+            const percentage = totalBills > 0 ? ((item.bills / totalBills) * 100).toFixed(0) : '0';
+            const barH = Math.max(item.bills > 0 ? (item.bills / maxVal) * chartHeight : 3, 3);
+            const x = paddingLeft + idx * colGap + (colGap - barWidth) / 2;
+            const y = paddingTop + chartHeight - barH;
+            const radius = Math.min(8, barWidth / 2);
+
+            // Path for flat-bottom, rounded-top bar
+            const barPath = `
+              M ${x},${paddingTop + chartHeight}
+              L ${x},${y + radius}
+              A ${radius},${radius} 0 0 1 ${x + radius},${y}
+              L ${x + barWidth - radius},${y}
+              A ${radius},${radius} 0 0 1 ${x + barWidth},${y + radius}
+              L ${x + barWidth},${paddingTop + chartHeight}
+              Z
+            `;
+
+            return (
+              <g
+                key={item.name}
+                onMouseEnter={() => setHoveredIndex(idx)}
+                onMouseLeave={() => setHoveredIndex(null)}
+                className="cursor-pointer transition-all duration-200"
+              >
+                {/* Vertical Bar */}
+                <path
+                  d={barPath}
+                  fill={`url(#${themes.gradientId})`}
+                  filter={isHovered ? 'url(#hoverGlow)' : 'url(#barShadow)'}
+                  className="transition-all duration-300"
+                  transform={isHovered ? `scale(1.02) translate(${-x * 0.02}, ${-y * 0.02 - 3})` : ''}
+                />
+
+                {/* Floating Numeric Value Badge */}
                 <g
-                  key={item.name}
-                  onMouseEnter={() => setHoveredIndex(idx)}
-                  onMouseLeave={() => setHoveredIndex(null)}
-                  className="cursor-pointer transition-transform duration-200"
-                  transform={`translate(0, ${liftY})`}
+                  transform={`translate(${x + barWidth / 2}, ${y - 12})`}
+                  className="transition-all duration-200"
                 >
-                  {/* Front Face */}
                   <rect
-                    x={x}
-                    y={y}
-                    width={barWidth}
-                    height={barH}
-                    fill={palette.front}
-                    rx="3"
+                    x={-22}
+                    y={-18}
+                    width={44}
+                    height={20}
+                    rx={6}
+                    fill={isHovered ? '#0f172a' : '#ffffff'}
+                    stroke={isHovered ? '#0f172a' : '#e2e8f0'}
+                    strokeWidth={1}
+                    filter="url(#barShadow)"
                   />
-
-                  {/* Top Face Cap (3D Isometric Bevel) */}
-                  {barH > 1 && (
-                    <polygon
-                      points={`
-                        ${x},${y}
-                        ${x + barDepth},${y - barDepth}
-                        ${x + barWidth + barDepth},${y - barDepth}
-                        ${x + barWidth},${y}
-                      `}
-                      fill={palette.top}
-                    />
-                  )}
-
-                  {/* Right Side Face (3D Depth Wall) */}
-                  {barH > 1 && (
-                    <polygon
-                      points={`
-                        ${x + barWidth},${y}
-                        ${x + barWidth + barDepth},${y - barDepth}
-                        ${x + barWidth + barDepth},${chartHeight - barDepth}
-                        ${x + barWidth},${chartHeight}
-                      `}
-                      fill={palette.side}
-                      opacity={0.88}
-                    />
-                  )}
-
-                  {/* Value Badge on Top of Bar */}
                   <text
-                    x={x + barWidth / 2}
-                    y={y - barDepth - 6}
+                    x={0}
+                    y={-4}
                     textAnchor="middle"
-                    className={`text-[12px] font-black transition-all ${
-                      isHovered ? 'fill-sky-600 scale-110' : 'fill-slate-700'
+                    className={`text-[11px] font-black transition-colors ${
+                      isHovered ? 'fill-white' : 'fill-slate-900'
                     }`}
                   >
                     {item.bills}
                   </text>
-
-                  {/* Percentage Tag */}
-                  <text
-                    x={x + barWidth / 2}
-                    y={y - barDepth - 20}
-                    textAnchor="middle"
-                    className="text-[10px] font-extrabold fill-slate-400"
-                  >
-                    {pct}%
-                  </text>
-
-                  {/* X-Axis Clean Horizontal Label */}
-                  <text
-                    x={x + barWidth / 2}
-                    y={chartHeight + 22}
-                    textAnchor="middle"
-                    className={`text-[12px] font-extrabold transition-colors ${
-                      isHovered ? 'fill-sky-700 font-black' : 'fill-slate-700'
-                    }`}
-                  >
-                    {item.name}
-                  </text>
                 </g>
-              );
-            })}
-          </g>
+
+                {/* Percentage Label */}
+                <text
+                  x={x + barWidth / 2}
+                  y={paddingTop + chartHeight + 18}
+                  textAnchor="middle"
+                  className={`text-[11px] font-mono font-black ${
+                    isHovered ? 'fill-indigo-600' : 'fill-slate-400'
+                  }`}
+                >
+                  {percentage}%
+                </text>
+
+                {/* X-Axis Category / Stage Name */}
+                <text
+                  x={x + barWidth / 2}
+                  y={paddingTop + chartHeight + 34}
+                  textAnchor="middle"
+                  className={`text-[12px] font-extrabold tracking-tight transition-colors ${
+                    isHovered ? 'fill-slate-900 font-black' : 'fill-slate-700'
+                  }`}
+                >
+                  {item.name}
+                </text>
+              </g>
+            );
+          })}
         </svg>
       </div>
     </div>

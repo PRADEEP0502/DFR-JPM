@@ -1,5 +1,21 @@
-import React from 'react';
-import { AlertOctagon, ShieldAlert, CheckCircle2, User, Clock, IndianRupee } from 'lucide-react';
+import React, { useState } from 'react';
+import {
+  AlertOctagon,
+  ShieldAlert,
+  CheckCircle2,
+  User,
+  Clock,
+  IndianRupee,
+  ChevronRight,
+  TrendingUp,
+  BarChart3,
+  Users,
+  Search,
+  Tag,
+  Building2,
+  Calendar,
+  Layers,
+} from 'lucide-react';
 import { BillRegisterItem, DfrAlert, DfrUser, STAGE_DISPLAY_NAMES } from '../../types/dfr';
 
 interface CriticalA10ViewProps {
@@ -16,134 +32,318 @@ export const CriticalA10View: React.FC<CriticalA10ViewProps> = ({
   onSelectBill,
   onAcknowledgeAlert,
 }) => {
-  const criticalBills = bills.filter(
-    b => b.age_band === 'A-10' && b.bill_status !== 'PAID' && b.bill_status !== 'CLOSED' && b.dfr_status !== 'PAID'
+  const [searchFilter, setSearchFilter] = useState<string>('');
+
+  const activeBills = bills.filter(
+    b => b.bill_status !== 'PAID' && b.bill_status !== 'CLOSED' && b.dfr_status !== 'PAID'
   );
-  const criticalAmount = criticalBills.reduce((sum, b) => sum + b.amount, 0);
+
+  const a3Threshold = activeBills.filter(b => b.age_days >= 3);
+  const a5Threshold = activeBills.filter(b => b.age_days >= 5);
+  const a10Bills = activeBills.filter(b => b.age_band === 'A-10' || b.age_days >= 10);
+  
+  const criticalAmount = a10Bills.reduce((sum, b) => sum + b.amount, 0);
+
+  // Group Critical Bills by Current Holder (Person & Stage)
+  const holderBreakdown: Record<string, { count: number; amount: number }> = {};
+  a10Bills.forEach(b => {
+    const holder = b.current_holder_name || 'Unassigned';
+    if (!holderBreakdown[holder]) {
+      holderBreakdown[holder] = { count: 0, amount: 0 };
+    }
+    holderBreakdown[holder].count += 1;
+    holderBreakdown[holder].amount += b.amount;
+  });
+
+  const sortedHolders = Object.keys(holderBreakdown).sort(
+    (a, b) => holderBreakdown[b].count - holderBreakdown[a].count
+  );
+  const maxHolderCount = Math.max(...Object.values(holderBreakdown).map(h => h.count), 1);
+
+  // Filtered Critical Bills
+  const filteredCriticalBills = a10Bills.filter(b => {
+    if (!searchFilter.trim()) return true;
+    const q = searchFilter.toLowerCase();
+    return (
+      b.br_no.toLowerCase().includes(q) ||
+      b.supplier.toLowerCase().includes(q) ||
+      b.current_holder_name?.toLowerCase().includes(q) ||
+      b.header_id.toString().includes(q)
+    );
+  });
 
   return (
-    <div className="space-y-6 pb-16 max-w-full overflow-hidden">
-      {/* Header Banner */}
-      <div className="bg-gradient-to-r from-red-600 via-rose-700 to-slate-900 p-4 sm:p-6 rounded-2xl border border-red-500 text-white shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-start gap-3 sm:gap-4">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-white text-red-600 flex items-center justify-center font-black shadow-md shrink-0 animate-pulse">
-            <AlertOctagon className="w-6 h-6 sm:w-7 sm:h-7" />
-          </div>
+    <div className="space-y-6 pb-16 max-w-full overflow-hidden text-slate-900 font-sans">
+      
+      {/* Top 2 KPI Metric Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+        {/* A-10 Critical Count */}
+        <div className="bg-white border border-rose-200/90 rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-xs flex items-center justify-between">
           <div>
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight">
-              Critical (A-10) Escalation Register
-            </h1>
-            <p className="text-xs sm:text-sm text-red-100/90 mt-1">
-              Bills pending ≥ 10 days from BR Date requiring explicit human acknowledgement & escalation
+            <span className="text-[11px] font-black uppercase tracking-wider text-rose-600">
+              A-10 CRITICAL COUNT
+            </span>
+            <p className="text-3xl sm:text-4xl font-black text-slate-900 mt-1.5 tracking-tight">
+              {a10Bills.length} <span className="text-sm font-semibold text-slate-400">Bills</span>
             </p>
+            <p className="text-xs text-slate-500 mt-1 font-medium">
+              Pending ≥ 10 days from receipt date
+            </p>
+          </div>
+          <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center font-black shadow-xs shrink-0">
+            <AlertOctagon className="w-6 h-6 animate-pulse" />
           </div>
         </div>
 
-        <div className="bg-white/10 backdrop-blur border border-white/20 rounded-xl px-4 py-2 text-left md:text-right shrink-0">
-          <span className="text-[11px] sm:text-xs text-red-100 font-bold uppercase tracking-wider">
-            Total Critical Exposure
-          </span>
-          <p className="text-xl sm:text-2xl font-black text-white">
-            ₹{criticalAmount.toLocaleString('en-IN')}
-          </p>
+        {/* A-10 Critical Amount */}
+        <div className="bg-white border border-rose-200/90 rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-xs flex items-center justify-between">
+          <div>
+            <span className="text-[11px] font-black uppercase tracking-wider text-rose-600">
+              A-10 CRITICAL AMOUNT
+            </span>
+            <p className="text-3xl sm:text-4xl font-black text-rose-700 mt-1.5 tracking-tight">
+              ₹{criticalAmount.toLocaleString('en-IN')}
+            </p>
+            <p className="text-xs text-slate-500 mt-1 font-medium">
+              ₹{(criticalAmount / 100000).toFixed(2)} Lakhs Total Exposure
+            </p>
+          </div>
+          <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center font-black shadow-xs shrink-0">
+            <IndianRupee className="w-6 h-6" />
+          </div>
         </div>
       </div>
 
-      {/* Grid of Critical Cards */}
-      {criticalBills.length === 0 ? (
-        <div className="bg-white border border-slate-200 rounded-2xl p-8 sm:p-12 text-center space-y-3 shadow-xs">
-          <CheckCircle2 className="w-10 h-10 sm:w-12 sm:h-12 text-emerald-500 mx-auto" />
-          <h3 className="text-base sm:text-lg font-bold text-slate-900">Zero Critical A-10 Overdue Bills!</h3>
-          <p className="text-xs text-slate-500 max-w-md mx-auto">
-            All active bills are currently moving through holders within the acceptable 0–9 day timeframe from BR Date.
-          </p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
-          {criticalBills.map(bill => {
-            const alertObj = alerts.find(
-              a => a.header_id === bill.header_id && a.band === 'A-10'
-            );
-            const isAcked = !!alertObj?.acknowledged_at;
+      {/* Analytical Visual Breakdown Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        
+        {/* Chart 1: Pending Bills by Ageing Flag (Overlapping) */}
+        <div className="lg:col-span-6 bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 className="text-sm font-extrabold text-slate-900">
+              Pending bills by ageing flag (overlapping)
+            </h3>
+            <span className="text-[11px] font-bold text-slate-400 font-mono">
+              Total Active: {activeBills.length}
+            </span>
+          </div>
 
-            return (
-              <div
-                key={bill.header_id}
-                onClick={() => onSelectBill(bill)}
-                className="bg-white border border-red-200 rounded-2xl p-5 shadow-xs space-y-4 hover:border-red-400 transition cursor-pointer relative group text-slate-900"
-              >
-                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-black px-2.5 py-1 rounded bg-red-100 text-red-800 border border-red-200">
-                      {bill.br_no}
-                    </span>
-                    <span className="text-xs font-mono text-slate-500 font-bold">
-                      #{bill.header_id}
-                    </span>
-                  </div>
-                  <span className="text-xs font-bold text-red-700 bg-red-50 border border-red-200 px-2.5 py-1 rounded-full animate-pulse">
-                    {bill.age_days} Days Pending
-                  </span>
-                </div>
-
-                <div>
-                  <h3 className="text-base font-bold text-slate-900 group-hover:text-red-600 transition">
-                    {bill.supplier}
-                  </h3>
-                  <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
-                    <span>Invoice: {bill.bill_no}</span>
-                    <span>•</span>
-                    <span>BR Date: {bill.br_date}</span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 p-3 rounded-xl border border-slate-200">
-                  <div>
-                    <span className="text-[10px] text-slate-500 font-semibold">Amount:</span>
-                    <p className="font-bold text-emerald-600">
-                      ₹{bill.amount.toLocaleString('en-IN')}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-slate-500 font-semibold">Category:</span>
-                    <p className="font-bold text-slate-900">{bill.category}</p>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-slate-500 font-semibold">Current Stage:</span>
-                    <p className="font-bold text-slate-900">
-                      {STAGE_DISPLAY_NAMES[bill.current_stage] || bill.current_stage}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-slate-500 font-semibold">Current Holder:</span>
-                    <p className="font-extrabold text-sky-700">{bill.current_holder_name}</p>
-                  </div>
-                </div>
-
-                <div
-                  className="pt-2 border-t border-slate-100 flex items-center justify-between"
-                  onClick={e => e.stopPropagation()}
-                >
-                  {isAcked ? (
-                    <span className="text-xs text-emerald-700 font-bold bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-lg flex items-center gap-1.5">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                      Acknowledged
-                    </span>
-                  ) : (
-                    <button
-                      onClick={() => alertObj && onAcknowledgeAlert(alertObj.id)}
-                      className="w-full py-2 bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-500 hover:to-rose-600 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center justify-center gap-2"
-                    >
-                      <ShieldAlert className="w-4 h-4" />
-                      Acknowledge Critical Alert
-                    </button>
-                  )}
+          <div className="grid grid-cols-3 gap-3 pt-2">
+            {/* A-3 Threshold */}
+            <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200 flex flex-col justify-between space-y-3">
+              <span className="text-[11px] font-extrabold text-slate-500 uppercase">
+                A-3 (&gt;3d)
+              </span>
+              <div>
+                <p className="text-2xl sm:text-3xl font-black text-slate-800">
+                  {a3Threshold.length}
+                </p>
+                <div className="w-full bg-slate-200 h-2 rounded-full mt-2 overflow-hidden">
+                  <div
+                    className="bg-indigo-500 h-full rounded-full"
+                    style={{ width: `${(a3Threshold.length / Math.max(activeBills.length, 1)) * 100}%` }}
+                  />
                 </div>
               </div>
-            );
-          })}
+            </div>
+
+            {/* A-5 Threshold */}
+            <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200 flex flex-col justify-between space-y-3">
+              <span className="text-[11px] font-extrabold text-slate-500 uppercase">
+                A-5 (&gt;5d)
+              </span>
+              <div>
+                <p className="text-2xl sm:text-3xl font-black text-slate-800">
+                  {a5Threshold.length}
+                </p>
+                <div className="w-full bg-slate-200 h-2 rounded-full mt-2 overflow-hidden">
+                  <div
+                    className="bg-amber-500 h-full rounded-full"
+                    style={{ width: `${(a5Threshold.length / Math.max(activeBills.length, 1)) * 100}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* A-10 Threshold */}
+            <div className="p-4 rounded-2xl bg-rose-50/60 border border-rose-200 flex flex-col justify-between space-y-3">
+              <span className="text-[11px] font-extrabold text-rose-600 uppercase">
+                A-10 (&gt;10d)
+              </span>
+              <div>
+                <p className="text-2xl sm:text-3xl font-black text-rose-600">
+                  {a10Bills.length}
+                </p>
+                <div className="w-full bg-rose-200 h-2 rounded-full mt-2 overflow-hidden">
+                  <div
+                    className="bg-rose-600 h-full rounded-full animate-pulse"
+                    style={{ width: `${(a10Bills.length / Math.max(activeBills.length, 1)) * 100}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      )}
+
+        {/* Chart 2: Pending Bills by Current Holder (Horizontal Progress Bars) */}
+        <div className="lg:col-span-6 bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 className="text-sm font-extrabold text-slate-900">
+              Pending bills by current holder
+            </h3>
+            <span className="text-[11px] font-bold text-slate-400">
+              {sortedHolders.length} Active Holders
+            </span>
+          </div>
+
+          <div className="space-y-3 pt-1">
+            {sortedHolders.map(name => {
+              const h = holderBreakdown[name];
+              const pct = (h.count / maxHolderCount) * 100;
+              return (
+                <div key={name} className="space-y-1">
+                  <div className="flex items-center justify-between text-xs font-bold">
+                    <span className="text-slate-800 font-extrabold">{name}</span>
+                    <span className="text-slate-600 font-mono">
+                      {h.count} Bills (₹{(h.amount / 100000).toFixed(2)}L)
+                    </span>
+                  </div>
+                  <div className="w-full bg-slate-100 h-3.5 rounded-full overflow-hidden flex">
+                    <div
+                      className="bg-teal-600 hover:bg-teal-500 transition-all duration-300 rounded-full h-full"
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Critical Escalation Action Table & Filter */}
+      <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-xs space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+          <div>
+            <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+              <ShieldAlert className="w-5 h-5 text-rose-600" />
+              Critical A-10 Action & Escalation List ({filteredCriticalBills.length})
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Click any bill to view complete timeline, audit logs, or perform custody handover.
+            </p>
+          </div>
+
+          <div className="relative w-full sm:w-64">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchFilter}
+              onChange={e => setSearchFilter(e.target.value)}
+              placeholder="Search BR No, supplier, holder..."
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-xs font-medium text-slate-900 focus:outline-none focus:border-rose-500"
+            />
+          </div>
+        </div>
+
+        {/* Modern Executive Critical Bill Cards */}
+        {filteredCriticalBills.length === 0 ? (
+          <div className="py-12 text-center text-slate-400 text-xs">
+            No critical bills matched your filter.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
+            {filteredCriticalBills.map(bill => {
+              const alertObj = alerts.find(
+                a => a.header_id === bill.header_id && a.band === 'A-10'
+              );
+              const isAcked = !!alertObj?.acknowledged_at;
+
+              return (
+                <div
+                  key={bill.header_id}
+                  onClick={() => onSelectBill(bill)}
+                  className="bg-white border border-slate-200/90 hover:border-rose-300 rounded-2xl p-4.5 space-y-3.5 transition duration-200 cursor-pointer relative text-slate-900 shadow-xs hover:shadow-md group flex flex-col justify-between"
+                >
+                  {/* Top Badges */}
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-black px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-800 border border-slate-200">
+                        {bill.br_no}
+                      </span>
+                      <span className="text-[11px] font-mono text-slate-400 font-bold">
+                        #{bill.header_id}
+                      </span>
+                    </div>
+
+                    <span className="px-2.5 py-1 rounded-full text-xs font-extrabold bg-rose-50 text-rose-600 border border-rose-200 flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5" />
+                      <span>{bill.age_days} Days Pending</span>
+                    </span>
+                  </div>
+
+                  {/* Supplier & Amount Info */}
+                  <div className="space-y-1">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <h4 className="text-sm sm:text-base font-extrabold text-slate-900 group-hover:text-rose-600 transition truncate">
+                        {bill.supplier}
+                      </h4>
+                      <span className="text-base font-black text-slate-900 shrink-0 font-mono">
+                        ₹{bill.amount.toLocaleString('en-IN')}
+                      </span>
+                    </div>
+
+                    <p className="text-xs text-slate-500 flex items-center gap-2">
+                      <span>Inv: <strong className="text-slate-700">{bill.bill_no}</strong></span>
+                      <span>•</span>
+                      <span>BR: {bill.br_date}</span>
+                    </p>
+                  </div>
+
+                  {/* Clean Metadata Badges */}
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                    <span className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200 flex items-center gap-1">
+                      <Tag className="w-3 h-3 text-slate-400" />
+                      {bill.category}
+                    </span>
+
+                    <span className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200 flex items-center gap-1">
+                      <Layers className="w-3 h-3 text-purple-500" />
+                      {STAGE_DISPLAY_NAMES[bill.current_stage] || bill.current_stage}
+                    </span>
+
+                    <span className="px-2.5 py-1 rounded-lg text-[11px] font-black bg-sky-50 text-sky-700 border border-sky-200 flex items-center gap-1">
+                      <User className="w-3 h-3 text-sky-600" />
+                      {bill.current_holder_name}
+                    </span>
+                  </div>
+
+                  {/* Footer Action Button */}
+                  <div
+                    className="pt-3 border-t border-slate-100 flex items-center justify-between"
+                    onClick={e => e.stopPropagation()}
+                  >
+                    {isAcked ? (
+                      <span className="text-xs text-emerald-700 font-bold bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-xl flex items-center gap-1.5 w-full justify-center">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                        Alert Acknowledged
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => alertObj && onAcknowledgeAlert(alertObj.id)}
+                        className="w-full py-2.5 px-4 bg-slate-900 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors duration-150 flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />
+                        <span>Acknowledge Alert</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
