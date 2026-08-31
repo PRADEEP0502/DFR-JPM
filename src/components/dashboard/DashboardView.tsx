@@ -178,9 +178,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       </div>
 
       {/* Row 1: KPI Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3.5 sm:gap-5">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5">
         {/* Total Pending Bills */}
-        <Card3D glowColor="rgba(2, 132, 199, 0.2)" className="p-5">
+        <Card3D glowColor="rgba(2, 132, 199, 0.2)" className="p-3.5 sm:p-5">
           <div className="flex items-center justify-between">
             <span className="text-xs font-extrabold uppercase tracking-wider text-slate-500">
               Total Pending
