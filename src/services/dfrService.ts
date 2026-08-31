@@ -828,15 +828,12 @@ class DfrService {
     if (this.syncTimerId) {
       clearInterval(this.syncTimerId);
     }
-    // Check every minute if next_sync_at has arrived
+    // High-Frequency Real-Time Sync: polls Selsoft ERP every 15 seconds for instant updates
     this.syncTimerId = setInterval(() => {
-      const now = new Date().getTime();
-      const nextSync = new Date(this.state.syncState.next_sync_at).getTime();
-
-      if (now >= nextSync && !this.state.syncState.is_syncing) {
-        this.syncErpBillsNow(false);
+      if (!this.state.syncState.is_syncing && document.visibilityState === 'visible') {
+        this.syncErpBillsNow(true).catch(e => console.warn('Background live sync:', e));
       }
-    }, 60 * 1000);
+    }, 15 * 1000);
   }
 }
 

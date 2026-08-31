@@ -44,6 +44,19 @@ export const App: React.FC = () => {
     // Initial live sync from Selsoft ERP API
     dfrService.syncErpBillsNow(true);
 
+    const handleWindowFocus = () => {
+      dfrService.syncErpBillsNow(true).catch(() => {});
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        dfrService.syncErpBillsNow(true).catch(() => {});
+      }
+    };
+
+    window.addEventListener('focus', handleWindowFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     const unsubDfr = dfrService.subscribe(() => {
       setTick(t => t + 1);
     });
@@ -55,6 +68,8 @@ export const App: React.FC = () => {
     });
 
     return () => {
+      window.removeEventListener('focus', handleWindowFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       unsubDfr();
       unsubAuth();
     };
