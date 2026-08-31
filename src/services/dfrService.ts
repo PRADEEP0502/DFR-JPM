@@ -217,16 +217,27 @@ class DfrService {
         updated_at: erp.last_modified_datetime,
       };
 
-      // Strict Ageing Formula: Age = Current Date - BRDate
+      // Strict Ageing Formula: Age = Current Date - BRDate (BRDate is the ONLY basis for age_days)
       const brDateObj = new Date(erp.br_date);
       const diffTime = Math.max(0, now.getTime() - brDateObj.getTime());
       const ageDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-      // Ageing Bands: 0-2: NORMAL, 3-4: A-3, 5-9: A-5, 10+: A-10 Critical
+      // Business Rule: If Accounts Export status is completed/exported, exclude from A-10 Critical
+      const isAccountsExported =
+        erp.tally_status === 'EXPORTED' ||
+        erp.tally_status === 'POSTED' ||
+        !!erp.tally_exported_date ||
+        erp.bill_status === 'PAID';
+
+      // Ageing Bands: 0-2: NORMAL, 3-4: A-3, 5-9: A-5, 10+: A-10 Critical (only if NOT Accounts Exported)
       let ageBand: AgeBand = 'NORMAL';
-      if (ageDays >= 10) ageBand = 'A-10';
-      else if (ageDays >= 5) ageBand = 'A-5';
-      else if (ageDays >= 3) ageBand = 'A-3';
+      if (ageDays >= 10) {
+        ageBand = isAccountsExported ? 'NORMAL' : 'A-10';
+      } else if (ageDays >= 5) {
+        ageBand = isAccountsExported ? 'NORMAL' : 'A-5';
+      } else if (ageDays >= 3) {
+        ageBand = isAccountsExported ? 'NORMAL' : 'A-3';
+      }
 
       // Multi-labels
       const labelIds = this.state.billLabelsMap[erp.header_id] || [];
@@ -496,6 +507,11 @@ class DfrService {
       changed_at: nowIso,
     });
 
+    // Rule: Immediately exclude from A-10 Critical alerts upon Accounts/Tally Export
+    this.state.alerts = this.state.alerts.filter(
+      a => !(a.header_id === headerId && a.band === 'A-10')
+    );
+
     this.saveStateToStorage();
   }
 
@@ -624,12 +640,35 @@ class DfrService {
         }
       }
 
-      // Refresh A-10 alerts for active synced bills
+      // Refresh A-10 alerts strictly for active, non-exported bills
+      // Rule: Exclude all bills that have been Accounts/Tally Exported from A-10 Critical
+      const exportedHeaderIds = new Set(
+        this.state.erpBills
+          .filter(
+            b =>
+              b.tally_status === 'EXPORTED' ||
+              b.tally_status === 'POSTED' ||
+              !!b.tally_exported_date ||
+              b.bill_status === 'PAID' ||
+              b.bill_status === 'CLOSED'
+          )
+          .map(b => b.header_id)
+      );
+
+      // Purge any existing A-10 alerts for bills that are now Accounts Exported
+      this.state.alerts = this.state.alerts.filter(a => !exportedHeaderIds.has(a.header_id));
+
       const existingAlertMap = new Set(this.state.alerts.map(a => `${a.header_id}-${a.band}`));
       let maxAlertId = this.state.alerts.reduce((max, a) => Math.max(max, a.id), 0);
 
       for (const bill of this.state.erpBills) {
-        if (bill.bill_status !== 'PAID' && bill.bill_status !== 'CLOSED') {
+        const isAccountsExported = exportedHeaderIds.has(bill.header_id);
+
+        if (
+          bill.bill_status !== 'PAID' &&
+          bill.bill_status !== 'CLOSED' &&
+          !isAccountsExported
+        ) {
           const brDateObj = new Date(bill.br_date);
           const diffTime = Math.max(0, new Date().getTime() - brDateObj.getTime());
           const ageDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));

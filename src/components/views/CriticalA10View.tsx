@@ -35,13 +35,20 @@ export const CriticalA10View: React.FC<CriticalA10ViewProps> = ({
 }) => {
   const [searchFilter, setSearchFilter] = useState<string>('');
 
+  // Strict Rule: Active pending bills that have NOT been Accounts/Tally Exported
   const activeBills = bills.filter(
-    b => b.bill_status !== 'PAID' && b.bill_status !== 'CLOSED' && b.dfr_status !== 'PAID'
+    b =>
+      b.bill_status !== 'PAID' &&
+      b.bill_status !== 'CLOSED' &&
+      b.dfr_status !== 'PAID' &&
+      b.tally_status !== 'EXPORTED' &&
+      b.tally_status !== 'POSTED' &&
+      !b.tally_exported_date
   );
 
   const a3Threshold = activeBills.filter(b => b.age_days >= 3);
   const a5Threshold = activeBills.filter(b => b.age_days >= 5);
-  const a10Bills = activeBills.filter(b => b.age_band === 'A-10' || b.age_days >= 10);
+  const a10Bills = activeBills.filter(b => b.age_band === 'A-10');
   
   const criticalAmount = a10Bills.reduce((sum, b) => sum + b.amount, 0);
 
