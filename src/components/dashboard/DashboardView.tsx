@@ -77,13 +77,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   );
   const tallyDoneAmount = tallyDoneBills.reduce((sum, b) => sum + b.amount, 0);
 
-  // Group by Holder (Staff Persons)
-  const excludedHolders = new Set(['IAD', 'AO', 'JMD', 'ACCOUNTS', 'UNASSIGNED']);
+  // Group by Holder (All Active Custodians without hardcoded exclusions)
   const holderStats: Record<string, { count: number; amount: number; a10Count: number }> = {};
   
   activeBills.forEach(b => {
-    const name = (b.current_holder_name || '').trim();
-    if (name && !excludedHolders.has(name.toUpperCase())) {
+    const name = (b.current_holder_name || 'Unassigned').trim();
+    if (name) {
       if (!holderStats[name]) {
         holderStats[name] = { count: 0, amount: 0, a10Count: 0 };
       }
@@ -95,7 +94,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     }
   });
 
-  const holderChartData: Bar3DItem[] = Object.keys(holderStats).map(name => ({
+  const sortedHolderNames = Object.keys(holderStats).sort(
+    (a, b) => holderStats[b].count - holderStats[a].count
+  );
+
+  const holderChartData: Bar3DItem[] = sortedHolderNames.map(name => ({
     name,
     bills: holderStats[name].count,
   }));
