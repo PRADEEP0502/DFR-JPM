@@ -74,12 +74,15 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
             if (isIad) return b.current_stage === 'IAD' || b.current_holder_name === 'IAD';
             if (isAo) return b.current_stage === 'AO' || b.current_holder_name === 'AO';
             if (isJmd) return b.current_stage === 'JMD' || b.current_holder_name === 'JMD';
-            
+
             // Purchase / Bill Inward Staff: ONLY show bills currently at Bill Inward stage!
-            // Any bill that has progressed to IAD, AO, or JMD is strictly excluded!
+            // Any bill that has progressed to IAD, AO, JMD, ACCOUNTS, or TALLY is strictly excluded!
             return (
               (b.current_holder_id === user.id || b.current_holder_name?.toUpperCase() === user.full_name?.toUpperCase()) &&
-              b.current_stage === 'BILL_INWARD'
+              b.current_stage === 'BILL_INWARD' &&
+              b.tally_status !== 'EXPORTED' &&
+              b.tally_status !== 'POSTED' &&
+              b.dfr_status !== 'TALLY_DONE'
             );
           });
           const totalAmount = personBills.reduce((sum, b) => sum + b.amount, 0);

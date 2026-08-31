@@ -202,6 +202,19 @@ class DfrService {
       const u = this.state.users.find(x => x.id === 'user-007' || x.username === 'jmd' || x.full_name === 'JMD');
       if (u) return u;
     }
+    if (stage === 'ACCOUNTS' || stage === 'TALLY') {
+      const u = this.state.users.find(x => x.username === 'accounts' || x.department === 'ACCOUNTS' || x.id === 'user-accounts');
+      if (u) return u;
+      return {
+        id: 'user-accounts',
+        username: 'accounts',
+        full_name: 'Accounts / Tally',
+        department: 'ACCOUNTS',
+        role: 'STAFF',
+        access_level: 'DEPARTMENT_ACCESS',
+        active: true,
+      };
+    }
     return this.resolveInitialHolderForCategory(categoryStr);
   }
 
@@ -230,13 +243,21 @@ class DfrService {
       const dfrEntry = dfrMap.get(erp.header_id);
       const effectiveStage = dfrEntry?.current_stage || stage;
 
-      // Business Rule: If a bill has moved to IAD, AO, or JMD, the custodian is strictly that stage/department
-      const effectiveHolder =
-        effectiveStage === 'IAD' || effectiveStage === 'AO' || effectiveStage === 'JMD'
-          ? this.resolveHolderForBill(erp.category, effectiveStage)
-          : dfrEntry?.current_holder_id
-          ? this.state.users.find(u => u.id === dfrEntry.current_holder_id) || stageHolder
-          : stageHolder;
+      // Business Rule: If a bill has moved to IAD, AO, JMD, ACCOUNTS, or TALLY, the custodian is strictly that department (NEVER Bill Inward RP staff)
+      const isPostInwardStage =
+        effectiveStage === 'IAD' ||
+        effectiveStage === 'AO' ||
+        effectiveStage === 'JMD' ||
+        effectiveStage === 'ACCOUNTS' ||
+        effectiveStage === 'TALLY' ||
+        erp.tally_status === 'EXPORTED' ||
+        erp.tally_status === 'POSTED';
+
+      const effectiveHolder = isPostInwardStage
+        ? this.resolveHolderForBill(erp.category, effectiveStage)
+        : dfrEntry?.current_holder_id
+        ? this.state.users.find(u => u.id === dfrEntry.current_holder_id) || stageHolder
+        : stageHolder;
 
       const dfr = {
         header_id: erp.header_id,

@@ -7,6 +7,8 @@ export type UserDepartment =
   | 'GM'
   | 'JMD'
   | 'MD'
+  | 'ACCOUNTS'
+  | 'TALLY'
   | 'SYSTEM ADMIN';
 
 export type AccessLevel = 'DEPARTMENT_ACCESS' | 'FULL_EDIT' | 'FULL_ACCESS';
