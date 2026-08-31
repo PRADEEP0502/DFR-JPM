@@ -18,6 +18,9 @@ import {
   FileText,
   Layers,
   Send,
+  ArrowRightCircle,
+  Activity,
+  Check,
 } from 'lucide-react';
 import {
   BillRegisterItem,
@@ -365,17 +368,19 @@ export const BillDetailDrawer: React.FC<BillDetailDrawerProps> = ({
                 )}
               </div>
 
-              {/* Full Holder Movement Timeline */}
+              {/* Redesigned Custody Movement Audit Trail */}
               <div className="bg-slate-50/80 border border-slate-200/90 rounded-2xl p-5 space-y-4 shadow-2xs">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between border-b border-slate-200/70 pb-3">
                   <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
                     <History className="w-4 h-4 text-sky-600" />
-                    Custody Movement Timeline ({history.length})
+                    Custody Movement Audit Trail
                   </h3>
-                  <span className="text-[11px] font-mono text-slate-400">dfr_holder_history</span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-200/80 text-slate-700">
+                    {history.length} Event{history.length !== 1 ? 's' : ''}
+                  </span>
                 </div>
 
-                <div className="relative pl-6 space-y-4 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200 max-h-[340px] overflow-y-auto pr-1">
+                <div className="relative pl-6 space-y-4 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200 max-h-[350px] overflow-y-auto pr-1">
                   {history.map(item => {
                     const changedByName = userMap.get(item.changed_by) || 'System';
                     const toHolderName = userMap.get(item.to_holder_id) || 'User';
@@ -384,17 +389,33 @@ export const BillDetailDrawer: React.FC<BillDetailDrawerProps> = ({
                       : 'Bill Inward';
 
                     return (
-                      <div key={item.id} className="relative">
-                        <div className="absolute -left-6 top-1.5 w-3.5 h-3.5 rounded-full bg-sky-500 border-2 border-white ring-2 ring-sky-200" />
-                        <div className="bg-white border border-slate-200 rounded-xl p-3 text-xs space-y-1.5 shadow-2xs">
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="font-black text-slate-900 truncate">
-                              {fromHolderName} ➔ {toHolderName}
-                            </span>
-                            <div className="flex items-center gap-1.5 shrink-0">
-                              {item.source === 'ERP Sync' && (
-                                <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-indigo-50 text-indigo-700 border border-indigo-200 uppercase tracking-wider">
-                                  ERP Sync
+                      <div key={item.id} className="relative group">
+                        {/* Timeline Node Icon */}
+                        <div className="absolute -left-6 top-1.5 w-3.5 h-3.5 rounded-full bg-sky-600 border-2 border-white ring-2 ring-sky-200 shadow-2xs" />
+                        
+                        {/* Refined Timeline Card */}
+                        <div className="bg-white border border-slate-200/90 rounded-xl p-4 space-y-2.5 shadow-2xs hover:border-slate-300 transition">
+                          
+                          {/* From -> To Row */}
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex items-center gap-1.5">
+                              <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-xs font-bold border border-slate-200">
+                                {fromHolderName}
+                              </span>
+                              <ArrowRight className="w-3.5 h-3.5 text-sky-500 shrink-0" />
+                              <span className="px-2 py-0.5 rounded-md bg-sky-50 text-sky-800 text-xs font-black border border-sky-200">
+                                {toHolderName}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-2 shrink-0">
+                              {item.source === 'ERP Sync' ? (
+                                <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-indigo-50 text-indigo-700 border border-indigo-200 uppercase tracking-wider">
+                                  ERP Intake
+                                </span>
+                              ) : (
+                                <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase tracking-wider">
+                                  Manual Transfer
                                 </span>
                               )}
                               <span className="text-[10px] text-slate-400 font-mono">
@@ -403,22 +424,25 @@ export const BillDetailDrawer: React.FC<BillDetailDrawerProps> = ({
                             </div>
                           </div>
 
-                          <p className="text-slate-600">
-                            Stage:{' '}
-                            <strong className="text-slate-900">
+                          {/* Stage Name */}
+                          <div className="text-xs text-slate-600 flex items-center gap-1.5">
+                            <span className="text-slate-400 font-medium">Checkpoint Stage:</span>
+                            <span className="font-extrabold text-slate-900 bg-slate-100 px-2 py-0.5 rounded-md text-[11px]">
                               {STAGE_DISPLAY_NAMES[item.to_stage] || item.to_stage}
-                            </strong>
-                          </p>
+                            </span>
+                          </div>
 
+                          {/* Action Note / Reason */}
                           {item.note && (
-                            <p className="text-slate-700 bg-slate-50 p-2 rounded-lg border border-slate-200 italic text-[11px]">
-                              "{item.note}"
-                            </p>
+                            <div className="text-xs text-slate-700 bg-slate-50/90 border-l-2 border-sky-500 px-3 py-2 rounded-r-lg font-medium">
+                              {item.note}
+                            </div>
                           )}
 
-                          <p className="text-[10px] text-slate-400 font-semibold pt-0.5">
-                            Source: {item.source === 'ERP Sync' ? 'Selsoft ERP Sync Automation' : changedByName}
-                          </p>
+                          {/* Actor Subtitle */}
+                          <div className="text-[11px] text-slate-400 font-medium pt-0.5 flex items-center justify-between">
+                            <span>Actor: <strong className="text-slate-700">{item.source === 'ERP Sync' ? 'Selsoft ERP Sync Automation' : changedByName}</strong></span>
+                          </div>
                         </div>
                       </div>
                     );
