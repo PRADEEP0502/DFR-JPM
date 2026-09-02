@@ -139,25 +139,34 @@ class SelsoftApiClient {
       }
 
       // Map raw API fields to internal ErpBill schema
-      const mappedData: ErpBill[] = (json.Data || []).map((raw: any) => ({
-        header_id: raw.HeaderId,
-        br_no: raw.BRNo || `BR-${raw.HeaderId}`,
-        br_date: normalizeErpDate(raw.BRDate),
-        category: raw.Category || 'GENERAL',
-        supplier: raw.Supplier || 'Unknown Supplier',
-        bill_no: raw.BillNo || '—',
-        bill_date: normalizeErpDate(raw.BillDate),
-        amount: Number(raw.Amount) || 0,
-        approval_status: raw.ApprovalStatus || 'Pending',
-        next_approver: raw.NextApprover || '',
-        rejected_by: raw.RejectedBy || '',
-        rejection_reason: raw.RejectionReason || '',
-        tally_status: raw.TallyStatus || 'Waiting to Export',
-        bill_status: raw.BillStatus || 'Active',
-        tally_exported_date: raw.TallyExportedDate ? normalizeErpDate(raw.TallyExportedDate) : undefined,
-        last_modified_datetime: raw.LastModifiedDateTime || raw.BRDate || new Date().toISOString(),
-        raw_payload: raw,
-      }));
+      const mappedData: ErpBill[] = (json.Data || []).map((raw: any) => {
+        const rawCategory = (raw.Category || '').trim().toUpperCase();
+        const rawBrNo = (raw.BRNo || '').trim().toUpperCase();
+        let category = rawCategory || 'GENERAL';
+        if ((!rawCategory || category === 'GENERAL') && (rawBrNo.startsWith('SB') || rawBrNo.startsWith('SB-') || rawBrNo.startsWith('SB/'))) {
+          category = 'SERVICE';
+        }
+
+        return {
+          header_id: raw.HeaderId,
+          br_no: raw.BRNo || `BR-${raw.HeaderId}`,
+          br_date: normalizeErpDate(raw.BRDate),
+          category: category,
+          supplier: raw.Supplier || 'Unknown Supplier',
+          bill_no: raw.BillNo || '—',
+          bill_date: normalizeErpDate(raw.BillDate),
+          amount: Number(raw.Amount) || 0,
+          approval_status: raw.ApprovalStatus || 'Pending',
+          next_approver: raw.NextApprover || '',
+          rejected_by: raw.RejectedBy || '',
+          rejection_reason: raw.RejectionReason || '',
+          tally_status: raw.TallyStatus || 'Waiting to Export',
+          bill_status: raw.BillStatus || 'Active',
+          tally_exported_date: raw.TallyExportedDate ? normalizeErpDate(raw.TallyExportedDate) : undefined,
+          last_modified_datetime: raw.LastModifiedDateTime || raw.BRDate || new Date().toISOString(),
+          raw_payload: raw,
+        };
+      });
 
       return {
         Success: json.Success !== false,
