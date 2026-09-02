@@ -53,8 +53,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onSelectBill,
   onAcknowledgeAlert,
 }) => {
-  // Filter active/open bills
-  const activeBills = bills.filter(b => b.bill_status !== 'PAID' && b.bill_status !== 'CLOSED');
+  // Business Rule: Exclude all bills that are Paid, Closed, or Exported to Tally/Accounts from Active Pending counts
+  const isExportedOrDone = (b: BillRegisterItem) => {
+    const tally = (b.tally_status || '').toUpperCase().trim();
+    return (
+      tally === 'EXPORTED' ||
+      tally === 'POSTED' ||
+      b.dfr_status === 'TALLY_DONE' ||
+      b.dfr_status === 'PAID' ||
+      b.bill_status === 'PAID' ||
+      b.bill_status === 'CLOSED'
+    );
+  };
+
+  // Filter truly active pending bills before Tally/Accounts export
+  const activeBills = bills.filter(b => !isExportedOrDone(b));
 
   // Strict Ageing metrics
   const normalBills = activeBills.filter(b => b.age_band === 'NORMAL');

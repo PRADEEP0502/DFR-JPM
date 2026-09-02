@@ -87,7 +87,10 @@ export const App: React.FC = () => {
       b.age_band === 'A-10' &&
       b.bill_status !== 'PAID' &&
       b.bill_status !== 'CLOSED' &&
-      b.dfr_status !== 'PAID'
+      b.dfr_status !== 'PAID' &&
+      b.dfr_status !== 'TALLY_DONE' &&
+      b.tally_status !== 'EXPORTED' &&
+      b.tally_status !== 'POSTED'
   ).length;
 
   const showToast = (msg: string) => {
