@@ -211,12 +211,18 @@ class DfrService {
       if (u) return u;
     }
     if (stage === 'ACCOUNTS' || stage === 'TALLY') {
-      const u = this.state.users.find(x => x.username === 'accounts' || x.department === 'ACCOUNTS' || x.id === 'user-accounts');
+      const u = this.state.users.find(
+        x =>
+          x.username === 'accounts' ||
+          x.id === 'user-011' ||
+          x.department === 'ACCOUNTS' ||
+          x.id === 'user-accounts'
+      );
       if (u) return u;
       return {
-        id: 'user-accounts',
+        id: 'user-011',
         username: 'accounts',
-        full_name: 'Accounts / Tally',
+        full_name: 'ACCOUNTS',
         department: 'ACCOUNTS',
         role: 'STAFF',
         access_level: 'DEPARTMENT_ACCESS',
