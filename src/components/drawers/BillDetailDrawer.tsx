@@ -379,7 +379,7 @@ export const BillDetailDrawer: React.FC<BillDetailDrawerProps> = ({
                 <div className="flex items-center justify-between border-b border-slate-200/70 pb-3">
                   <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
                     <History className="w-4 h-4 text-sky-600" />
-                    Custody Movement Audit Trail
+                    Movement History
                   </h3>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-200/80 text-slate-700">
                     {history.length} Event{history.length !== 1 ? 's' : ''}
