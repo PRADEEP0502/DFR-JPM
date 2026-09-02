@@ -46,12 +46,12 @@ class DfrService {
         if (!this.state.categoryMappings || this.state.categoryMappings.length === 0) {
           this.state.categoryMappings = INITIAL_CATEGORY_MAPPINGS;
         } else {
-          // Auto-merge newly added standard category mappings (such as SERVICE & SB)
-          const existingCategorySet = new Set(this.state.categoryMappings.map(m => m.category.toUpperCase()));
-          for (const initMap of INITIAL_CATEGORY_MAPPINGS) {
-            if (!existingCategorySet.has(initMap.category.toUpperCase())) {
-              this.state.categoryMappings.push(initMap);
-            }
+          // Remove duplicate 'SB' and ensure unified 'SERVICE' mapping is present
+          this.state.categoryMappings = this.state.categoryMappings.filter(m => m.category.toUpperCase() !== 'SB');
+          const hasService = this.state.categoryMappings.some(m => m.category.toUpperCase() === 'SERVICE');
+          if (!hasService) {
+            const serviceInit = INITIAL_CATEGORY_MAPPINGS.find(m => m.category.toUpperCase() === 'SERVICE');
+            if (serviceInit) this.state.categoryMappings.push(serviceInit);
           }
         }
       } catch (e) {

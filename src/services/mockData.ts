@@ -14,7 +14,6 @@ export const INITIAL_CATEGORY_MAPPINGS: CategoryHolderMapping[] = [
   { id: 'map-6', category: 'STATIONARY', holder_id: 'user-003', holder_name: 'KIRUTHIKA', is_active: true, updated_at: '2026-08-27T00:00:00Z' },
   { id: 'map-7', category: 'CLEANING PURPOSE', holder_id: 'user-003', holder_name: 'KIRUTHIKA', is_active: true, updated_at: '2026-08-27T00:00:00Z' },
   { id: 'map-8', category: 'SERVICE', holder_id: 'user-002', holder_name: 'SURIYA', is_active: true, updated_at: '2026-08-27T00:00:00Z' },
-  { id: 'map-9', category: 'SB', holder_id: 'user-002', holder_name: 'SURIYA', is_active: true, updated_at: '2026-08-27T00:00:00Z' },
 ];
 
 export const INITIAL_LABELS: DfrLabel[] = [
