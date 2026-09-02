@@ -304,7 +304,7 @@ export const BillDetailDrawer: React.FC<BillDetailDrawerProps> = ({
                 <div className="flex items-center justify-between">
                   <h3 className="text-xs font-black text-sky-900 uppercase tracking-wider flex items-center gap-2">
                     <User className="w-4 h-4 text-sky-600" />
-                    Physical Custody & Action Center
+                    Bill Movement
                   </h3>
                   <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-sky-100 text-sky-800 border border-sky-200">
                     Active Handover
