@@ -415,15 +415,6 @@ export const BillDetailDrawer: React.FC<BillDetailDrawerProps> = ({
                             </div>
 
                             <div className="flex items-center gap-2 shrink-0">
-                              {item.source === 'ERP Sync' ? (
-                                <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-indigo-50 text-indigo-700 border border-indigo-200 uppercase tracking-wider">
-                                  ERP Intake
-                                </span>
-                              ) : (
-                                <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase tracking-wider">
-                                  Manual Transfer
-                                </span>
-                              )}
                               <span className="text-[10px] text-slate-400 font-mono">
                                 {new Date(item.changed_at).toLocaleString()}
                               </span>
