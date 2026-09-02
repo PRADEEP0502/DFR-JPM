@@ -311,15 +311,21 @@ export const BillDetailDrawer: React.FC<BillDetailDrawerProps> = ({
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 bg-white p-3.5 rounded-xl border border-sky-100 text-xs">
+                <div className="grid grid-cols-3 gap-3 bg-white p-3.5 rounded-xl border border-sky-100 text-xs">
                   <div>
                     <span className="text-[10px] text-slate-400 font-bold uppercase">Current Holder</span>
-                    <p className="text-sm font-black text-sky-800 mt-0.5">{bill.current_holder_name}</p>
+                    <p className="text-sm font-black text-sky-800 mt-0.5 truncate">{bill.current_holder_name}</p>
                   </div>
                   <div>
                     <span className="text-[10px] text-slate-400 font-bold uppercase">Current Stage</span>
-                    <p className="text-sm font-black text-slate-900 mt-0.5">
+                    <p className="text-sm font-black text-slate-900 mt-0.5 truncate">
                       {STAGE_DISPLAY_NAMES[bill.current_stage] || bill.current_stage}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase">Age</span>
+                    <p className="text-sm font-black text-amber-700 mt-0.5 font-mono">
+                      {bill.age_days} Days
                     </p>
                   </div>
                 </div>
