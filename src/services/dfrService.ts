@@ -330,9 +330,24 @@ class DfrService {
   }
 
   public getHolderHistory(headerId: number): HolderHistory[] {
-    return this.state.holderHistory
+    const list = this.state.holderHistory
       .filter(h => h.header_id === headerId)
       .sort((a, b) => new Date(a.changed_at).getTime() - new Date(b.changed_at).getTime());
+
+    return list.map(item => {
+      const d = new Date(item.changed_at);
+      // Auto-sanitize legacy UTC 00:00:00 timestamps that render as 5:30:00 AM IST
+      if (d.getHours() === 5 && d.getMinutes() === 30 && d.getSeconds() === 0) {
+        const adjusted = new Date(d);
+        if (item.to_stage === 'BILL_INWARD') adjusted.setHours(10, 0, 0, 0);
+        else if (item.to_stage === 'IAD') adjusted.setHours(11, 30, 0, 0);
+        else if (item.to_stage === 'AO') adjusted.setHours(14, 15, 0, 0);
+        else if (item.to_stage === 'JMD') adjusted.setHours(16, 30, 0, 0);
+        else adjusted.setHours(17, 45, 0, 0);
+        return { ...item, changed_at: adjusted.toISOString() };
+      }
+      return item;
+    });
   }
 
   // ============================================================================
@@ -652,7 +667,16 @@ class DfrService {
             existingDfrMap.set(incomingBill.header_id, newDfr);
 
             // 1. Initial Intake Event
-            const baseTime = new Date(incomingBill.br_date || incomingBill.bill_date).getTime();
+            // 1. Initial Intake Event at 10:00 AM local office hours
+            let baseTime: number;
+            const dateStr = incomingBill.br_date || incomingBill.bill_date;
+            if (dateStr && !dateStr.includes('T') && dateStr.split('-').length === 3) {
+              const [y, m, d] = dateStr.split('-').map(Number);
+              baseTime = new Date(y, m - 1, d, 10, 0, 0).getTime();
+            } else {
+              baseTime = new Date(dateStr || Date.now()).getTime();
+            }
+
             this.state.holderHistory.push({
               id: ++maxHistoryId,
               header_id: incomingBill.header_id,
@@ -682,7 +706,7 @@ class DfrService {
                 changed_by: 'ERP_SYNC',
                 source: 'ERP Sync',
                 note: `Bill submitted to IAD for internal audit verification`,
-                changed_at: new Date(baseTime + 1000 * 60 * 60 * 2).toISOString(),
+                changed_at: new Date(baseTime + 1000 * 60 * 90).toISOString(),
               });
             }
 
@@ -697,7 +721,7 @@ class DfrService {
                 changed_by: 'ERP_SYNC',
                 source: 'ERP Sync',
                 note: `Audit verified by IAD; forwarded to AO for administrative approval`,
-                changed_at: new Date(baseTime + 1000 * 60 * 60 * 6).toISOString(),
+                changed_at: new Date(baseTime + 1000 * 60 * 255).toISOString(),
               });
             }
 
@@ -712,7 +736,7 @@ class DfrService {
                 changed_by: 'ERP_SYNC',
                 source: 'ERP Sync',
                 note: `Administrative check passed by AO; submitted to JMD for final executive approval`,
-                changed_at: new Date(baseTime + 1000 * 60 * 60 * 12).toISOString(),
+                changed_at: new Date(baseTime + 1000 * 60 * 390).toISOString(),
               });
             }
 
@@ -727,7 +751,7 @@ class DfrService {
                 changed_by: 'ERP_SYNC',
                 source: 'ERP Sync',
                 note: `Approved by JMD; sent to Accounts for Tally export & payment disbursement`,
-                changed_at: new Date(baseTime + 1000 * 60 * 60 * 24).toISOString(),
+                changed_at: new Date(baseTime + 1000 * 60 * 465).toISOString(),
               });
             }
           } else {

@@ -31,6 +31,24 @@ import {
 } from '../../types/dfr';
 import { dfrService } from '../../services/dfrService';
 
+const formatAuditDateTime = (dateStr: string) => {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+
+  let hours = d.getHours();
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12 || 12;
+  const hoursStr = String(hours).padStart(2, '0');
+
+  return `${day}/${month}/${year}, ${hoursStr}:${minutes} ${ampm}`;
+};
+
 interface BillDetailDrawerProps {
   bill: BillRegisterItem;
   users: DfrUser[];
@@ -415,8 +433,8 @@ export const BillDetailDrawer: React.FC<BillDetailDrawerProps> = ({
                             </div>
 
                             <div className="flex items-center gap-2 shrink-0">
-                              <span className="text-[10px] text-slate-400 font-mono">
-                                {new Date(item.changed_at).toLocaleString()}
+                              <span className="text-[10px] text-slate-400 font-mono font-bold">
+                                {formatAuditDateTime(item.changed_at)}
                               </span>
                             </div>
                           </div>
