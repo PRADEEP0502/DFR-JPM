@@ -145,14 +145,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   // 3D Ageing Distribution Donut Data
   const ageDistributionData: Pie3DSlice[] = [
     {
-      name: 'Normal (0-2d)',
+      name: 'NORMAL (0-2D)',
       value: normalBills.length,
       color: '#10b981',
       darkColor: '#047857',
     },
-    { name: 'A-3 (3-4d)', value: a3Bills.length, color: '#eab308', darkColor: '#b45309' },
-    { name: 'A-5 (5-9d)', value: a5Bills.length, color: '#f59e0b', darkColor: '#c2410c' },
-    { name: 'A-10 (≥10d)', value: a10Bills.length, color: '#ef4444', darkColor: '#b91c1c' },
+    { name: 'A-3 (3-4D)', value: a3Bills.length, color: '#eab308', darkColor: '#b45309' },
+    { name: 'A-5 (5-9D)', value: a5Bills.length, color: '#f59e0b', darkColor: '#c2410c' },
+    { name: 'A-10 (≥10D)', value: a10Bills.length, color: '#ef4444', darkColor: '#b91c1c' },
   ];
 
   return (
@@ -384,8 +384,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <Clock className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-extrabold text-slate-900">
-                Bills by Ageing
+              <h2 className="text-base font-black text-slate-900 uppercase tracking-wide">
+                BILLS BY AGEING
               </h2>
             </div>
           </div>
