@@ -103,6 +103,7 @@ const DEFAULT_USERS = [
   { id: 'user-008', username: 'md_mam', full_name: 'MD_MAM', department: 'MD', role: 'MD', access_level: 'FULL_EDIT', active: true },
   { id: 'user-009', username: 'md', full_name: 'MD', department: 'MD', role: 'MD', access_level: 'FULL_EDIT', active: true },
   { id: 'user-010', username: 'dfr_admin', full_name: 'DFR_ADMIN', department: 'SYSTEM ADMIN', role: 'ADMIN', access_level: 'FULL_ACCESS', active: true },
+  { id: 'user-011', username: 'accounts', full_name: 'ACCOUNTS', department: 'ACCOUNTS', role: 'STAFF', access_level: 'DEPARTMENT_ACCESS', active: true },
 ];
 
 const DEFAULT_CATEGORY_MAPPINGS = [

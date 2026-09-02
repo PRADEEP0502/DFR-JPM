@@ -108,6 +108,16 @@ export const DEFAULT_USERS: DfrUser[] = [
     active: true,
     created_at: '2026-08-27T00:00:00Z',
   },
+  {
+    id: 'user-011',
+    username: 'accounts',
+    full_name: 'ACCOUNTS',
+    department: 'ACCOUNTS',
+    role: 'STAFF',
+    access_level: 'DEPARTMENT_ACCESS',
+    active: true,
+    created_at: '2026-08-27T00:00:00Z',
+  },
 ];
 
 class AuthService {
@@ -132,7 +142,22 @@ class AuthService {
 
         if (Array.isArray(parsedUsers) && parsedUsers.length > 0) {
           this.users = parsedUsers;
-          this.credentialsMap = parsedCreds;
+          this.credentialsMap = parsedCreds || {};
+
+          // Auto-merge newly added default accounts (such as accounts)
+          const existingUsernames = new Set(this.users.map(u => u.username.toLowerCase()));
+          const defaultHash = bcrypt.hashSync('dfr@123', 10);
+          let added = false;
+          for (const defU of DEFAULT_USERS) {
+            if (!existingUsernames.has(defU.username.toLowerCase())) {
+              this.users.push(defU);
+              this.credentialsMap[defU.id] = defaultHash;
+              added = true;
+            }
+          }
+          if (added) {
+            this.saveUsersAndCredentials();
+          }
           return;
         }
       } catch (e) {
