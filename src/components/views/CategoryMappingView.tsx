@@ -39,6 +39,8 @@ export const CategoryMappingView: React.FC<CategoryMappingViewProps> = ({
   );
 
   const PRESET_CATEGORIES = [
+    'SERVICE',
+    'SB',
     'CHEMICAL',
     'DYES',
     'POLYBAG',

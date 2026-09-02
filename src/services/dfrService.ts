@@ -45,6 +45,14 @@ class DfrService {
         this.state.users = authService.getUsers(); // Always ensure latest user definitions
         if (!this.state.categoryMappings || this.state.categoryMappings.length === 0) {
           this.state.categoryMappings = INITIAL_CATEGORY_MAPPINGS;
+        } else {
+          // Auto-merge newly added standard category mappings (such as SERVICE & SB)
+          const existingCategorySet = new Set(this.state.categoryMappings.map(m => m.category.toUpperCase()));
+          for (const initMap of INITIAL_CATEGORY_MAPPINGS) {
+            if (!existingCategorySet.has(initMap.category.toUpperCase())) {
+              this.state.categoryMappings.push(initMap);
+            }
+          }
         }
       } catch (e) {
         console.error('Failed to parse saved DFR state, resetting:', e);
