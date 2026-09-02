@@ -91,12 +91,12 @@ export interface StageHolderMapping {
 export type ProcessStage = 'BILL_INWARD' | 'IAD' | 'AO' | 'JMD' | 'ACCOUNTS' | 'TALLY';
 
 export const STAGE_DISPLAY_NAMES: Record<ProcessStage, string> = {
-  BILL_INWARD: 'Bill Inward',
+  BILL_INWARD: 'BILL INWARD',
   IAD: 'IAD',
   AO: 'AO',
   JMD: 'JMD',
-  ACCOUNTS: 'Accounts / Tally',
-  TALLY: 'Accounts / Tally',
+  ACCOUNTS: 'ACCOUNTS / TALLY',
+  TALLY: 'ACCOUNTS / TALLY',
 };
 
 export type DfrStatus = 'OPEN' | 'ON_HOLD' | 'TALLY_DONE' | 'PAID' | 'CLOSED';

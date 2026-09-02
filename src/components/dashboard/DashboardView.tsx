@@ -325,8 +325,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <Layers className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-extrabold text-slate-900">
-                Bills by Stage
+              <h2 className="text-base font-black text-slate-900 uppercase tracking-wide">
+                BILLS BY STAGE
               </h2>
             </div>
           </div>
@@ -353,8 +353,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <Users className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-extrabold text-slate-900">
-                Bills by Holder
+              <h2 className="text-base font-black text-slate-900 uppercase tracking-wide">
+                BILLS BY HOLDER
               </h2>
             </div>
           </div>
