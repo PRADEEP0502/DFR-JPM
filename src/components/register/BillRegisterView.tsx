@@ -85,12 +85,9 @@ export const BillRegisterView: React.FC<BillRegisterViewProps> = ({
     return Array.from(set).sort();
   }, [bills]);
 
-  // Date range calculator for BR Date (Dynamic Real-Time)
-  const isWithinDateFilter = (brDateStr: string): boolean => {
+  // Date range calculator for BR Date & Inward Date (Dynamic Real-Time & Format Tolerant)
+  const isWithinDateFilter = (bill: BillRegisterItem): boolean => {
     if (datePreset === 'ALL') return true;
-
-    const brDate = new Date(brDateStr);
-    const now = new Date();
 
     const formatDate = (d: Date) => {
       const y = d.getFullYear();
@@ -99,47 +96,81 @@ export const BillRegisterView: React.FC<BillRegisterViewProps> = ({
       return `${y}-${m}-${day}`;
     };
 
-    const todayStr = formatDate(now);
+    const normalizeDateStr = (raw?: string): string => {
+      if (!raw) return '';
+      let str = raw.trim();
+      if (str.includes('T')) str = str.split('T')[0];
+      if (str.includes('/')) {
+        const parts = str.split('/');
+        if (parts.length === 3) {
+          const [d, m, y] = parts;
+          return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+        }
+      }
+      const parts = str.split('-');
+      if (parts.length === 3) {
+        const [y, m, d] = parts;
+        return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+      }
+      const parsed = new Date(str);
+      if (!isNaN(parsed.getTime())) return formatDate(parsed);
+      return str;
+    };
 
+    const now = new Date();
+    const todayStr = formatDate(now);
+    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const yesterdayStr = formatDate(yesterday);
+
+    const brDateIso = normalizeDateStr(bill.br_date);
+    const billDateIso = normalizeDateStr(bill.bill_date);
+
+    // Check match against today or yesterday
     if (datePreset === 'TODAY') {
-      return brDateStr === todayStr;
+      return brDateIso === todayStr || billDateIso === todayStr;
     }
 
     if (datePreset === 'YESTERDAY') {
-      const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-      return brDateStr === formatDate(yesterday);
+      return brDateIso === yesterdayStr || billDateIso === yesterdayStr;
     }
 
     if (datePreset === 'LAST_7_DAYS') {
       const cutoff = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
       const cutoffStr = formatDate(cutoff);
-      return brDateStr >= cutoffStr && brDateStr <= todayStr;
+      return (
+        (brDateIso >= cutoffStr && brDateIso <= todayStr) ||
+        (billDateIso >= cutoffStr && billDateIso <= todayStr)
+      );
     }
 
     if (datePreset === 'LAST_30_DAYS') {
       const cutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
       const cutoffStr = formatDate(cutoff);
-      return brDateStr >= cutoffStr && brDateStr <= todayStr;
+      return (
+        (brDateIso >= cutoffStr && brDateIso <= todayStr) ||
+        (billDateIso >= cutoffStr && billDateIso <= todayStr)
+      );
     }
 
     if (datePreset === 'THIS_MONTH') {
-      return (
-        brDate.getFullYear() === now.getFullYear() &&
-        brDate.getMonth() === now.getMonth()
-      );
+      const checkStr = brDateIso || billDateIso;
+      if (!checkStr) return false;
+      const [y, m] = checkStr.split('-').map(Number);
+      return y === now.getFullYear() && m === (now.getMonth() + 1);
     }
 
     if (datePreset === 'LAST_MONTH') {
+      const checkStr = brDateIso || billDateIso;
+      if (!checkStr) return false;
+      const [y, m] = checkStr.split('-').map(Number);
       const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-      return (
-        brDate.getFullYear() === lastMonth.getFullYear() &&
-        brDate.getMonth() === lastMonth.getMonth()
-      );
+      return y === lastMonth.getFullYear() && m === (lastMonth.getMonth() + 1);
     }
 
     if (datePreset === 'CUSTOM') {
-      if (appliedCustomFrom && brDateStr < appliedCustomFrom) return false;
-      if (appliedCustomTo && brDateStr > appliedCustomTo) return false;
+      const checkIso = brDateIso || billDateIso;
+      if (appliedCustomFrom && checkIso < appliedCustomFrom) return false;
+      if (appliedCustomTo && checkIso > appliedCustomTo) return false;
       return true;
     }
 
@@ -176,8 +207,8 @@ export const BillRegisterView: React.FC<BillRegisterViewProps> = ({
 
   const filteredBills = useMemo(() => {
     return bills.filter(b => {
-      // Date Filter (BR Date)
-      if (!isWithinDateFilter(b.br_date)) return false;
+      // Date Filter (BR Date / Inward Date)
+      if (!isWithinDateFilter(b)) return false;
 
       // Dropdown Filters
       if (holderFilter !== 'ALL' && b.current_holder_id !== holderFilter) return false;
