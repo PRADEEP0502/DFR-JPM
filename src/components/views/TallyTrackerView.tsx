@@ -15,6 +15,36 @@ import {
 import { BillRegisterItem, DfrUser, STAGE_DISPLAY_NAMES } from '../../types/dfr';
 import { dfrService } from '../../services/dfrService';
 
+const formatDateOnly = (dateStr?: string | null): string => {
+  if (!dateStr) return '—';
+  let str = dateStr.trim();
+  if (str.includes('T')) str = str.split('T')[0];
+  if (str.includes('/')) {
+    const parts = str.split('/');
+    if (parts.length === 3) {
+      const [p1, p2, p3] = parts;
+      if (p3.length === 4) {
+        return `${p1.padStart(2, '0')}/${p2.padStart(2, '0')}/${p3}`;
+      } else if (p1.length === 4) {
+        return `${p3.padStart(2, '0')}/${p2.padStart(2, '0')}/${p1}`;
+      }
+    }
+  }
+  const parts = str.split('-');
+  if (parts.length === 3) {
+    const [y, m, d] = parts;
+    return `${d.padStart(2, '0')}/${m.padStart(2, '0')}/${y}`;
+  }
+  const d = new Date(str);
+  if (!isNaN(d.getTime())) {
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  }
+  return dateStr;
+};
+
 interface TallyTrackerViewProps {
   bills: BillRegisterItem[];
   currentUser: DfrUser;
@@ -295,9 +325,7 @@ export const TallyTrackerView: React.FC<TallyTrackerViewProps> = ({
                       </span>
                     </td>
                     <td className="py-3.5 px-4 font-mono text-slate-600 text-[11px]">
-                      {b.tally_exported_date
-                        ? new Date(b.tally_exported_date).toLocaleDateString()
-                        : '—'}
+                      {formatDateOnly(b.tally_exported_date)}
                     </td>
                     <td className="py-3.5 px-4 font-bold text-slate-700">
                       {b.age_days} Days

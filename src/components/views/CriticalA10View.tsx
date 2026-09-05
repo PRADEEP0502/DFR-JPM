@@ -20,6 +20,36 @@ import {
 } from 'lucide-react';
 import { BillRegisterItem, DfrAlert, DfrUser, STAGE_DISPLAY_NAMES } from '../../types/dfr';
 
+const formatDateOnly = (dateStr?: string | null): string => {
+  if (!dateStr) return '—';
+  let str = dateStr.trim();
+  if (str.includes('T')) str = str.split('T')[0];
+  if (str.includes('/')) {
+    const parts = str.split('/');
+    if (parts.length === 3) {
+      const [p1, p2, p3] = parts;
+      if (p3.length === 4) {
+        return `${p1.padStart(2, '0')}/${p2.padStart(2, '0')}/${p3}`;
+      } else if (p1.length === 4) {
+        return `${p3.padStart(2, '0')}/${p2.padStart(2, '0')}/${p1}`;
+      }
+    }
+  }
+  const parts = str.split('-');
+  if (parts.length === 3) {
+    const [y, m, d] = parts;
+    return `${d.padStart(2, '0')}/${m.padStart(2, '0')}/${y}`;
+  }
+  const d = new Date(str);
+  if (!isNaN(d.getTime())) {
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  }
+  return dateStr;
+};
+
 interface CriticalA10ViewProps {
   bills: BillRegisterItem[];
   alerts: DfrAlert[];
@@ -349,7 +379,7 @@ export const CriticalA10View: React.FC<CriticalA10ViewProps> = ({
                         {bill.supplier}
                       </h3>
                       <p className="text-xs text-slate-500 font-medium">
-                        Inv: <strong className="text-slate-700 font-semibold">{bill.bill_no}</strong> • BR Date: {bill.br_date}
+                        Inv: <strong className="text-slate-700 font-semibold">{bill.bill_no}</strong> • BR Date: {formatDateOnly(bill.br_date)}
                       </p>
                     </div>
 

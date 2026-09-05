@@ -49,6 +49,36 @@ const formatAuditDateTime = (dateStr: string) => {
   return `${day}/${month}/${year}, ${hoursStr}:${minutes} ${ampm}`;
 };
 
+const formatDateOnly = (dateStr?: string | null): string => {
+  if (!dateStr) return '—';
+  let str = dateStr.trim();
+  if (str.includes('T')) str = str.split('T')[0];
+  if (str.includes('/')) {
+    const parts = str.split('/');
+    if (parts.length === 3) {
+      const [p1, p2, p3] = parts;
+      if (p3.length === 4) {
+        return `${p1.padStart(2, '0')}/${p2.padStart(2, '0')}/${p3}`;
+      } else if (p1.length === 4) {
+        return `${p3.padStart(2, '0')}/${p2.padStart(2, '0')}/${p1}`;
+      }
+    }
+  }
+  const parts = str.split('-');
+  if (parts.length === 3) {
+    const [y, m, d] = parts;
+    return `${d.padStart(2, '0')}/${m.padStart(2, '0')}/${y}`;
+  }
+  const d = new Date(str);
+  if (!isNaN(d.getTime())) {
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  }
+  return dateStr;
+};
+
 interface BillDetailDrawerProps {
   bill: BillRegisterItem;
   users: DfrUser[];
@@ -171,11 +201,11 @@ export const BillDetailDrawer: React.FC<BillDetailDrawerProps> = ({
                   </div>
                   <div>
                     <span className="text-[11px] text-slate-400 font-bold uppercase block">BR Date (Inward)</span>
-                    <p className="font-mono font-bold text-slate-900 mt-0.5">{bill.br_date}</p>
+                    <p className="font-mono font-bold text-slate-900 mt-0.5">{formatDateOnly(bill.br_date)}</p>
                   </div>
                   <div>
                     <span className="text-[11px] text-slate-400 font-bold uppercase block">Bill Date (Invoice)</span>
-                    <p className="font-mono font-bold text-slate-900 mt-0.5">{bill.bill_date}</p>
+                    <p className="font-mono font-bold text-slate-900 mt-0.5">{formatDateOnly(bill.bill_date)}</p>
                   </div>
                   <div className="col-span-2">
                     <span className="text-[11px] text-slate-400 font-bold uppercase block">Supplier / Party</span>
@@ -232,9 +262,7 @@ export const BillDetailDrawer: React.FC<BillDetailDrawerProps> = ({
                   <div>
                     <span className="text-[11px] text-slate-400 font-bold uppercase block">Tally Exported Date</span>
                     <p className="font-mono text-slate-700 mt-1">
-                      {bill.tally_exported_date
-                        ? new Date(bill.tally_exported_date).toLocaleDateString()
-                        : '—'}
+                      {formatDateOnly(bill.tally_exported_date)}
                     </p>
                   </div>
 
