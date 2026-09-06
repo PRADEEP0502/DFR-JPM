@@ -15,21 +15,24 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
   users,
   onSelectBill,
 }) => {
-  // Exclude exported to Tally, posted, paid, and closed bills from active holder counts
+  // Exclude truly exported to Tally, posted, paid, and closed bills from active holder counts
   const isTallyExported = (b: BillRegisterItem): boolean => {
     const tally = (b.tally_status || '').toUpperCase().trim();
     const dfr = (b.dfr_status || '').toUpperCase().trim();
     const bill = (b.bill_status || '').toUpperCase().trim();
+
+    // If status is Waiting, Pending, or Open, it is NOT exported
+    if (tally.includes('WAITING') || tally.includes('PENDING') || tally === 'OPEN' || tally === 'IN PROGRESS') {
+      return false;
+    }
+
     return (
       tally === 'EXPORTED' ||
       tally === 'POSTED' ||
-      tally.includes('EXPORTED') ||
-      tally.includes('POSTED') ||
       dfr === 'TALLY_DONE' ||
       dfr === 'PAID' ||
       bill === 'PAID' ||
-      bill === 'CLOSED' ||
-      Boolean(b.tally_exported_date)
+      bill === 'CLOSED'
     );
   };
 
