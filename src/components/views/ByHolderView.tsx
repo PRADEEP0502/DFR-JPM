@@ -52,6 +52,67 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
     return true;
   });
 
+  const userWorkloadList = activeUsers.map(user => {
+    const isIad = user.username?.toLowerCase() === 'iad' || user.full_name?.toUpperCase() === 'IAD' || user.id === 'user-004';
+    const isAo = user.username?.toLowerCase() === 'ao' || user.full_name?.toUpperCase() === 'AO' || user.id === 'user-005';
+    const isJmd = user.username?.toLowerCase() === 'jmd' || user.full_name?.toUpperCase() === 'JMD' || user.id === 'user-007';
+    const isAccounts =
+      user.username?.toLowerCase() === 'accounts' ||
+      user.full_name?.toUpperCase() === 'ACCOUNTS' ||
+      user.department === 'ACCOUNTS' ||
+      user.id === 'user-011' ||
+      user.id === 'user-accounts';
+
+    const personBills = activeBills.filter(b => {
+      if (isIad) return b.current_stage === 'IAD' || b.current_holder_name === 'IAD';
+      if (isAo) return b.current_stage === 'AO' || b.current_holder_name === 'AO';
+      if (isJmd) return b.current_stage === 'JMD' || b.current_holder_name === 'JMD';
+      if (isAccounts) {
+        // ALL bills that have reached ACCOUNTS / TALLY stage and are waiting to be exported to Tally
+        return (
+          (b.current_stage === 'ACCOUNTS' ||
+            b.current_stage === 'TALLY' ||
+            b.current_holder_name?.toUpperCase().includes('ACCOUNT') ||
+            b.next_approver?.toUpperCase().includes('ACCOUNT') ||
+            b.approval_status === 'APPROVED') &&
+          b.tally_status !== 'EXPORTED' &&
+          b.tally_status !== 'POSTED' &&
+          b.dfr_status !== 'TALLY_DONE'
+        );
+      }
+
+      // Purchase / Bill Inward Staff: ONLY show bills currently at Bill Inward stage!
+      // Any bill that has progressed to IAD, AO, JMD, ACCOUNTS, or TALLY is strictly excluded!
+      return (
+        (b.current_holder_id === user.id || b.current_holder_name?.toUpperCase() === user.full_name?.toUpperCase()) &&
+        b.current_stage === 'BILL_INWARD' &&
+        b.tally_status !== 'EXPORTED' &&
+        b.tally_status !== 'POSTED' &&
+        b.dfr_status !== 'TALLY_DONE'
+      );
+    });
+
+    const totalAmount = personBills.reduce((sum, b) => sum + b.amount, 0);
+    const oldestAge = personBills.reduce((max, b) => Math.max(max, b.age_days), 0);
+    const criticalCount = personBills.filter(b => b.age_band === 'A-10').length;
+
+    return {
+      user,
+      personBills,
+      totalAmount,
+      oldestAge,
+      criticalCount,
+    };
+  });
+
+  // Sort descending: who holds more bills first, second, third... (with amount as secondary tie-breaker)
+  const sortedUserWorkload = [...userWorkloadList].sort((a, b) => {
+    if (b.personBills.length !== a.personBills.length) {
+      return b.personBills.length - a.personBills.length;
+    }
+    return b.totalAmount - a.totalAmount;
+  });
+
   return (
     <div className="space-y-6 pb-16 max-w-full overflow-hidden">
       <div>
@@ -60,63 +121,26 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
           Pending Bills by Current Holder
         </h1>
         <p className="text-xs sm:text-sm text-slate-500 mt-1">
-          Person-wise workload summary showing pending bill count, total exposure amount, and oldest sitting bill based on BR Date
+          Person-wise workload summary ordered descending by pending bill volume, showing exposure amount and oldest sitting bill
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
-        {activeUsers.map(user => {
-          const isIad = user.username?.toLowerCase() === 'iad' || user.full_name?.toUpperCase() === 'IAD' || user.id === 'user-004';
-          const isAo = user.username?.toLowerCase() === 'ao' || user.full_name?.toUpperCase() === 'AO' || user.id === 'user-005';
-          const isJmd = user.username?.toLowerCase() === 'jmd' || user.full_name?.toUpperCase() === 'JMD' || user.id === 'user-007';
-          const isAccounts =
-            user.username?.toLowerCase() === 'accounts' ||
-            user.full_name?.toUpperCase() === 'ACCOUNTS' ||
-            user.department === 'ACCOUNTS' ||
-            user.id === 'user-011' ||
-            user.id === 'user-accounts';
-
-          const personBills = activeBills.filter(b => {
-            if (isIad) return b.current_stage === 'IAD' || b.current_holder_name === 'IAD';
-            if (isAo) return b.current_stage === 'AO' || b.current_holder_name === 'AO';
-            if (isJmd) return b.current_stage === 'JMD' || b.current_holder_name === 'JMD';
-            if (isAccounts) {
-              // ALL bills that have reached ACCOUNTS / TALLY stage and are waiting to be exported to Tally
-              return (
-                (b.current_stage === 'ACCOUNTS' ||
-                  b.current_stage === 'TALLY' ||
-                  b.current_holder_name?.toUpperCase().includes('ACCOUNT') ||
-                  b.next_approver?.toUpperCase().includes('ACCOUNT') ||
-                  b.approval_status === 'APPROVED') &&
-                b.tally_status !== 'EXPORTED' &&
-                b.tally_status !== 'POSTED' &&
-                b.dfr_status !== 'TALLY_DONE'
-              );
-            }
-
-            // Purchase / Bill Inward Staff: ONLY show bills currently at Bill Inward stage!
-            // Any bill that has progressed to IAD, AO, JMD, ACCOUNTS, or TALLY is strictly excluded!
-            return (
-              (b.current_holder_id === user.id || b.current_holder_name?.toUpperCase() === user.full_name?.toUpperCase()) &&
-              b.current_stage === 'BILL_INWARD' &&
-              b.tally_status !== 'EXPORTED' &&
-              b.tally_status !== 'POSTED' &&
-              b.dfr_status !== 'TALLY_DONE'
-            );
-          });
-          const totalAmount = personBills.reduce((sum, b) => sum + b.amount, 0);
-          const oldestAge = personBills.reduce((max, b) => Math.max(max, b.age_days), 0);
-          const criticalCount = personBills.filter(b => b.age_band === 'A-10').length;
-
+        {sortedUserWorkload.map(({ user, personBills, totalAmount, oldestAge, criticalCount }, index) => {
           return (
             <div
               key={user.id}
-              className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs space-y-4 hover:border-slate-300 transition text-slate-900"
+              className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs space-y-4 hover:border-slate-300 transition text-slate-900 relative group"
             >
               <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-sky-100 text-sky-700 border border-sky-200 flex items-center justify-center font-black text-lg">
-                    {user.full_name.charAt(0)}
+                  <div className="relative">
+                    <div className="w-10 h-10 rounded-xl bg-sky-100 text-sky-700 border border-sky-200 flex items-center justify-center font-black text-lg shadow-2xs">
+                      {user.full_name.charAt(0)}
+                    </div>
+                    <span className="absolute -top-1.5 -left-1.5 w-5 h-5 rounded-full bg-slate-900 text-white text-[10px] font-black flex items-center justify-center shadow-xs">
+                      #{index + 1}
+                    </span>
                   </div>
                   <div>
                     <h3 className="font-extrabold text-slate-900 text-base">{user.full_name}</h3>
@@ -125,7 +149,7 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
                 </div>
 
                 {criticalCount > 0 && (
-                  <span className="px-2.5 py-1 rounded bg-red-100 text-red-700 border border-red-200 text-xs font-bold animate-pulse">
+                  <span className="px-2.5 py-1 rounded-lg bg-red-100 text-red-700 border border-red-200 text-xs font-black animate-pulse">
                     {criticalCount} Critical
                   </span>
                 )}
