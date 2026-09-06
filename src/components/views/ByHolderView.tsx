@@ -68,13 +68,12 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
       if (isAo) return b.current_stage === 'AO' || b.current_holder_name === 'AO';
       if (isJmd) return b.current_stage === 'JMD' || b.current_holder_name === 'JMD';
       if (isAccounts) {
-        // ALL bills that have reached ACCOUNTS / TALLY stage and are waiting to be exported to Tally
+        // Bills that have reached ACCOUNTS / TALLY stage and are waiting to be exported to Tally
         return (
           (b.current_stage === 'ACCOUNTS' ||
             b.current_stage === 'TALLY' ||
-            b.current_holder_name?.toUpperCase().includes('ACCOUNT') ||
-            b.next_approver?.toUpperCase().includes('ACCOUNT') ||
-            b.approval_status === 'APPROVED') &&
+            b.current_holder_name?.toUpperCase() === 'ACCOUNTS' ||
+            b.current_holder_id === user.id) &&
           b.tally_status !== 'EXPORTED' &&
           b.tally_status !== 'POSTED' &&
           b.dfr_status !== 'TALLY_DONE'
