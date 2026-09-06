@@ -156,7 +156,7 @@ export const TallyTrackerView: React.FC<TallyTrackerViewProps> = ({
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-black text-emerald-800 uppercase tracking-wider">
-              1. Awaiting Tally Export
+              1. Waiting for Tally
             </span>
             <span className="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 font-extrabold rounded-full text-xs">
               {awaitingBills.length}
@@ -203,7 +203,7 @@ export const TallyTrackerView: React.FC<TallyTrackerViewProps> = ({
             <h2 className="text-base font-black text-slate-900 flex items-center gap-2">
               {activeTab === 'awaiting' && <Clock className="w-5 h-5 text-emerald-600" />}
               {activeTab === 'exported' && <CheckCircle2 className="w-5 h-5 text-indigo-600" />}
-              {activeTab === 'awaiting' && `Bills Awaiting Tally Export (${filteredBills.length})`}
+              {activeTab === 'awaiting' && `Bills Waiting for Tally (${filteredBills.length})`}
               {activeTab === 'exported' && `Bills Exported to Tally (${filteredBills.length})`}
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
