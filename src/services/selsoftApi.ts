@@ -170,13 +170,17 @@ class SelsoftApiClient {
           category = 'SERVICE';
         }
 
+        const rawTallyStatus = (raw.TallyStatus || '').trim();
+        const upperTallyStatus = rawTallyStatus.toUpperCase();
+        const isExported = upperTallyStatus === 'EXPORTED' || upperTallyStatus === 'POSTED';
+
         const rawTallyDate =
           raw.TallyExportedDate ||
           raw.TallyExportDate ||
           raw.TallyDate ||
           raw.ExportedDate ||
           raw.Tally_Exported_Date;
-        const normalizedTallyDate = normalizeErpDate(rawTallyDate);
+        const normalizedTallyDate = isExported && rawTallyDate ? normalizeErpDate(rawTallyDate) : undefined;
 
         return {
           header_id: raw.HeaderId,
@@ -191,7 +195,7 @@ class SelsoftApiClient {
           next_approver: raw.NextApprover || '',
           rejected_by: raw.RejectedBy || '',
           rejection_reason: raw.RejectionReason || '',
-          tally_status: raw.TallyStatus || (normalizedTallyDate ? 'Exported' : 'Waiting to Export'),
+          tally_status: rawTallyStatus || (normalizedTallyDate ? 'Exported' : 'Waiting to Export'),
           bill_status: raw.BillStatus || 'Active',
           tally_exported_date: normalizedTallyDate || undefined,
           last_modified_datetime: raw.LastModifiedDateTime || raw.BRDate || new Date().toISOString(),

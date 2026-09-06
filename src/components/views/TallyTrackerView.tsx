@@ -283,7 +283,7 @@ export const TallyTrackerView: React.FC<TallyTrackerViewProps> = ({
                       </span>
                     </td>
                     <td className="py-3.5 px-4 font-mono text-slate-600 text-[11px]">
-                      {formatDateOnly(b.tally_exported_date)}
+                      {isExported(b) && b.tally_exported_date ? formatDateOnly(b.tally_exported_date) : '—'}
                     </td>
                     <td className="py-3.5 px-4 font-bold text-slate-700">
                       {b.age_days} Days
