@@ -256,24 +256,24 @@ export const TallyTrackerView: React.FC<TallyTrackerViewProps> = ({
                     onClick={() => onSelectBill(b)}
                     className="hover:bg-slate-50 transition cursor-pointer"
                   >
-                    <td className="py-3.5 px-4 font-mono font-bold text-slate-500">
+                    <td className="py-3.5 px-4 font-mono font-bold text-slate-500 whitespace-nowrap">
                       #{b.header_id}
                     </td>
-                    <td className="py-3.5 px-4 font-extrabold text-sky-700 font-mono">
+                    <td className="py-3.5 px-4 font-extrabold text-sky-700 font-mono whitespace-nowrap">
                       {b.br_no}
                     </td>
-                    <td className="py-3.5 px-4 font-bold text-slate-900">{b.supplier}</td>
-                    <td className="py-3.5 px-4">
-                      <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-semibold text-[11px] border border-slate-200">
+                    <td className="py-3.5 px-4 font-bold text-slate-900 whitespace-nowrap">{b.supplier}</td>
+                    <td className="py-3.5 px-4 whitespace-nowrap">
+                      <span className="inline-flex items-center justify-center whitespace-nowrap px-2.5 py-1 rounded-lg bg-slate-100 text-slate-800 font-bold text-[11px] border border-slate-200 shadow-2xs leading-normal">
                         {b.category}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 font-black text-slate-900 font-mono">
+                    <td className="py-3.5 px-4 font-black text-slate-900 font-mono whitespace-nowrap">
                       ₹{b.amount.toLocaleString('en-IN')}
                     </td>
-                    <td className="py-3.5 px-4">
+                    <td className="py-3.5 px-4 whitespace-nowrap">
                       <span
-                        className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase ${
+                        className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase whitespace-nowrap ${
                           isExported(b)
                             ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
                             : 'bg-amber-100 text-amber-800 border border-amber-200'
@@ -282,13 +282,13 @@ export const TallyTrackerView: React.FC<TallyTrackerViewProps> = ({
                         {isExported(b) ? 'EXPORTED' : 'WAITING'}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 font-mono text-slate-600 text-[11px]">
+                    <td className="py-3.5 px-4 font-mono text-slate-600 text-[11px] whitespace-nowrap">
                       {isExported(b) && b.tally_exported_date ? formatDateOnly(b.tally_exported_date) : '—'}
                     </td>
-                    <td className="py-3.5 px-4 font-bold text-slate-700">
+                    <td className="py-3.5 px-4 font-bold text-slate-700 whitespace-nowrap">
                       {isExported(b) ? '—' : `${b.age_days} Days`}
                     </td>
-                    <td className="py-3.5 px-4 text-right" onClick={e => e.stopPropagation()}>
+                    <td className="py-3.5 px-4 text-right whitespace-nowrap" onClick={e => e.stopPropagation()}>
                       {activeTab === 'awaiting' && (
                         <div>
                           {selectedHeaderId === b.header_id ? (
