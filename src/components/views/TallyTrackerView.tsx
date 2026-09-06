@@ -217,7 +217,7 @@ export const TallyTrackerView: React.FC<TallyTrackerViewProps> = ({
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-black text-teal-800 uppercase tracking-wider">
-              3. Tally Posted / Paid
+              3. Tally Posted
             </span>
             <span className="px-2.5 py-0.5 bg-teal-100 text-teal-800 font-extrabold rounded-full text-xs">
               {completedBills.length}
@@ -227,7 +227,7 @@ export const TallyTrackerView: React.FC<TallyTrackerViewProps> = ({
             ₹{(completedAmount / 100000).toFixed(2)}L
           </p>
           <p className="text-[11px] text-slate-500 mt-1 font-medium">
-            Final bank disbursement completed
+            Bills posted into Tally accounting software
           </p>
         </div>
       </div>
@@ -242,7 +242,7 @@ export const TallyTrackerView: React.FC<TallyTrackerViewProps> = ({
               {activeTab === 'completed' && <CheckCircle2 className="w-5 h-5 text-teal-600" />}
               {activeTab === 'awaiting' && `Bills Awaiting Tally Export (${filteredBills.length})`}
               {activeTab === 'exported' && `Bills Exported to Tally (${filteredBills.length})`}
-              {activeTab === 'completed' && `Bills Posted & Paid in Tally (${filteredBills.length})`}
+              {activeTab === 'completed' && `Bills Posted in Tally (${filteredBills.length})`}
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
               {activeTab === 'exported' &&
@@ -250,7 +250,7 @@ export const TallyTrackerView: React.FC<TallyTrackerViewProps> = ({
               {activeTab === 'awaiting' &&
                 'Click Mark Moved to Tally to transition active bills into Tally processing.'}
               {activeTab === 'completed' &&
-                'Complete ledger history and audit records for settled bills.'}
+                'Complete ledger history and audit records for posted bills in Tally.'}
             </p>
           </div>
 
