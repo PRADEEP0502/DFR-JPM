@@ -141,6 +141,9 @@ export const BillDetailDrawer: React.FC<BillDetailDrawerProps> = ({
                 <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-lg bg-slate-200/80 text-slate-700">
                   Header #{bill.header_id}
                 </span>
+                <span className="text-xs font-bold px-2.5 py-0.5 rounded-lg bg-sky-100 text-sky-800 border border-sky-200 flex items-center gap-1">
+                  Holder: <strong className="font-black text-sky-900">{bill.current_holder_name}</strong>
+                </span>
                 <span className={`text-xs font-bold px-2.5 py-0.5 rounded-lg border ${ageBandColors[bill.age_band]}`}>
                   {bill.age_band} ({bill.age_days} Days Pending)
                 </span>
@@ -196,8 +199,23 @@ export const BillDetailDrawer: React.FC<BillDetailDrawerProps> = ({
                     <p className="font-mono font-bold text-slate-900 mt-0.5">#{bill.header_id}</p>
                   </div>
                   <div>
+                    <span className="text-[11px] text-slate-400 font-bold uppercase block">Current Holder</span>
+                    <p className="font-extrabold text-sky-800 mt-0.5 flex items-center gap-1.5">
+                      <span className="w-5 h-5 rounded-full bg-sky-100 text-sky-700 inline-flex items-center justify-center text-[10px] font-black border border-sky-200">
+                        {bill.current_holder_name.charAt(0)}
+                      </span>
+                      <span className="truncate">{bill.current_holder_name}</span>
+                    </p>
+                  </div>
+                  <div>
                     <span className="text-[11px] text-slate-400 font-bold uppercase block">BR No (Inward Ref)</span>
                     <p className="font-mono font-black text-sky-700 mt-0.5">{bill.br_no}</p>
+                  </div>
+                  <div>
+                    <span className="text-[11px] text-slate-400 font-bold uppercase block">Category</span>
+                    <span className="inline-block px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-800 font-bold text-xs mt-1">
+                      {bill.category}
+                    </span>
                   </div>
                   <div>
                     <span className="text-[11px] text-slate-400 font-bold uppercase block">BR Date (Inward)</span>
@@ -210,12 +228,6 @@ export const BillDetailDrawer: React.FC<BillDetailDrawerProps> = ({
                   <div className="col-span-2">
                     <span className="text-[11px] text-slate-400 font-bold uppercase block">Supplier / Party</span>
                     <p className="font-extrabold text-slate-900 mt-0.5 text-sm">{bill.supplier}</p>
-                  </div>
-                  <div>
-                    <span className="text-[11px] text-slate-400 font-bold uppercase block">Category</span>
-                    <span className="inline-block px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-800 font-bold text-xs mt-1">
-                      {bill.category}
-                    </span>
                   </div>
                   <div>
                     <span className="text-[11px] text-slate-400 font-bold uppercase block">Invoice No</span>
