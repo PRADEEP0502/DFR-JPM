@@ -192,10 +192,10 @@ export const CategoryMappingView: React.FC<CategoryMappingViewProps> = ({
                       <td className="py-4 px-5 font-bold text-sky-800">
                         <div className="flex items-center gap-2">
                           <div className="w-6 h-6 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center text-xs font-black border border-sky-200">
-                            {(userObj?.name || m.holder_name).charAt(0)}
+                            {(userObj?.full_name || m.holder_name).charAt(0)}
                           </div>
                           <div>
-                            <span className="font-extrabold text-sm text-slate-900">{userObj?.name || m.holder_name}</span>
+                            <span className="font-extrabold text-sm text-slate-900">{userObj?.full_name || m.holder_name}</span>
                             <span className="text-[10px] text-slate-500 block font-medium">
                               {userObj?.role || 'STAFF'}
                             </span>
