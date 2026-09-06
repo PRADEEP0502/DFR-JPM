@@ -52,7 +52,7 @@ interface TallyTrackerViewProps {
   onRefresh: () => void;
 }
 
-type TallyTab = 'awaiting' | 'exported' | 'completed';
+type TallyTab = 'awaiting' | 'exported';
 
 export const TallyTrackerView: React.FC<TallyTrackerViewProps> = ({
   bills,
@@ -65,33 +65,34 @@ export const TallyTrackerView: React.FC<TallyTrackerViewProps> = ({
   const [selectedHeaderId, setSelectedHeaderId] = useState<number | null>(null);
   const [note, setNote] = useState<string>('');
 
-  // 1. Awaiting Tally Export (Not exported yet, and active)
-  const awaitingBills = bills.filter(
-    b =>
-      b.tally_status !== 'EXPORTED' &&
-      b.tally_status !== 'POSTED' &&
-      b.dfr_status !== 'TALLY_DONE' &&
-      b.bill_status !== 'PAID' &&
-      b.bill_status !== 'CLOSED'
-  );
+  const isExported = (b: BillRegisterItem) => {
+    const status = (b.tally_status || '').toUpperCase().trim();
+    const dfr = (b.dfr_status || '').toUpperCase().trim();
+    const bill = (b.bill_status || '').toUpperCase().trim();
 
-  // 2. Exported to Tally (Exported, awaiting posting/completion)
-  const exportedBills = bills.filter(
-    b =>
-      (b.tally_status === 'EXPORTED' || b.dfr_status === 'TALLY_DONE') &&
-      b.tally_status !== 'POSTED' &&
-      b.bill_status !== 'PAID' &&
-      b.bill_status !== 'CLOSED'
-  );
+    if (status.includes('WAITING') || status.includes('PENDING') || status === 'OPEN') {
+      return false;
+    }
 
-  // 3. Tally Posted / Completed
-  const completedBills = bills.filter(
-    b => b.tally_status === 'POSTED' || b.bill_status === 'PAID' || b.dfr_status === 'PAID'
-  );
+    return (
+      status === 'EXPORTED' ||
+      status === 'POSTED' ||
+      dfr === 'TALLY_DONE' ||
+      dfr === 'PAID' ||
+      bill === 'PAID' ||
+      bill === 'CLOSED' ||
+      Boolean(b.tally_exported_date)
+    );
+  };
+
+  // 1. Awaiting Tally Export (Active pending bills awaiting export)
+  const awaitingBills = bills.filter(b => !isExported(b));
+
+  // 2. Exported to Tally (Exported bills - Completed & Closed)
+  const exportedBills = bills.filter(b => isExported(b));
 
   const awaitingAmount = awaitingBills.reduce((sum, b) => sum + b.amount, 0);
   const exportedAmount = exportedBills.reduce((sum, b) => sum + b.amount, 0);
-  const completedAmount = completedBills.reduce((sum, b) => sum + b.amount, 0);
 
   const handleMarkTally = (headerId: number) => {
     dfrService.markMovedToTally(headerId, currentUser.id, note);
@@ -100,19 +101,7 @@ export const TallyTrackerView: React.FC<TallyTrackerViewProps> = ({
     onRefresh();
   };
 
-  const handleCompletePayment = (headerId: number) => {
-    dfrService.markPaymentCompleted(headerId, currentUser.id, note);
-    setSelectedHeaderId(null);
-    setNote('');
-    onRefresh();
-  };
-
-  const currentList =
-    activeTab === 'awaiting'
-      ? awaitingBills
-      : activeTab === 'exported'
-      ? exportedBills
-      : completedBills;
+  const currentList = activeTab === 'awaiting' ? awaitingBills : exportedBills;
 
   const filteredBills = currentList.filter(b => {
     if (!searchFilter.trim()) return true;
@@ -153,8 +142,8 @@ export const TallyTrackerView: React.FC<TallyTrackerViewProps> = ({
         </div>
       </div>
 
-      {/* 3 Interactive Section Tabs / Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 sm:gap-4">
+      {/* 2 Interactive Section Tabs / Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
         
         {/* Tab 1: Awaiting Tally Export */}
         <div
@@ -202,32 +191,7 @@ export const TallyTrackerView: React.FC<TallyTrackerViewProps> = ({
             ₹{(exportedAmount / 100000).toFixed(2)}L
           </p>
           <p className="text-[11px] text-slate-500 mt-1 font-medium">
-            Exported to Tally (Excluded from A-10 Critical)
-          </p>
-        </div>
-
-        {/* Tab 3: Tally Posted / Completed */}
-        <div
-          onClick={() => setActiveTab('completed')}
-          className={`p-5 rounded-2xl border transition cursor-pointer shadow-xs ${
-            activeTab === 'completed'
-              ? 'bg-teal-50/90 border-teal-400 ring-2 ring-teal-500/20'
-              : 'bg-white border-slate-200/90 hover:bg-slate-50'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-black text-teal-800 uppercase tracking-wider">
-              3. Tally Posted
-            </span>
-            <span className="px-2.5 py-0.5 bg-teal-100 text-teal-800 font-extrabold rounded-full text-xs">
-              {completedBills.length}
-            </span>
-          </div>
-          <p className="text-2xl font-black text-slate-900 mt-2 font-mono">
-            ₹{(completedAmount / 100000).toFixed(2)}L
-          </p>
-          <p className="text-[11px] text-slate-500 mt-1 font-medium">
-            Bills posted into Tally accounting software
+            Exported to Tally (Workflow Completed & Closed)
           </p>
         </div>
       </div>
@@ -238,19 +202,15 @@ export const TallyTrackerView: React.FC<TallyTrackerViewProps> = ({
           <div>
             <h2 className="text-base font-black text-slate-900 flex items-center gap-2">
               {activeTab === 'awaiting' && <Clock className="w-5 h-5 text-emerald-600" />}
-              {activeTab === 'exported' && <Send className="w-5 h-5 text-indigo-600" />}
-              {activeTab === 'completed' && <CheckCircle2 className="w-5 h-5 text-teal-600" />}
+              {activeTab === 'exported' && <CheckCircle2 className="w-5 h-5 text-indigo-600" />}
               {activeTab === 'awaiting' && `Bills Awaiting Tally Export (${filteredBills.length})`}
               {activeTab === 'exported' && `Bills Exported to Tally (${filteredBills.length})`}
-              {activeTab === 'completed' && `Bills Posted in Tally (${filteredBills.length})`}
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
               {activeTab === 'exported' &&
-                'Note: Exported bills appear in Tally Tracker while remaining excluded from A-10 Critical counts.'}
+                'Note: Exported bills are successfully processed into Tally and closed in DFR workflow.'}
               {activeTab === 'awaiting' &&
-                'Click Mark Moved to Tally to transition active bills into Tally processing.'}
-              {activeTab === 'completed' &&
-                'Complete ledger history and audit records for posted bills in Tally.'}
+                'Click Move to Tally to transition active bills into exported status.'}
             </p>
           </div>
 
@@ -314,14 +274,12 @@ export const TallyTrackerView: React.FC<TallyTrackerViewProps> = ({
                     <td className="py-3.5 px-4">
                       <span
                         className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase ${
-                          b.tally_status === 'EXPORTED'
-                            ? 'bg-indigo-100 text-indigo-800 border border-indigo-200'
-                            : b.tally_status === 'POSTED' || b.bill_status === 'PAID'
-                            ? 'bg-teal-100 text-teal-800 border border-teal-200'
+                          isExported(b)
+                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
                             : 'bg-amber-100 text-amber-800 border border-amber-200'
                         }`}
                       >
-                        {b.tally_status || (b.bill_status === 'PAID' ? 'POSTED' : 'WAITING')}
+                        {isExported(b) ? 'EXPORTED' : 'WAITING'}
                       </span>
                     </td>
                     <td className="py-3.5 px-4 font-mono text-slate-600 text-[11px]">
@@ -368,18 +326,8 @@ export const TallyTrackerView: React.FC<TallyTrackerViewProps> = ({
                       )}
 
                       {activeTab === 'exported' && (
-                        <button
-                          onClick={() => handleCompletePayment(b.header_id)}
-                          className="px-3 py-1 bg-indigo-50 border border-indigo-200 text-indigo-800 hover:bg-indigo-100 font-bold text-[11px] rounded-xl transition flex items-center gap-1.5 ml-auto cursor-pointer"
-                        >
-                          <CheckCircle2 className="w-3.5 h-3.5 text-indigo-600" />
-                          Mark Paid
-                        </button>
-                      )}
-
-                      {activeTab === 'completed' && (
-                        <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-lg inline-flex items-center gap-1">
-                          <Check className="w-3.5 h-3.5 text-emerald-600" /> Paid
+                        <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg inline-flex items-center gap-1">
+                          <Check className="w-3.5 h-3.5 text-emerald-600" /> Exported & Closed
                         </span>
                       )}
                     </td>
