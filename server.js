@@ -94,7 +94,7 @@ const AuditLog = mongoose.model('AuditLog', AuditLogSchema);
 
 const DEFAULT_USERS = [
   { id: 'user-001', username: 'vanitha', full_name: 'VANITHA', department: 'PURCHASE', role: 'STAFF', access_level: 'DEPARTMENT_ACCESS', active: true },
-  { id: 'user-002', username: 'suriya', full_name: 'SURIYA', department: 'PURCHASE', role: 'STAFF', access_level: 'DEPARTMENT_ACCESS', active: true },
+  { id: 'user-002', username: 'jayasuriya', full_name: 'JAYASURIYA', department: 'PURCHASE', role: 'STAFF', access_level: 'DEPARTMENT_ACCESS', active: true },
   { id: 'user-003', username: 'krithika', full_name: 'KRITHIKA', department: 'PURCHASE', role: 'STAFF', access_level: 'DEPARTMENT_ACCESS', active: true },
   { id: 'user-004', username: 'iad', full_name: 'IAD', department: 'IAD', role: 'STAFF', access_level: 'DEPARTMENT_ACCESS', active: true },
   { id: 'user-005', username: 'ao', full_name: 'AO', department: 'AO', role: 'MANAGER', access_level: 'DEPARTMENT_ACCESS', active: true },
@@ -110,10 +110,11 @@ const DEFAULT_CATEGORY_MAPPINGS = [
   { id: 'map-1', category: 'CHEMICAL', holder_id: 'user-001', holder_name: 'VANITHA', is_active: true },
   { id: 'map-2', category: 'DYES', holder_id: 'user-001', holder_name: 'VANITHA', is_active: true },
   { id: 'map-3', category: 'POLYBAG', holder_id: 'user-001', holder_name: 'VANITHA', is_active: true },
-  { id: 'map-4', category: 'MAINTENANCE', holder_id: 'user-002', holder_name: 'SURIYA', is_active: true },
-  { id: 'map-5', category: 'ELECTRICAL', holder_id: 'user-002', holder_name: 'SURIYA', is_active: true },
+  { id: 'map-4', category: 'MAINTENANCE', holder_id: 'user-002', holder_name: 'JAYASURIYA', is_active: true },
+  { id: 'map-5', category: 'ELECTRICAL', holder_id: 'user-002', holder_name: 'JAYASURIYA', is_active: true },
   { id: 'map-6', category: 'STATIONARY', holder_id: 'user-003', holder_name: 'KRITHIKA', is_active: true },
   { id: 'map-7', category: 'CLEANING PURPOSE', holder_id: 'user-003', holder_name: 'KRITHIKA', is_active: true },
+  { id: 'map-8', category: 'SERVICE', holder_id: 'user-002', holder_name: 'JAYASURIYA', is_active: true },
 ];
 
 async function initializeDatabase() {

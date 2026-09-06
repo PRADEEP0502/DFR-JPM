@@ -53,6 +53,13 @@ class DfrService {
             const serviceInit = INITIAL_CATEGORY_MAPPINGS.find(m => m.category.toUpperCase() === 'SERVICE');
             if (serviceInit) this.state.categoryMappings.push(serviceInit);
           }
+          // Update holder_name for user-002 to JAYASURIYA
+          this.state.categoryMappings.forEach(m => {
+            if (m.holder_id === 'user-002' || m.holder_name === 'SURIYA') {
+              m.holder_name = 'JAYASURIYA';
+              m.holder_id = 'user-002';
+            }
+          });
         }
       } catch (e) {
         console.error('Failed to parse saved DFR state, resetting:', e);

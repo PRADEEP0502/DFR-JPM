@@ -20,8 +20,8 @@ export const DEFAULT_USERS: DfrUser[] = [
   },
   {
     id: 'user-002',
-    username: 'suriya',
-    full_name: 'SURIYA',
+    username: 'jayasuriya',
+    full_name: 'JAYASURIYA',
     department: 'PURCHASE',
     role: 'STAFF',
     access_level: 'DEPARTMENT_ACCESS',
@@ -144,10 +144,19 @@ class AuthService {
           this.users = parsedUsers;
           this.credentialsMap = parsedCreds || {};
 
+          let added = false;
+
+          // Auto-migrate user-002 name to JAYASURIYA
+          const user002 = this.users.find(u => u.id === 'user-002');
+          if (user002 && (user002.full_name !== 'JAYASURIYA' || user002.username === 'suriya')) {
+            user002.full_name = 'JAYASURIYA';
+            user002.username = 'jayasuriya';
+            added = true;
+          }
+
           // Auto-merge newly added default accounts (such as accounts)
           const existingUsernames = new Set(this.users.map(u => u.username.toLowerCase()));
           const defaultHash = bcrypt.hashSync('dfr@123', 10);
-          let added = false;
           for (const defU of DEFAULT_USERS) {
             if (!existingUsernames.has(defU.username.toLowerCase())) {
               this.users.push(defU);
@@ -274,7 +283,10 @@ class AuthService {
     }
 
     const user = this.users.find(
-      u => u.username.toLowerCase() === cleanId || u.full_name.toLowerCase() === cleanId
+      u =>
+        u.username.toLowerCase() === cleanId ||
+        u.full_name.toLowerCase() === cleanId ||
+        (u.id === 'user-002' && (cleanId === 'suriya' || cleanId === 'jayasuriya'))
     );
 
     if (!user) {

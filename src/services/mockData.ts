@@ -9,11 +9,11 @@ export const INITIAL_CATEGORY_MAPPINGS: CategoryHolderMapping[] = [
   { id: 'map-1', category: 'CHEMICAL', holder_id: 'user-001', holder_name: 'VANITHA', is_active: true, updated_at: '2026-08-27T00:00:00Z' },
   { id: 'map-2', category: 'DYES', holder_id: 'user-001', holder_name: 'VANITHA', is_active: true, updated_at: '2026-08-27T00:00:00Z' },
   { id: 'map-3', category: 'POLYBAG', holder_id: 'user-001', holder_name: 'VANITHA', is_active: true, updated_at: '2026-08-27T00:00:00Z' },
-  { id: 'map-4', category: 'MAINTENANCE', holder_id: 'user-002', holder_name: 'SURIYA', is_active: true, updated_at: '2026-08-27T00:00:00Z' },
-  { id: 'map-5', category: 'ELECTRICAL', holder_id: 'user-002', holder_name: 'SURIYA', is_active: true, updated_at: '2026-08-27T00:00:00Z' },
+  { id: 'map-4', category: 'MAINTENANCE', holder_id: 'user-002', holder_name: 'JAYASURIYA', is_active: true, updated_at: '2026-08-27T00:00:00Z' },
+  { id: 'map-5', category: 'ELECTRICAL', holder_id: 'user-002', holder_name: 'JAYASURIYA', is_active: true, updated_at: '2026-08-27T00:00:00Z' },
   { id: 'map-6', category: 'STATIONARY', holder_id: 'user-003', holder_name: 'KIRUTHIKA', is_active: true, updated_at: '2026-08-27T00:00:00Z' },
   { id: 'map-7', category: 'CLEANING PURPOSE', holder_id: 'user-003', holder_name: 'KIRUTHIKA', is_active: true, updated_at: '2026-08-27T00:00:00Z' },
-  { id: 'map-8', category: 'SERVICE', holder_id: 'user-002', holder_name: 'SURIYA', is_active: true, updated_at: '2026-08-27T00:00:00Z' },
+  { id: 'map-8', category: 'SERVICE', holder_id: 'user-002', holder_name: 'JAYASURIYA', is_active: true, updated_at: '2026-08-27T00:00:00Z' },
 ];
 
 export const INITIAL_LABELS: DfrLabel[] = [
