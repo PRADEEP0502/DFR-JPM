@@ -18,20 +18,43 @@ export const DEFAULT_SELSOFT_CONFIG: SelsoftApiConfig = {
 /**
  * Normalizes raw date string from ERP into standard YYYY-MM-DD
  */
-export const normalizeErpDate = (dateStr?: string | null): string => {
-  if (!dateStr) return new Date().toISOString().split('T')[0];
-  if (dateStr.includes('T')) {
-    return dateStr.split('T')[0];
+export const normalizeErpDate = (dateStr?: string | null, fallbackToToday: boolean = false): string => {
+  if (!dateStr || !dateStr.trim()) {
+    return fallbackToToday ? new Date().toISOString().split('T')[0] : '';
   }
-  // Handles DD/MM/YYYY
-  if (dateStr.includes('/')) {
-    const parts = dateStr.split('/');
+  let str = dateStr.trim();
+  if (str.includes('1900-') || str.includes('/1900') || str.startsWith('0001')) {
+    return '';
+  }
+  if (str.includes('T')) {
+    str = str.split('T')[0];
+  }
+  // Handles DD/MM/YYYY or YYYY/MM/DD
+  if (str.includes('/')) {
+    const parts = str.split('/');
     if (parts.length === 3) {
-      const [d, m, y] = parts;
-      return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+      const [p1, p2, p3] = parts;
+      if (p3.length === 4) {
+        // DD/MM/YYYY -> YYYY-MM-DD
+        return `${p3}-${p2.padStart(2, '0')}-${p1.padStart(2, '0')}`;
+      } else if (p1.length === 4) {
+        // YYYY/MM/DD -> YYYY-MM-DD
+        return `${p1}-${p2.padStart(2, '0')}-${p3.padStart(2, '0')}`;
+      }
     }
   }
-  return dateStr;
+  if (str.includes('-')) {
+    const parts = str.split('-');
+    if (parts.length === 3) {
+      const [p1, p2, p3] = parts;
+      if (p1.length === 4) {
+        return `${p1}-${p2.padStart(2, '0')}-${p3.padStart(2, '0')}`;
+      } else if (p3.length === 4) {
+        return `${p3}-${p2.padStart(2, '0')}-${p1.padStart(2, '0')}`;
+      }
+    }
+  }
+  return str;
 };
 
 /**
@@ -147,22 +170,30 @@ class SelsoftApiClient {
           category = 'SERVICE';
         }
 
+        const rawTallyDate =
+          raw.TallyExportedDate ||
+          raw.TallyExportDate ||
+          raw.TallyDate ||
+          raw.ExportedDate ||
+          raw.Tally_Exported_Date;
+        const normalizedTallyDate = normalizeErpDate(rawTallyDate);
+
         return {
           header_id: raw.HeaderId,
           br_no: raw.BRNo || `BR-${raw.HeaderId}`,
-          br_date: normalizeErpDate(raw.BRDate),
+          br_date: normalizeErpDate(raw.BRDate, true),
           category: category,
           supplier: raw.Supplier || 'Unknown Supplier',
           bill_no: raw.BillNo || '—',
-          bill_date: normalizeErpDate(raw.BillDate),
+          bill_date: normalizeErpDate(raw.BillDate, true),
           amount: Number(raw.Amount) || 0,
           approval_status: raw.ApprovalStatus || 'Pending',
           next_approver: raw.NextApprover || '',
           rejected_by: raw.RejectedBy || '',
           rejection_reason: raw.RejectionReason || '',
-          tally_status: raw.TallyStatus || 'Waiting to Export',
+          tally_status: raw.TallyStatus || (normalizedTallyDate ? 'Exported' : 'Waiting to Export'),
           bill_status: raw.BillStatus || 'Active',
-          tally_exported_date: raw.TallyExportedDate ? normalizeErpDate(raw.TallyExportedDate) : undefined,
+          tally_exported_date: normalizedTallyDate || undefined,
           last_modified_datetime: raw.LastModifiedDateTime || raw.BRDate || new Date().toISOString(),
           raw_payload: raw,
         };

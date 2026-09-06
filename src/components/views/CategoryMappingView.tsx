@@ -180,7 +180,7 @@ export const CategoryMappingView: React.FC<CategoryMappingViewProps> = ({
                   return (
                     <tr key={m.id} className="hover:bg-slate-50/70 transition">
                       <td className="py-4 px-5">
-                        <span className="px-3 py-1 rounded-lg bg-slate-100 text-slate-800 font-black text-xs border border-slate-200 shadow-2xs">
+                        <span className="inline-flex items-center justify-center px-3 py-1.5 rounded-lg bg-slate-100 text-slate-800 font-black text-xs border border-slate-200 shadow-2xs whitespace-nowrap leading-normal">
                           {m.category}
                         </span>
                       </td>
@@ -192,10 +192,10 @@ export const CategoryMappingView: React.FC<CategoryMappingViewProps> = ({
                       <td className="py-4 px-5 font-bold text-sky-800">
                         <div className="flex items-center gap-2">
                           <div className="w-6 h-6 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center text-xs font-black border border-sky-200">
-                            {m.holder_name.charAt(0)}
+                            {(userObj?.name || m.holder_name).charAt(0)}
                           </div>
                           <div>
-                            <span className="font-extrabold text-sm text-slate-900">{m.holder_name}</span>
+                            <span className="font-extrabold text-sm text-slate-900">{userObj?.name || m.holder_name}</span>
                             <span className="text-[10px] text-slate-500 block font-medium">
                               {userObj?.role || 'STAFF'}
                             </span>
@@ -217,7 +217,14 @@ export const CategoryMappingView: React.FC<CategoryMappingViewProps> = ({
                       </td>
 
                       <td className="py-4 px-5 text-slate-500 text-[11px] font-mono">
-                        {new Date(m.updated_at).toLocaleDateString()}
+                        {(() => {
+                          const d = new Date(m.updated_at);
+                          if (isNaN(d.getTime())) return '—';
+                          const day = String(d.getDate()).padStart(2, '0');
+                          const month = String(d.getMonth() + 1).padStart(2, '0');
+                          const year = d.getFullYear();
+                          return `${day}/${month}/${year}`;
+                        })()}
                       </td>
 
                       <td className="py-4 px-5 text-right">

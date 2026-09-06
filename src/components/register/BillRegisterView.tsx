@@ -751,7 +751,7 @@ export const BillRegisterView: React.FC<BillRegisterViewProps> = ({
 
                     {/* 8. Category */}
                     <td className="py-3.5 px-4 whitespace-nowrap">
-                      <span className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 font-bold text-[11px] border border-slate-200 shadow-2xs">
+                      <span className="inline-flex items-center justify-center whitespace-nowrap px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 font-bold text-[11px] border border-slate-200 shadow-2xs leading-normal">
                         {b.category}
                       </span>
                     </td>
