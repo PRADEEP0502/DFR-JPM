@@ -286,7 +286,7 @@ export const TallyTrackerView: React.FC<TallyTrackerViewProps> = ({
                       {isExported(b) && b.tally_exported_date ? formatDateOnly(b.tally_exported_date) : '—'}
                     </td>
                     <td className="py-3.5 px-4 font-bold text-slate-700">
-                      {b.age_days} Days
+                      {isExported(b) ? '—' : `${b.age_days} Days`}
                     </td>
                     <td className="py-3.5 px-4 text-right" onClick={e => e.stopPropagation()}>
                       {activeTab === 'awaiting' && (

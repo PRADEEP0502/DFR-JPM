@@ -142,9 +142,15 @@ export const BillDetailDrawer: React.FC<BillDetailDrawerProps> = ({
                   <span className="text-slate-500 font-mono text-[10px]">#{bill.header_id}</span>
                   <span>Holder: <strong className="font-black text-sky-900">{bill.current_holder_name}</strong></span>
                 </span>
-                <span className={`text-xs font-bold px-2.5 py-0.5 rounded-lg border ${ageBandColors[bill.age_band]}`}>
-                  {bill.age_band} ({bill.age_days} Days Pending)
-                </span>
+                {bill.tally_status?.toUpperCase() === 'EXPORTED' || bill.tally_status?.toUpperCase() === 'POSTED' || bill.dfr_status === 'TALLY_DONE' || bill.bill_status === 'PAID' ? (
+                  <span className="text-xs font-bold px-2.5 py-0.5 rounded-lg border bg-emerald-50 text-emerald-800 border-emerald-200">
+                    Exported & Closed
+                  </span>
+                ) : (
+                  <span className={`text-xs font-bold px-2.5 py-0.5 rounded-lg border ${ageBandColors[bill.age_band]}`}>
+                    {bill.age_band} ({bill.age_days} Days Pending)
+                  </span>
+                )}
               </div>
 
               <div className="flex items-baseline gap-3 mt-1.5">

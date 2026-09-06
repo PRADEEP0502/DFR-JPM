@@ -779,18 +779,26 @@ export const BillRegisterView: React.FC<BillRegisterViewProps> = ({
 
                     {/* 11. Age */}
                     <td className="py-3.5 px-4 whitespace-nowrap font-mono font-bold text-slate-700">
-                      {b.age_days}d
+                      {b.tally_status?.toUpperCase() === 'EXPORTED' || b.tally_status?.toUpperCase() === 'POSTED' || b.dfr_status === 'TALLY_DONE' || b.bill_status === 'PAID'
+                        ? '—'
+                        : `${b.age_days}d`}
                     </td>
 
                     {/* 12. Ageing (A-3 / A-5 / A-10 inside Ageing) */}
                     <td className="py-3.5 px-4 whitespace-nowrap">
-                      <span
-                        className={`px-2.5 py-1 rounded-lg text-[10px] border shadow-2xs ${
-                          ageBandColors[b.age_band]
-                        }`}
-                      >
-                        {b.age_band}
-                      </span>
+                      {b.tally_status?.toUpperCase() === 'EXPORTED' || b.tally_status?.toUpperCase() === 'POSTED' || b.dfr_status === 'TALLY_DONE' || b.bill_status === 'PAID' ? (
+                        <span className="px-2.5 py-1 rounded-lg text-[10px] bg-slate-100 text-slate-500 border border-slate-200">
+                          —
+                        </span>
+                      ) : (
+                        <span
+                          className={`px-2.5 py-1 rounded-lg text-[10px] border shadow-2xs ${
+                            ageBandColors[b.age_band]
+                          }`}
+                        >
+                          {b.age_band}
+                        </span>
+                      )}
                     </td>
 
                     {/* 13. Status */}
