@@ -2,9 +2,17 @@ import http from 'http';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import dns from 'dns';
 import bcrypt from 'bcryptjs';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+
+// Resolve DNS SRV query issues on local Windows networks/ISPs
+try {
+  dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
+} catch (e) {
+  // Ignore if custom DNS cannot be set
+}
 
 dotenv.config();
 
@@ -16,7 +24,7 @@ const DIST_DIR = path.join(__dirname, 'dist');
 const ERP_BASE_URL = 'http://103.168.241.16/BillpassingApplication/api/approval';
 const MONGODB_URI =
   process.env.MONGODB_URI ||
-  'mongodb+srv://pradeep07322_db_user:bKevrKLKPEo8U11v@cluster0.v9fb22c.mongodb.net/dfr_db?retryWrites=true&w=majority&appName=Cluster0';
+  'mongodb+srv://pradeep07322_db_user:Virat18@cluster0.v9fb22c.mongodb.net/dfr_db?retryWrites=true&w=majority&appName=Cluster0';
 
 const MIME_TYPES = {
   '.html': 'text/html',
