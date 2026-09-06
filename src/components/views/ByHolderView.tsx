@@ -15,10 +15,25 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
   users,
   onSelectBill,
 }) => {
-  // Exclude closed/paid bills from active holder counts
-  const activeBills = bills.filter(
-    b => b.bill_status !== 'PAID' && b.bill_status !== 'CLOSED' && b.dfr_status !== 'PAID'
-  );
+  // Exclude exported to Tally, posted, paid, and closed bills from active holder counts
+  const isTallyExported = (b: BillRegisterItem): boolean => {
+    const tally = (b.tally_status || '').toUpperCase().trim();
+    const dfr = (b.dfr_status || '').toUpperCase().trim();
+    const bill = (b.bill_status || '').toUpperCase().trim();
+    return (
+      tally === 'EXPORTED' ||
+      tally === 'POSTED' ||
+      tally.includes('EXPORTED') ||
+      tally.includes('POSTED') ||
+      dfr === 'TALLY_DONE' ||
+      dfr === 'PAID' ||
+      bill === 'PAID' ||
+      bill === 'CLOSED' ||
+      Boolean(b.tally_exported_date)
+    );
+  };
+
+  const activeBills = bills.filter(b => !isTallyExported(b));
 
   const excludedUsernames = new Set([
     'gm',
@@ -68,15 +83,13 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
       if (isAo) return b.current_stage === 'AO' || b.current_holder_name === 'AO';
       if (isJmd) return b.current_stage === 'JMD' || b.current_holder_name === 'JMD';
       if (isAccounts) {
-        // Bills that have reached ACCOUNTS / TALLY stage and are waiting to be exported to Tally
+        // Bills that have reached ACCOUNTS / TALLY stage and are strictly awaiting export to Tally
         return (
           (b.current_stage === 'ACCOUNTS' ||
             b.current_stage === 'TALLY' ||
             b.current_holder_name?.toUpperCase() === 'ACCOUNTS' ||
             b.current_holder_id === user.id) &&
-          b.tally_status !== 'EXPORTED' &&
-          b.tally_status !== 'POSTED' &&
-          b.dfr_status !== 'TALLY_DONE'
+          !isTallyExported(b)
         );
       }
 
@@ -85,9 +98,7 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
       return (
         (b.current_holder_id === user.id || b.current_holder_name?.toUpperCase() === user.full_name?.toUpperCase()) &&
         b.current_stage === 'BILL_INWARD' &&
-        b.tally_status !== 'EXPORTED' &&
-        b.tally_status !== 'POSTED' &&
-        b.dfr_status !== 'TALLY_DONE'
+        !isTallyExported(b)
       );
     });
 
