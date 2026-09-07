@@ -145,12 +145,13 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
           return (
             <div
               key={user.id}
-              className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs space-y-4 hover:border-slate-300 transition text-slate-900 relative group"
+              onClick={() => onSelectHolder && onSelectHolder(user.id)}
+              className="bg-white border border-slate-200/80 hover:border-sky-500/80 rounded-2xl p-6 shadow-xs hover:shadow-md transition-all duration-200 text-slate-900 relative group cursor-pointer hover:-translate-y-0.5"
             >
               <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                 <div className="flex items-center gap-3">
                   <div className="relative">
-                    <div className="w-10 h-10 rounded-xl bg-sky-100 text-sky-700 border border-sky-200 flex items-center justify-center font-black text-lg shadow-2xs">
+                    <div className="w-10 h-10 rounded-xl bg-sky-100 text-sky-700 border border-sky-200 flex items-center justify-center font-black text-lg shadow-2xs group-hover:bg-sky-600 group-hover:text-white group-hover:border-sky-600 transition-colors">
                       {user.full_name.charAt(0)}
                     </div>
                     <span className="absolute -top-1.5 -left-1.5 w-5 h-5 rounded-full bg-slate-900 text-white text-[10px] font-black flex items-center justify-center shadow-xs">
@@ -158,7 +159,12 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
                     </span>
                   </div>
                   <div>
-                    <h3 className="font-extrabold text-slate-900 text-base">{user.full_name}</h3>
+                    <h3 className="font-extrabold text-slate-900 text-base group-hover:text-sky-700 transition-colors flex items-center gap-1.5">
+                      {user.full_name}
+                      <span className="text-[11px] font-bold text-sky-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                        &rarr;
+                      </span>
+                    </h3>
                     <span className="text-[11px] text-slate-500 font-bold uppercase">{user.role}</span>
                   </div>
                 </div>
@@ -171,19 +177,19 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
               </div>
 
               <div className="grid grid-cols-3 gap-2 text-center">
-                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 group-hover:bg-sky-50/50 group-hover:border-sky-200 transition-colors">
                   <span className="text-[10px] text-slate-500 uppercase font-bold">Bills</span>
                   <p className="text-lg font-black text-slate-900 mt-0.5">{personBills.length}</p>
                 </div>
 
-                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 group-hover:bg-emerald-50/50 group-hover:border-emerald-200 transition-colors">
                   <span className="text-[10px] text-slate-500 uppercase font-bold">Amount</span>
                   <p className="text-sm font-black text-emerald-600 mt-1">
                     ₹{(totalAmount / 1000).toFixed(0)}k
                   </p>
                 </div>
 
-                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 group-hover:bg-amber-50/50 group-hover:border-amber-200 transition-colors">
                   <span className="text-[10px] text-slate-500 uppercase font-bold">Max Age</span>
                   <p className="text-sm font-black text-amber-600 mt-1">{oldestAge}d</p>
                 </div>
@@ -195,14 +201,9 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
                   <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                     Held Bills List ({personBills.length})
                   </span>
-                  {onSelectHolder && (
-                    <button
-                      onClick={() => onSelectHolder(user.id)}
-                      className="text-[11px] font-extrabold text-sky-600 hover:text-sky-800 hover:underline transition flex items-center gap-1 cursor-pointer"
-                    >
-                      View in Register &rarr;
-                    </button>
-                  )}
+                  <span className="text-[11px] font-extrabold text-sky-600 group-hover:text-sky-700 underline flex items-center gap-0.5">
+                    Open in Register &rarr;
+                  </span>
                 </div>
                 {personBills.length === 0 ? (
                   <p className="text-xs text-slate-400 italic">No pending bills currently held.</p>
@@ -211,8 +212,11 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
                     {personBills.map(b => (
                       <div
                         key={b.header_id}
-                        onClick={() => onSelectBill(b)}
-                        className="bg-slate-50 border border-slate-200 hover:border-sky-400 p-2 rounded-xl text-xs flex items-center justify-between cursor-pointer transition"
+                        onClick={e => {
+                          e.stopPropagation();
+                          onSelectBill(b);
+                        }}
+                        className="bg-slate-50 border border-slate-200 hover:border-sky-400 hover:bg-sky-50/70 p-2 rounded-xl text-xs flex items-center justify-between cursor-pointer transition"
                       >
                         <div>
                           <span className="font-bold text-sky-700">{b.br_no}</span>

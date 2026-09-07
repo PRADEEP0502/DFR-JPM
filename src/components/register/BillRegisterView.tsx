@@ -280,23 +280,76 @@ export const BillRegisterView: React.FC<BillRegisterViewProps> = ({
       // Current Holder Dropdown Filter
       if (holderFilter !== 'ALL') {
         const u = users.find(x => x.id === holderFilter);
-        const matchesId = b.current_holder_id === holderFilter;
-        const matchesName = Boolean(
-          u &&
-            b.current_holder_name &&
-            b.current_holder_name.toUpperCase() === u.full_name.toUpperCase()
-        );
-        const matchesAccounts =
-          isAccountsFilter &&
-          (b.current_stage === 'ACCOUNTS' ||
-            b.current_stage === 'TALLY' ||
-            b.current_holder_name?.toUpperCase() === 'ACCOUNTS' ||
-            b.current_holder_id === 'user-011' ||
-            b.current_holder_id === 'user-accounts' ||
-            b.current_holder_id?.toUpperCase() === 'ACCOUNTS');
+        const isIad =
+          u?.username?.toLowerCase() === 'iad' ||
+          u?.full_name?.toUpperCase() === 'IAD' ||
+          holderFilter === 'user-004';
+        const isAo =
+          u?.username?.toLowerCase() === 'ao' ||
+          u?.full_name?.toUpperCase() === 'AO' ||
+          holderFilter === 'user-005';
+        const isJmd =
+          u?.username?.toLowerCase() === 'jmd' ||
+          u?.full_name?.toUpperCase() === 'JMD' ||
+          holderFilter === 'user-007';
+        const isAccounts =
+          u?.username?.toLowerCase() === 'accounts' ||
+          u?.full_name?.toUpperCase() === 'ACCOUNTS' ||
+          u?.department === 'ACCOUNTS' ||
+          holderFilter === 'user-011' ||
+          holderFilter === 'user-accounts' ||
+          holderFilter.toUpperCase() === 'ACCOUNTS';
 
-        if (!matchesId && !matchesName && !matchesAccounts) {
-          return false;
+        if (isIad) {
+          if (
+            b.current_stage !== 'IAD' &&
+            b.current_holder_name?.toUpperCase() !== 'IAD' &&
+            b.current_holder_id !== holderFilter
+          ) {
+            return false;
+          }
+        } else if (isAo) {
+          if (
+            b.current_stage !== 'AO' &&
+            b.current_holder_name?.toUpperCase() !== 'AO' &&
+            b.current_holder_id !== holderFilter
+          ) {
+            return false;
+          }
+        } else if (isJmd) {
+          if (
+            b.current_stage !== 'JMD' &&
+            b.current_holder_name?.toUpperCase() !== 'JMD' &&
+            b.current_holder_id !== holderFilter
+          ) {
+            return false;
+          }
+        } else if (isAccounts) {
+          if (
+            b.current_stage !== 'ACCOUNTS' &&
+            b.current_stage !== 'TALLY' &&
+            b.current_holder_name?.toUpperCase() !== 'ACCOUNTS' &&
+            b.current_holder_id !== holderFilter &&
+            b.current_holder_id !== 'user-011' &&
+            b.current_holder_id !== 'user-accounts' &&
+            b.current_holder_id?.toUpperCase() !== 'ACCOUNTS'
+          ) {
+            return false;
+          }
+        } else {
+          // Purchase / Bill Inward Staff
+          const matchesId = b.current_holder_id === holderFilter;
+          const matchesName = Boolean(
+            u &&
+              b.current_holder_name &&
+              b.current_holder_name.toUpperCase() === u.full_name.toUpperCase()
+          );
+          if (
+            (!matchesId && !matchesName) ||
+            (b.current_stage !== 'BILL_INWARD' && b.current_stage !== undefined)
+          ) {
+            return false;
+          }
         }
       }
 
