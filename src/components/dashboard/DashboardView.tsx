@@ -523,18 +523,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs min-w-[750px]">
+            <table className="w-full text-left text-xs min-w-[950px]">
               <thead className="bg-slate-100/90 text-slate-700 uppercase tracking-wider font-bold border-b border-slate-200">
                 <tr>
-                  <th className="py-3 px-4">Header ID</th>
-                  <th className="py-3 px-4">BR No</th>
-                  <th className="py-3 px-4">Supplier Party</th>
-                  <th className="py-3 px-4">Category</th>
-                  <th className="py-3 px-4">Amount</th>
-                  <th className="py-3 px-4">Current Holder</th>
-                  <th className="py-3 px-4">Stage</th>
-                  <th className="py-3 px-4">Age (BR Date)</th>
-                  <th className="py-3 px-4 text-right">Human Action</th>
+                  <th className="py-3 px-4 whitespace-nowrap">Header ID</th>
+                  <th className="py-3 px-4 whitespace-nowrap">BR No</th>
+                  <th className="py-3 px-4 whitespace-nowrap">Supplier Party</th>
+                  <th className="py-3 px-4 whitespace-nowrap">Category</th>
+                  <th className="py-3 px-4 whitespace-nowrap">Amount</th>
+                  <th className="py-3 px-4 whitespace-nowrap">Current Holder</th>
+                  <th className="py-3 px-4 whitespace-nowrap">Stage</th>
+                  <th className="py-3 px-4 whitespace-nowrap">Age (BR Date)</th>
+                  <th className="py-3 px-4 text-right whitespace-nowrap">Human Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium text-slate-800">

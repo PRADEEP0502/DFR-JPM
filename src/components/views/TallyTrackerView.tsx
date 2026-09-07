@@ -227,18 +227,18 @@ export const TallyTrackerView: React.FC<TallyTrackerViewProps> = ({
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs min-w-[850px]">
+          <table className="w-full text-left text-xs min-w-[950px]">
             <thead className="bg-slate-100/90 text-slate-700 uppercase tracking-wider font-bold border-b border-slate-200">
               <tr>
-                <th className="py-3 px-4">Header ID</th>
-                <th className="py-3 px-4">BR No</th>
-                <th className="py-3 px-4">Supplier Party</th>
-                <th className="py-3 px-4">Category</th>
-                <th className="py-3 px-4">Amount</th>
-                <th className="py-3 px-4">Tally Status</th>
-                <th className="py-3 px-4">Export Date</th>
-                <th className="py-3 px-4">Age (BR Date)</th>
-                <th className="py-3 px-4 text-right">Checkpoint Action</th>
+                <th className="py-3 px-4 whitespace-nowrap">Header ID</th>
+                <th className="py-3 px-4 whitespace-nowrap">BR No</th>
+                <th className="py-3 px-4 whitespace-nowrap">Supplier Party</th>
+                <th className="py-3 px-4 whitespace-nowrap">Category</th>
+                <th className="py-3 px-4 whitespace-nowrap">Amount</th>
+                <th className="py-3 px-4 whitespace-nowrap">Tally Status</th>
+                <th className="py-3 px-4 whitespace-nowrap">Export Date</th>
+                <th className="py-3 px-4 whitespace-nowrap">Age (BR Date)</th>
+                <th className="py-3 px-4 text-right whitespace-nowrap">Checkpoint Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
