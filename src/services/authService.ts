@@ -457,3 +457,64 @@ class AuthService {
 }
 
 export const authService = new AuthService();
+
+/**
+ * Tally Tracker Authorization Guard:
+ * Accessible ONLY for specified User IDs:
+ * 1. ACCOUNTS (user-011 / accounts / ACCOUNTS)
+ * 2. JMD (user-007 / jmd / JMD)
+ * 3. MD (user-009 / md / MD)
+ * 4. MD_MAM (user-008 / md_mam / MD_MAM)
+ * 5. DFR_ADMIN (user-010 / dfr_admin / DFR_ADMIN / admin)
+ */
+export const isTallyTrackerAuthorized = (user?: DfrUser | null): boolean => {
+  if (!user) return false;
+
+  const uname = (user.username || '').toLowerCase().trim();
+  const fname = (user.full_name || '').toUpperCase().trim();
+  const uid = (user.id || '').toLowerCase().trim();
+
+  const allowedUsernames = new Set([
+    'accounts',
+    'jmd',
+    'md',
+    'md_mam',
+    'mdmam',
+    'dfr_admin',
+    'dfradmin',
+    'admin',
+  ]);
+
+  const allowedFullNames = new Set([
+    'ACCOUNTS',
+    'JMD',
+    'MD',
+    'MD_MAM',
+    'MD MAM',
+    'DFR_ADMIN',
+    'DFR ADMIN',
+    'SUPER ADMIN',
+    'ADMIN',
+  ]);
+
+  const allowedIds = new Set([
+    'user-007', // JMD
+    'user-008', // MD_MAM
+    'user-009', // MD
+    'user-010', // DFR_ADMIN
+    'user-011', // ACCOUNTS
+    'user-000', // DFR ADMIN / SUPER ADMIN
+    'accounts',
+    'jmd',
+    'md',
+    'md_mam',
+    'dfr_admin',
+  ]);
+
+  return (
+    allowedUsernames.has(uname) ||
+    allowedFullNames.has(fname) ||
+    allowedIds.has(uid) ||
+    (user.department === 'ACCOUNTS' && uname === 'accounts')
+  );
+};

@@ -13,7 +13,7 @@ import {
   AgeBand,
 } from '../types/dfr';
 import { INITIAL_LABELS, INITIAL_CATEGORY_MAPPINGS } from './mockData';
-import { authService } from './authService';
+import { authService, isTallyTrackerAuthorized } from './authService';
 import { auditService } from './auditService';
 import { selsoftApiClient, mapErpToDfrStage } from './selsoftApi';
 
@@ -570,6 +570,12 @@ class DfrService {
   }
 
   public markMovedToTally(headerId: number, actorUserId: string, note?: string) {
+    const actorUser = this.state.users.find(u => u.id === actorUserId) || authService.getCurrentUser();
+    if (!isTallyTrackerAuthorized(actorUser)) {
+      console.warn(`[Security] Unauthorized attempt to move bill #${headerId} to Tally by user: ${actorUserId}`);
+      return;
+    }
+
     const dfr = this.state.dfrBills.find(x => x.header_id === headerId);
     const erp = this.state.erpBills.find(x => x.header_id === headerId);
     if (!dfr || !erp) return;

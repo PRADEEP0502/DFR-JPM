@@ -14,6 +14,7 @@ import {
   X,
 } from 'lucide-react';
 import { DfrUser } from '../../types/dfr';
+import { isTallyTrackerAuthorized } from '../../services/authService';
 
 export type ViewTab =
   | 'dashboard'
@@ -46,6 +47,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onCloseMobile,
 }) => {
   const isAdminOrMd = currentUser.role === 'ADMIN' || currentUser.role === 'MD' || currentUser.access_level === 'FULL_ACCESS';
+  const canAccessTally = isTallyTrackerAuthorized(currentUser);
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -58,7 +60,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
       badgeColor: 'bg-red-500 text-white animate-pulse',
     },
     { id: 'by_holder', label: 'By Holder', icon: Users },
-    { id: 'tally', label: 'Tally Tracker', icon: Calculator },
+    ...(canAccessTally
+      ? [{ id: 'tally', label: 'Tally Tracker', icon: Calculator }]
+      : []),
     { id: 'labels', label: 'Labels Manager', icon: Tags },
     { id: 'category_mapping', label: 'Category Mappings', icon: GitFork },
     { id: 'reports', label: 'Reports / Export', icon: FileText },
