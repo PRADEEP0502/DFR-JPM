@@ -610,6 +610,18 @@ class DfrService {
     );
 
     this.saveStateToStorage();
+
+    const actor = authService.getCurrentUser();
+    auditService.log(
+      'MOVE_TO_TALLY',
+      `Exported bill #${headerId} (${erp.br_no || 'BR'}) to Tally software`,
+      actor,
+      {
+        header_id: headerId,
+        previous_value: fromStage,
+        new_value: 'TALLY',
+      }
+    );
   }
 
   public markPaymentCompleted(headerId: number, actorUserId: string, note?: string) {
@@ -640,6 +652,18 @@ class DfrService {
     });
 
     this.saveStateToStorage();
+
+    const actor = authService.getCurrentUser();
+    auditService.log(
+      'PAYMENT_COMPLETE',
+      `Marked bill #${headerId} (${erp.br_no || 'BR'}) as Paid & disbursed`,
+      actor,
+      {
+        header_id: headerId,
+        previous_value: 'TALLY_DONE',
+        new_value: 'PAID',
+      }
+    );
   }
 
   public acknowledgeAlert(alertId: number, userId: string) {
@@ -648,6 +672,17 @@ class DfrService {
       alert.acknowledged_by = userId;
       alert.acknowledged_at = new Date().toISOString();
       this.saveStateToStorage();
+
+      const actor = authService.getCurrentUser();
+      const erp = this.state.erpBills.find(x => x.header_id === alert.header_id);
+      auditService.log(
+        'ALERT_ACKNOWLEDGE',
+        `Acknowledged ${alert.band} critical alert for bill #${alert.header_id} (${erp?.br_no || 'BR'})`,
+        actor,
+        {
+          header_id: alert.header_id,
+        }
+      );
     }
   }
 
@@ -875,12 +910,6 @@ class DfrService {
         total_pages: Math.ceil(this.state.erpBills.length / 50),
         sync_errors_count: this.state.syncErrors.length,
       };
-
-      auditService.log(
-        forceFullSync ? 'MANUAL_SYNC' : 'ERP_SYNC',
-        `Successfully synchronized ${result.allBills.length} records from Selsoft ERP API (Total Active Bills: ${this.state.erpBills.length})`,
-        authService.getCurrentUser()
-      );
     } catch (err: any) {
       console.error('Sync failed:', err);
       this.state.syncState.is_syncing = false;

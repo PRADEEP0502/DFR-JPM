@@ -403,12 +403,13 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({ currentUse
                 className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-700 focus:outline-none focus:border-sky-500"
               >
                 <option value="ALL">All Actions</option>
-                <option value="LOGIN">Login</option>
-                <option value="LOGOUT">Logout</option>
-                <option value="HANDOVER">Handover</option>
-                <option value="ERP_SYNC">ERP Sync</option>
-                <option value="CATEGORY_MAP_CREATE">Category Map</option>
-                <option value="USER_CREATE">User Create</option>
+                <option value="LOGIN">Login / Logout</option>
+                <option value="HANDOVER">Handover / Custody</option>
+                <option value="MOVE_TO_TALLY">Tally Export</option>
+                <option value="PAYMENT_COMPLETE">Payment Done</option>
+                <option value="ALERT_ACKNOWLEDGE">Alert Acknowledged</option>
+                <option value="CATEGORY_MAP_CREATE">Category Mappings</option>
+                <option value="USER_CREATE">User Management</option>
                 <option value="SETTINGS_UPDATE">Settings Update</option>
               </select>
             </div>
@@ -439,7 +440,7 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({ currentUse
                   {filteredAuditLogs.length === 0 ? (
                     <tr>
                       <td colSpan={5} className="py-8 text-center text-slate-400">
-                        No audit logs matched your query.
+                        No user activity logs recorded yet.
                       </td>
                     </tr>
                   ) : (
@@ -466,8 +467,12 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({ currentUse
                                 ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
                                 : log.action === 'HANDOVER'
                                 ? 'bg-sky-50 text-sky-700 border border-sky-200'
-                                : log.action === 'ERP_SYNC' || log.action === 'MANUAL_SYNC'
+                                : log.action === 'MOVE_TO_TALLY'
                                 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                : log.action === 'PAYMENT_COMPLETE'
+                                ? 'bg-teal-50 text-teal-700 border border-teal-200'
+                                : log.action === 'ALERT_ACKNOWLEDGE'
+                                ? 'bg-amber-50 text-amber-700 border border-amber-200'
                                 : 'bg-slate-100 text-slate-700 border border-slate-200'
                             }`}
                           >

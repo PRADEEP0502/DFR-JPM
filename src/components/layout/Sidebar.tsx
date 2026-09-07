@@ -14,7 +14,7 @@ import {
   X,
 } from 'lucide-react';
 import { DfrUser } from '../../types/dfr';
-import { isTallyTrackerAuthorized } from '../../services/authService';
+import { isTallyTrackerAuthorized, isAdminSettingsAuthorized } from '../../services/authService';
 
 export type ViewTab =
   | 'dashboard'
@@ -46,7 +46,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isMobileOpen = false,
   onCloseMobile,
 }) => {
-  const isAdminOrMd = currentUser.role === 'ADMIN' || currentUser.role === 'MD' || currentUser.access_level === 'FULL_ACCESS';
+  const canAccessSettings = isAdminSettingsAuthorized(currentUser);
   const canAccessTally = isTallyTrackerAuthorized(currentUser);
 
   const menuItems = [
@@ -66,7 +66,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'labels', label: 'Labels Manager', icon: Tags },
     { id: 'category_mapping', label: 'Category Mappings', icon: GitFork },
     { id: 'reports', label: 'Reports / Export', icon: FileText },
-    ...(isAdminOrMd
+    ...(canAccessSettings
       ? [
           {
             id: 'settings',

@@ -36,6 +36,8 @@ export type AuditAction =
   | 'LOGIN'
   | 'LOGOUT'
   | 'HANDOVER'
+  | 'MOVE_TO_TALLY'
+  | 'PAYMENT_COMPLETE'
   | 'STAGE_CHANGE'
   | 'LABEL_CHANGE'
   | 'USER_CREATE'

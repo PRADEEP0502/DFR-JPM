@@ -10,7 +10,11 @@ class AuditService {
     const saved = localStorage.getItem(AUDIT_STORAGE_KEY);
     if (saved) {
       try {
-        this.logs = JSON.parse(saved);
+        const parsed: AuditLogEntry[] = JSON.parse(saved);
+        // Exclude all automated/manual sync noise from audit logs
+        this.logs = (Array.isArray(parsed) ? parsed : []).filter(
+          l => l.action !== 'ERP_SYNC' && l.action !== 'MANUAL_SYNC' && !l.action.includes('SYNC')
+        );
       } catch (e) {
         console.error('Failed to parse audit logs:', e);
         this.logs = [];
@@ -31,7 +35,7 @@ class AuditService {
         user_name: 'DFR_ADMIN',
         user_role: 'ADMIN',
         action: 'SETTINGS_UPDATE',
-        details: 'DFR enterprise system initialized with default 10 operational user accounts',
+        details: 'DFR enterprise system initialized with default operational user accounts',
         timestamp: new Date(now.getTime() - 86400000).toISOString(),
       },
       {
@@ -42,15 +46,6 @@ class AuditService {
         action: 'CATEGORY_MAP_CREATE',
         details: 'Configured initial intake routing rules for CHEMICAL, DYES, POLYBAG, MAINTENANCE, ELECTRICAL, STATIONARY, CLEANING PURPOSE',
         timestamp: new Date(now.getTime() - 80000000).toISOString(),
-      },
-      {
-        id: 3,
-        user_id: 'system',
-        user_name: 'SYSTEM',
-        user_role: 'ADMIN',
-        action: 'ERP_SYNC',
-        details: 'Automated Selsoft ERP incremental synchronization service started (30m interval)',
-        timestamp: new Date(now.getTime() - 72000000).toISOString(),
       },
     ];
     this.saveLogs();
@@ -86,6 +81,11 @@ class AuditService {
       new_value?: string;
     }
   ) {
+    // Exclude all sync operations from audit trail
+    if (action === 'ERP_SYNC' || action === 'MANUAL_SYNC' || action.includes('SYNC')) {
+      return;
+    }
+
     const nextId = this.logs.length > 0 ? Math.max(...this.logs.map(l => l.id)) + 1 : 1;
     const entry: AuditLogEntry = {
       id: nextId,

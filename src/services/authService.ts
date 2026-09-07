@@ -518,3 +518,61 @@ export const isTallyTrackerAuthorized = (user?: DfrUser | null): boolean => {
     (user.department === 'ACCOUNTS' && uname === 'accounts')
   );
 };
+
+/**
+ * Audit Log & Admin Settings Authorization Guard:
+ * Accessible ONLY for specified User IDs / Personas:
+ * 1. MD (user-009 / md / MD)
+ * 2. JMD (user-007 / jmd / JMD)
+ * 3. MD_MAM (user-008 / md_mam / MD_MAM)
+ * 4. DFR_ADMIN (user-010 / dfr_admin / DFR_ADMIN / admin)
+ */
+export const isAuditLogAuthorized = (user?: DfrUser | null): boolean => {
+  if (!user) return false;
+
+  const uname = (user.username || '').toLowerCase().trim();
+  const fname = (user.full_name || '').toUpperCase().trim();
+  const uid = (user.id || '').toLowerCase().trim();
+
+  const allowedUsernames = new Set([
+    'md',
+    'jmd',
+    'md_mam',
+    'mdmam',
+    'dfr_admin',
+    'dfradmin',
+    'admin',
+  ]);
+
+  const allowedFullNames = new Set([
+    'MD',
+    'JMD',
+    'MD_MAM',
+    'MD MAM',
+    'DFR_ADMIN',
+    'DFR ADMIN',
+    'SUPER ADMIN',
+    'ADMIN',
+  ]);
+
+  const allowedIds = new Set([
+    'user-007', // JMD
+    'user-008', // MD_MAM
+    'user-009', // MD
+    'user-010', // DFR_ADMIN
+    'user-000', // SUPER ADMIN
+    'md',
+    'jmd',
+    'md_mam',
+    'dfr_admin',
+  ]);
+
+  return (
+    allowedUsernames.has(uname) ||
+    allowedFullNames.has(fname) ||
+    allowedIds.has(uid)
+  );
+};
+
+export const isAdminSettingsAuthorized = isAuditLogAuthorized;
+

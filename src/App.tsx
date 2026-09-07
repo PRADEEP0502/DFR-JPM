@@ -14,7 +14,7 @@ import { LoginView } from './components/auth/LoginView';
 import { BillDetailDrawer } from './components/drawers/BillDetailDrawer';
 import { HandoverModal } from './components/modals/HandoverModal';
 import { dfrService } from './services/dfrService';
-import { authService, isTallyTrackerAuthorized } from './services/authService';
+import { authService, isTallyTrackerAuthorized, isAdminSettingsAuthorized } from './services/authService';
 import { BillRegisterItem, DfrUser, ProcessStage } from './types/dfr';
 import { ShieldAlert } from 'lucide-react';
 
@@ -148,6 +148,11 @@ export const App: React.FC = () => {
             setCurrentTab('dashboard');
             return;
           }
+          if (tab === 'settings' && !isAdminSettingsAuthorized(currentUser)) {
+            showToast('Access Denied: Admin Settings & Audit Logs are restricted to MD, JMD, MD_MAM, and DFR_ADMIN only.');
+            setCurrentTab('dashboard');
+            return;
+          }
           setCurrentTab(tab);
           setIsMobileMenuOpen(false);
           window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -170,6 +175,10 @@ export const App: React.FC = () => {
             if (currentTab === 'tally' && !isTallyTrackerAuthorized(u)) {
               setCurrentTab('dashboard');
               showToast(`Switched to ${u.full_name}. Tally Tracker restricted.`);
+            }
+            if (currentTab === 'settings' && !isAdminSettingsAuthorized(u)) {
+              setCurrentTab('dashboard');
+              showToast(`Switched to ${u.full_name}. Admin Settings restricted.`);
             }
           }}
           syncState={syncState}
@@ -281,10 +290,30 @@ export const App: React.FC = () => {
           {currentTab === 'reports' && <ReportsView bills={bills} users={users} />}
 
           {currentTab === 'settings' && (
-            <AdminSettingsView
-              currentUser={currentUser}
-              onRefresh={() => setTick(t => t + 1)}
-            />
+            isAdminSettingsAuthorized(currentUser) ? (
+              <AdminSettingsView
+                currentUser={currentUser}
+                onRefresh={() => setTick(t => t + 1)}
+              />
+            ) : (
+              <div className="bg-white rounded-3xl border border-rose-200 p-8 text-center space-y-4 shadow-sm max-w-lg mx-auto my-12 animate-in fade-in zoom-in-95 duration-200">
+                <div className="w-16 h-16 rounded-3xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto shadow-inner">
+                  <ShieldAlert className="w-8 h-8" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-black text-slate-900">Access Denied</h2>
+                  <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                    Admin Settings & Audit Logs are strictly restricted to <strong>MD, JMD, MD_MAM,</strong> and <strong>DFR_ADMIN</strong> user accounts only.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setCurrentTab('dashboard')}
+                  className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition cursor-pointer"
+                >
+                  Return to Dashboard
+                </button>
+              </div>
+            )
           )}
         </main>
       </div>
