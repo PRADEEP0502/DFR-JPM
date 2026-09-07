@@ -206,21 +206,25 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ bills }) => {
             <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
               {data.slice(0, 10).map(b => (
                 <tr key={b.header_id} className="hover:bg-slate-50">
-                  <td className="py-2.5 px-4 font-mono font-bold text-slate-500">#{b.header_id}</td>
-                  <td className="py-2.5 px-4 font-extrabold text-sky-600">{b.br_no}</td>
-                  <td className="py-2.5 px-4 font-bold text-slate-900">{b.supplier}</td>
-                  <td className="py-2.5 px-4">{b.category}</td>
-                  <td className="py-2.5 px-4 font-bold text-slate-900">
+                  <td className="py-2.5 px-4 font-mono font-bold text-slate-500 whitespace-nowrap">#{b.header_id}</td>
+                  <td className="py-2.5 px-4 font-extrabold text-sky-600 whitespace-nowrap">{b.br_no}</td>
+                  <td className="py-2.5 px-4 font-bold text-slate-900 whitespace-nowrap">{b.supplier}</td>
+                  <td className="py-2.5 px-4 whitespace-nowrap">
+                    <span className="inline-flex items-center justify-center whitespace-nowrap px-2 py-0.5 rounded bg-slate-100 text-slate-800 font-bold text-[11px] border border-slate-200 leading-normal">
+                      {b.category}
+                    </span>
+                  </td>
+                  <td className="py-2.5 px-4 font-bold text-slate-900 whitespace-nowrap">
                     ₹{b.amount.toLocaleString('en-IN')}
                   </td>
-                  <td className="py-2.5 px-4 text-sky-700 font-bold">{b.current_holder_name}</td>
-                  <td className="py-2.5 px-4 text-slate-700">
+                  <td className="py-2.5 px-4 text-sky-700 font-bold whitespace-nowrap">{b.current_holder_name}</td>
+                  <td className="py-2.5 px-4 text-slate-700 whitespace-nowrap">
                     {STAGE_DISPLAY_NAMES[b.current_stage] || b.current_stage}
                   </td>
-                  <td className="py-2.5 px-4 text-amber-700 font-bold">
+                  <td className="py-2.5 px-4 text-amber-700 font-bold whitespace-nowrap">
                     {b.age_days}d ({b.age_band})
                   </td>
-                  <td className="py-2.5 px-4 text-slate-700 font-semibold">{b.bill_status}</td>
+                  <td className="py-2.5 px-4 text-slate-700 font-semibold whitespace-nowrap">{b.bill_status}</td>
                 </tr>
               ))}
             </tbody>

@@ -550,35 +550,35 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       className="hover:bg-slate-50 transition cursor-pointer"
                       onClick={() => onSelectBill(bill)}
                     >
-                      <td className="py-3.5 px-4 font-mono font-bold text-slate-500">
+                      <td className="py-3.5 px-4 font-mono font-bold text-slate-500 whitespace-nowrap">
                         #{bill.header_id}
                       </td>
-                      <td className="py-3.5 px-4 font-extrabold text-sky-600">
+                      <td className="py-3.5 px-4 font-extrabold text-sky-600 whitespace-nowrap">
                         {bill.br_no}
                       </td>
-                      <td className="py-3.5 px-4 text-slate-900 font-bold">
+                      <td className="py-3.5 px-4 text-slate-900 font-bold whitespace-nowrap">
                         {bill.supplier}
                       </td>
-                      <td className="py-3.5 px-4">
-                        <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-semibold text-[11px] border border-slate-200">
+                      <td className="py-3.5 px-4 whitespace-nowrap">
+                        <span className="inline-flex items-center justify-center whitespace-nowrap px-2.5 py-1 rounded-lg bg-slate-100 text-slate-800 font-bold text-[11px] border border-slate-200 shadow-2xs leading-normal">
                           {bill.category}
                         </span>
                       </td>
-                      <td className="py-3.5 px-4 font-bold text-slate-900">
+                      <td className="py-3.5 px-4 font-bold text-slate-900 whitespace-nowrap">
                         ₹{bill.amount.toLocaleString('en-IN')}
                       </td>
-                      <td className="py-3.5 px-4 text-sky-700 font-bold">
+                      <td className="py-3.5 px-4 text-sky-700 font-bold whitespace-nowrap">
                         {bill.current_holder_name}
                       </td>
-                      <td className="py-3.5 px-4 text-slate-700 font-semibold">
+                      <td className="py-3.5 px-4 text-slate-700 font-semibold whitespace-nowrap">
                         {STAGE_DISPLAY_NAMES[bill.current_stage] || bill.current_stage}
                       </td>
-                      <td className="py-3.5 px-4">
-                        <span className="px-2.5 py-1 rounded-full bg-red-100 text-red-700 border border-red-200 font-extrabold">
+                      <td className="py-3.5 px-4 whitespace-nowrap">
+                        <span className="px-2.5 py-1 rounded-full bg-red-100 text-red-700 border border-red-200 font-extrabold whitespace-nowrap">
                           {bill.age_days} Days
                         </span>
                       </td>
-                      <td className="py-3.5 px-4 text-right">
+                      <td className="py-3.5 px-4 text-right whitespace-nowrap">
                         <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-100 hover:bg-sky-50 text-slate-700 hover:text-sky-700 font-bold text-[11px] rounded-xl border border-slate-200 hover:border-sky-300 transition shadow-2xs">
                           <span>View Bill</span>
                           <ChevronRight className="w-3.5 h-3.5" />

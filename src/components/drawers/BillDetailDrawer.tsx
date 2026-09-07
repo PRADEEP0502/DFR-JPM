@@ -225,7 +225,7 @@ export const BillDetailDrawer: React.FC<BillDetailDrawerProps> = ({
                   </div>
                   <div>
                     <span className="text-[11px] text-slate-400 font-bold uppercase block">Category</span>
-                    <span className="inline-block px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-800 font-bold text-xs mt-1">
+                    <span className="inline-flex items-center justify-center whitespace-nowrap px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-800 font-bold text-xs mt-1 shadow-2xs leading-normal">
                       {bill.category}
                     </span>
                   </div>
