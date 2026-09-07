@@ -8,12 +8,14 @@ interface ByHolderViewProps {
   users: DfrUser[];
   onSelectTab: (tab: ViewTab) => void;
   onSelectBill: (bill: BillRegisterItem) => void;
+  onSelectHolder?: (holderId: string) => void;
 }
 
 export const ByHolderView: React.FC<ByHolderViewProps> = ({
   bills,
   users,
   onSelectBill,
+  onSelectHolder,
 }) => {
   // Exclude truly exported to Tally, posted, paid, and closed bills from active holder counts
   const isTallyExported = (b: BillRegisterItem): boolean => {
@@ -189,9 +191,19 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
 
               {/* Sample list of bills */}
               <div className="space-y-2 pt-2">
-                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                  Held Bills List
-                </span>
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                    Held Bills List ({personBills.length})
+                  </span>
+                  {onSelectHolder && (
+                    <button
+                      onClick={() => onSelectHolder(user.id)}
+                      className="text-[11px] font-extrabold text-sky-600 hover:text-sky-800 hover:underline transition flex items-center gap-1 cursor-pointer"
+                    >
+                      View in Register &rarr;
+                    </button>
+                  )}
+                </div>
                 {personBills.length === 0 ? (
                   <p className="text-xs text-slate-400 italic">No pending bills currently held.</p>
                 ) : (

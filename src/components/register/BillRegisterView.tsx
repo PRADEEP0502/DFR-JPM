@@ -61,6 +61,7 @@ interface BillRegisterViewProps {
   searchQuery: string;
   onSelectBill: (bill: BillRegisterItem) => void;
   initialLabelFilter?: string;
+  initialHolderFilter?: string;
 }
 
 type DateFilterPreset =
@@ -80,9 +81,10 @@ export const BillRegisterView: React.FC<BillRegisterViewProps> = ({
   searchQuery,
   onSelectBill,
   initialLabelFilter,
+  initialHolderFilter,
 }) => {
   // Filter States
-  const [holderFilter, setHolderFilter] = useState<string>('ALL');
+  const [holderFilter, setHolderFilter] = useState<string>(initialHolderFilter || 'ALL');
   const [stageFilter, setStageFilter] = useState<string>('ALL');
   const [bandFilter, setBandFilter] = useState<string>('ALL');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
@@ -94,6 +96,12 @@ export const BillRegisterView: React.FC<BillRegisterViewProps> = ({
       setSelectedLabelId(initialLabelFilter);
     }
   }, [initialLabelFilter]);
+
+  useEffect(() => {
+    if (initialHolderFilter) {
+      setHolderFilter(initialHolderFilter);
+    }
+  }, [initialHolderFilter]);
 
   // Date Filter States (Based strictly on BR Date / Inward Date)
   const [datePreset, setDatePreset] = useState<DateFilterPreset>('ALL');
@@ -117,11 +125,11 @@ export const BillRegisterView: React.FC<BillRegisterViewProps> = ({
     );
   };
 
-  // Unique Categories extracted from active non-exported dataset
+  // Unique Categories extracted from active dataset
   const uniqueCategories = useMemo(() => {
     const set = new Set<string>();
     bills.forEach(b => {
-      if (!isExportedToTally(b) && b.category) set.add(b.category);
+      if (b.category) set.add(b.category);
     });
     return Array.from(set).sort();
   }, [bills]);
@@ -248,14 +256,51 @@ export const BillRegisterView: React.FC<BillRegisterViewProps> = ({
 
   const filteredBills = useMemo(() => {
     return bills.filter(b => {
-      // Exclude all bills that have been exported to Tally
-      if (isExportedToTally(b)) return false;
+      // Check if user has specifically selected ACCOUNTS in holderFilter
+      const isAccountsFilter =
+        holderFilter !== 'ALL' &&
+        (() => {
+          const u = users.find(x => x.id === holderFilter);
+          return (
+            u?.username?.toLowerCase() === 'accounts' ||
+            u?.full_name?.toUpperCase() === 'ACCOUNTS' ||
+            u?.department === 'ACCOUNTS' ||
+            holderFilter === 'user-011' ||
+            holderFilter === 'user-accounts' ||
+            holderFilter.toUpperCase() === 'ACCOUNTS'
+          );
+        })();
+
+      // If user is NOT explicitly filtering for Accounts, exclude exported bills from default register view
+      if (!isAccountsFilter && isExportedToTally(b)) return false;
 
       // Date Filter (BR Date / Inward Date)
       if (!isWithinDateFilter(b)) return false;
 
-      // Dropdown Filters
-      if (holderFilter !== 'ALL' && b.current_holder_id !== holderFilter) return false;
+      // Current Holder Dropdown Filter
+      if (holderFilter !== 'ALL') {
+        const u = users.find(x => x.id === holderFilter);
+        const matchesId = b.current_holder_id === holderFilter;
+        const matchesName = Boolean(
+          u &&
+            b.current_holder_name &&
+            b.current_holder_name.toUpperCase() === u.full_name.toUpperCase()
+        );
+        const matchesAccounts =
+          isAccountsFilter &&
+          (b.current_stage === 'ACCOUNTS' ||
+            b.current_stage === 'TALLY' ||
+            b.current_holder_name?.toUpperCase() === 'ACCOUNTS' ||
+            b.current_holder_id === 'user-011' ||
+            b.current_holder_id === 'user-accounts' ||
+            b.current_holder_id?.toUpperCase() === 'ACCOUNTS');
+
+        if (!matchesId && !matchesName && !matchesAccounts) {
+          return false;
+        }
+      }
+
+      // Current Stage Filter
       if (stageFilter !== 'ALL') {
         if (stageFilter === 'ACCOUNTS') {
           if (b.current_stage !== 'ACCOUNTS' && b.current_stage !== 'TALLY') return false;
@@ -300,6 +345,7 @@ export const BillRegisterView: React.FC<BillRegisterViewProps> = ({
     appliedCustomFrom,
     appliedCustomTo,
     searchQuery,
+    users,
   ]);
 
   const sortedBills = useMemo(() => {

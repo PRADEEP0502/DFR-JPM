@@ -32,6 +32,7 @@ export const App: React.FC = () => {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [selectedLabelFilter, setSelectedLabelFilter] = useState<string>('ALL');
+  const [selectedHolderFilter, setSelectedHolderFilter] = useState<string>('ALL');
 
   // Subscribe to service changes and trigger initial live sync
   const [, setTick] = useState(0);
@@ -216,6 +217,7 @@ export const App: React.FC = () => {
               searchQuery={searchQuery}
               onSelectBill={setSelectedBill}
               initialLabelFilter={selectedLabelFilter}
+              initialHolderFilter={selectedHolderFilter}
             />
           )}
 
@@ -235,6 +237,10 @@ export const App: React.FC = () => {
               users={users}
               onSelectTab={setCurrentTab}
               onSelectBill={setSelectedBill}
+              onSelectHolder={holderId => {
+                setSelectedHolderFilter(holderId);
+                setCurrentTab('register');
+              }}
             />
           )}
 

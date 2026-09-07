@@ -357,11 +357,179 @@ export const TallyTrackerView: React.FC<TallyTrackerViewProps> = ({
     const q = searchFilter.toLowerCase();
     return (
       b.br_no.toLowerCase().includes(q) ||
+      (b.bill_no && b.bill_no.toLowerCase().includes(q)) ||
       b.supplier.toLowerCase().includes(q) ||
-      b.current_holder_name?.toLowerCase().includes(q) ||
+      b.category.toLowerCase().includes(q) ||
+      (b.current_holder_name && b.current_holder_name.toLowerCase().includes(q)) ||
       b.header_id.toString().includes(q)
     );
   });
+
+  // Group exported bills by Month-Year for Accordion Toggle list
+  const exportedMonthGroups = useMemo(() => {
+    interface MonthExportGroup {
+      key: string;
+      title: string;
+      year: number;
+      monthIndex: number;
+      bills: BillRegisterItem[];
+      count: number;
+      totalAmount: number;
+    }
+
+    const groupMap = new Map<string, MonthExportGroup>();
+
+    exportedBills.forEach(b => {
+      // If search filter is active, only include matching bills
+      if (searchFilter.trim()) {
+        const q = searchFilter.toLowerCase();
+        const matches =
+          b.br_no.toLowerCase().includes(q) ||
+          (b.bill_no && b.bill_no.toLowerCase().includes(q)) ||
+          b.supplier.toLowerCase().includes(q) ||
+          b.category.toLowerCase().includes(q) ||
+          (b.current_holder_name && b.current_holder_name.toLowerCase().includes(q)) ||
+          b.header_id.toString().includes(q);
+        if (!matches) return;
+      }
+
+      const d = parseDateSafe(b.tally_exported_date) || parseDateSafe(b.br_date);
+      let key = 'other';
+      let title = 'Earlier / Other Completed';
+      let year = 0;
+      let monthIndex = -1;
+
+      if (d) {
+        year = d.getFullYear();
+        monthIndex = d.getMonth();
+        const calMonthNames = [
+          'January',
+          'February',
+          'March',
+          'April',
+          'May',
+          'June',
+          'July',
+          'August',
+          'September',
+          'October',
+          'November',
+          'December',
+        ];
+        key = `${year}-${String(monthIndex + 1).padStart(2, '0')}`;
+        title = `${calMonthNames[monthIndex]} ${year}`;
+      }
+
+      if (!groupMap.has(key)) {
+        groupMap.set(key, {
+          key,
+          title,
+          year,
+          monthIndex,
+          bills: [],
+          count: 0,
+          totalAmount: 0,
+        });
+      }
+
+      const grp = groupMap.get(key)!;
+      grp.bills.push(b);
+      grp.count += 1;
+      grp.totalAmount += b.amount;
+    });
+
+    // Sort groups descending (newest month first)
+    return Array.from(groupMap.values()).sort((a, b) => {
+      if (a.key === 'other') return 1;
+      if (b.key === 'other') return -1;
+      return b.key.localeCompare(a.key);
+    });
+  }, [exportedBills, searchFilter]);
+
+  // Accordion state for month groups
+  const [expandedMonthKeys, setExpandedMonthKeys] = useState<Record<string, boolean>>({});
+
+  const toggleMonthAccordion = (key: string) => {
+    setExpandedMonthKeys(prev => ({
+      ...prev,
+      [key]: prev[key] === undefined ? false : !prev[key],
+    }));
+  };
+
+  const handleExpandAll = () => {
+    const all: Record<string, boolean> = {};
+    exportedMonthGroups.forEach(g => {
+      all[g.key] = true;
+    });
+    setExpandedMonthKeys(all);
+  };
+
+  const handleCollapseAll = () => {
+    const all: Record<string, boolean> = {};
+    exportedMonthGroups.forEach(g => {
+      all[g.key] = false;
+    });
+    setExpandedMonthKeys(all);
+  };
+
+  const isGroupExpanded = (key: string, index: number) => {
+    // If searching, keep all matching groups open
+    if (searchFilter.trim()) return true;
+    if (expandedMonthKeys[key] !== undefined) {
+      return expandedMonthKeys[key];
+    }
+    // Default: first (most recent) group expanded, others collapsed
+    return index === 0;
+  };
+
+  const handleExportGroupCsv = (
+    group: { title: string; bills: BillRegisterItem[] },
+    e: React.MouseEvent
+  ) => {
+    e.stopPropagation();
+    if (group.bills.length === 0) return;
+
+    const headers = [
+      'Header ID',
+      'BR No',
+      'BR Date',
+      'Bill No',
+      'Bill Date',
+      'Supplier',
+      'Amount (INR)',
+      'Category',
+      'Current Holder',
+      'Tally Exported Date',
+      'Status',
+    ];
+
+    const rows = group.bills.map(b => [
+      b.header_id,
+      `"${b.br_no}"`,
+      `"${formatDateOnly(b.br_date)}"`,
+      `"${b.bill_no}"`,
+      `"${formatDateOnly(b.bill_date)}"`,
+      `"${b.supplier.replace(/"/g, '""')}"`,
+      b.amount,
+      `"${b.category}"`,
+      `"${b.current_holder_name || ''}"`,
+      `"${formatDateOnly(b.tally_exported_date)}"`,
+      `"EXPORTED"`,
+    ]);
+
+    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute(
+      'download',
+      `dfr_tally_exported_${group.title.replace(/\s+/g, '_')}.csv`
+    );
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <div className="space-y-6 pb-16 max-w-full overflow-hidden text-slate-900 font-sans">
@@ -480,23 +648,18 @@ export const TallyTrackerView: React.FC<TallyTrackerViewProps> = ({
       </div>
 
       {/* ========================================================================= */}
-      {/* SECTION 1 & 2: AWAITING OR EXPORTED PIPELINE LIST */}
+      {/* SECTION 1: AWAITING TALLY EXPORT LIST */}
       {/* ========================================================================= */}
-      {(activeTab === 'awaiting' || activeTab === 'exported') && (
+      {activeTab === 'awaiting' && (
         <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl overflow-hidden shadow-xs space-y-4 p-4 sm:p-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
             <div>
               <h2 className="text-base font-black text-slate-900 flex items-center gap-2">
-                {activeTab === 'awaiting' && <Clock className="w-5 h-5 text-emerald-600" />}
-                {activeTab === 'exported' && <CheckCircle2 className="w-5 h-5 text-indigo-600" />}
-                {activeTab === 'awaiting' && `Bills Waiting for Tally (${filteredBills.length})`}
-                {activeTab === 'exported' && `Bills Exported to Tally (${filteredBills.length})`}
+                <Clock className="w-5 h-5 text-emerald-600" />
+                Bills Waiting for Tally ({filteredBills.length})
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">
-                {activeTab === 'exported' &&
-                  'Exported bills have been successfully posted into Tally software and completed.'}
-                {activeTab === 'awaiting' &&
-                  'Click Move to Tally to transition active bills into completed Tally status.'}
+                Click Move to Tally to transition active bills into completed Tally status.
               </p>
             </div>
 
@@ -522,7 +685,6 @@ export const TallyTrackerView: React.FC<TallyTrackerViewProps> = ({
                   <th className="py-3 px-4 whitespace-nowrap">Category</th>
                   <th className="py-3 px-4 whitespace-nowrap">Amount</th>
                   <th className="py-3 px-4 whitespace-nowrap">Tally Status</th>
-                  <th className="py-3 px-4 whitespace-nowrap">Export Date</th>
                   <th className="py-3 px-4 whitespace-nowrap">Age (BR Date)</th>
                   <th className="py-3 px-4 text-right whitespace-nowrap">Checkpoint Action</th>
                 </tr>
@@ -530,9 +692,9 @@ export const TallyTrackerView: React.FC<TallyTrackerViewProps> = ({
               <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
                 {filteredBills.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="py-12 text-center text-slate-400">
+                    <td colSpan={8} className="py-12 text-center text-slate-400">
                       <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
-                      No bills found in this Tally pipeline status.
+                      No bills currently waiting for Tally export.
                     </td>
                   </tr>
                 ) : (
@@ -558,63 +720,44 @@ export const TallyTrackerView: React.FC<TallyTrackerViewProps> = ({
                         ₹{b.amount.toLocaleString('en-IN')}
                       </td>
                       <td className="py-3.5 px-4 whitespace-nowrap">
-                        <span
-                          className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase whitespace-nowrap ${
-                            isExported(b)
-                              ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                              : 'bg-amber-100 text-amber-800 border border-amber-200'
-                          }`}
-                        >
-                          {isExported(b) ? 'EXPORTED' : 'WAITING'}
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase whitespace-nowrap bg-amber-100 text-amber-800 border border-amber-200">
+                          WAITING
                         </span>
                       </td>
-                      <td className="py-3.5 px-4 font-mono text-slate-600 text-[11px] whitespace-nowrap">
-                        {isExported(b) && b.tally_exported_date ? formatDateOnly(b.tally_exported_date) : '—'}
-                      </td>
                       <td className="py-3.5 px-4 font-bold text-slate-700 whitespace-nowrap">
-                        {isExported(b) ? '—' : `${b.age_days} Days`}
+                        {b.age_days} Days
                       </td>
                       <td className="py-3.5 px-4 text-right whitespace-nowrap" onClick={e => e.stopPropagation()}>
-                        {activeTab === 'awaiting' && (
-                          <div>
-                            {selectedHeaderId === b.header_id ? (
-                              <div className="flex items-center justify-end gap-2">
-                                <input
-                                  type="text"
-                                  placeholder="Voucher note..."
-                                  value={note}
-                                  onChange={e => setNote(e.target.value)}
-                                  className="bg-white border border-slate-300 rounded-lg px-2 py-1 text-[11px] text-slate-900 focus:outline-none focus:border-emerald-500"
-                                />
-                                <button
-                                  onClick={() => handleMarkTally(b.header_id)}
-                                  className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] rounded-lg transition shadow-xs cursor-pointer"
-                                >
-                                  Confirm
-                                </button>
-                                <button
-                                  onClick={() => setSelectedHeaderId(null)}
-                                  className="text-[11px] text-slate-400 hover:text-slate-600 font-semibold cursor-pointer"
-                                >
-                                  Cancel
-                                </button>
-                              </div>
-                            ) : (
-                              <button
-                                onClick={() => setSelectedHeaderId(b.header_id)}
-                                className="px-3 py-1 bg-emerald-50 border border-emerald-200 text-emerald-800 hover:bg-emerald-100 font-bold text-[11px] rounded-xl transition flex items-center gap-1.5 ml-auto cursor-pointer"
-                              >
-                                <Calculator className="w-3.5 h-3.5 text-emerald-600" />
-                                Move to Tally
-                              </button>
-                            )}
+                        {selectedHeaderId === b.header_id ? (
+                          <div className="flex items-center justify-end gap-2">
+                            <input
+                              type="text"
+                              placeholder="Voucher note..."
+                              value={note}
+                              onChange={e => setNote(e.target.value)}
+                              className="bg-white border border-slate-300 rounded-lg px-2 py-1 text-[11px] text-slate-900 focus:outline-none focus:border-emerald-500"
+                            />
+                            <button
+                              onClick={() => handleMarkTally(b.header_id)}
+                              className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] rounded-lg transition shadow-xs cursor-pointer"
+                            >
+                              Confirm
+                            </button>
+                            <button
+                              onClick={() => setSelectedHeaderId(null)}
+                              className="text-[11px] text-slate-400 hover:text-slate-600 font-semibold cursor-pointer"
+                            >
+                              Cancel
+                            </button>
                           </div>
-                        )}
-
-                        {activeTab === 'exported' && (
-                          <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg inline-flex items-center gap-1">
-                            <Check className="w-3.5 h-3.5 text-emerald-600" /> Exported & Closed
-                          </span>
+                        ) : (
+                          <button
+                            onClick={() => setSelectedHeaderId(b.header_id)}
+                            className="px-3 py-1 bg-emerald-50 border border-emerald-200 text-emerald-800 hover:bg-emerald-100 font-bold text-[11px] rounded-xl transition flex items-center gap-1.5 ml-auto cursor-pointer"
+                          >
+                            <Calculator className="w-3.5 h-3.5 text-emerald-600" />
+                            Move to Tally
+                          </button>
                         )}
                       </td>
                     </tr>
@@ -623,6 +766,217 @@ export const TallyTrackerView: React.FC<TallyTrackerViewProps> = ({
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* SECTION 2: EXPORTED TO TALLY (LIST-WISE MONTH ACCORDION TOGGLE VIEW) */}
+      {/* ========================================================================= */}
+      {activeTab === 'exported' && (
+        <div className="space-y-4 animate-in fade-in duration-200">
+          {/* Header Bar with Search & Expand/Collapse All Controls */}
+          <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-base font-black text-slate-900 flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-indigo-600" />
+                  Bills Exported to Tally ({exportedBills.length})
+                </h2>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-100 text-indigo-800 border border-indigo-200">
+                  {exportedMonthGroups.length} Month Groups
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Organized list-wise by completion month. Click any month bar to expand or collapse bill details.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2.5 flex-wrap">
+              {/* Search Filter */}
+              <div className="relative w-full sm:w-60">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={searchFilter}
+                  onChange={e => setSearchFilter(e.target.value)}
+                  placeholder="Search BR, supplier, party..."
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-1.5 text-xs font-medium text-slate-900 focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              {/* Expand All / Collapse All Buttons */}
+              <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200 shrink-0">
+                <button
+                  onClick={handleExpandAll}
+                  className="px-2.5 py-1 text-[11px] font-bold text-slate-700 hover:text-slate-900 hover:bg-white rounded-lg transition shadow-2xs flex items-center gap-1 cursor-pointer"
+                  title="Expand all month lists"
+                >
+                  <ChevronDown className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>Expand All</span>
+                </button>
+                <button
+                  onClick={handleCollapseAll}
+                  className="px-2.5 py-1 text-[11px] font-bold text-slate-700 hover:text-slate-900 hover:bg-white rounded-lg transition shadow-2xs flex items-center gap-1 cursor-pointer"
+                  title="Collapse all month lists"
+                >
+                  <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Collapse All</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Month-wise Accordion Groups */}
+          {exportedMonthGroups.length === 0 ? (
+            <div className="bg-white border border-slate-200/90 rounded-2xl p-12 text-center text-slate-400">
+              <CheckCircle2 className="w-8 h-8 text-indigo-400 mx-auto mb-2" />
+              <p className="font-semibold text-slate-700 text-sm">No exported bills matching your search.</p>
+              <p className="text-xs text-slate-400 mt-1">Try searching for a different BR number, party name, or supplier.</p>
+            </div>
+          ) : (
+            <div className="space-y-3.5">
+              {exportedMonthGroups.map((group, groupIdx) => {
+                const isExpanded = isGroupExpanded(group.key, groupIdx);
+
+                return (
+                  <div
+                    key={group.key}
+                    className="bg-white border border-slate-200/90 rounded-2xl overflow-hidden shadow-xs transition-all duration-200 hover:border-slate-300"
+                  >
+                    {/* Month Accordion Header Toggle Bar */}
+                    <div
+                      onClick={() => toggleMonthAccordion(group.key)}
+                      className={`p-3.5 sm:p-4 cursor-pointer select-none transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                        isExpanded
+                          ? 'bg-gradient-to-r from-indigo-50/80 via-slate-50 to-white border-b border-indigo-100'
+                          : 'bg-white hover:bg-slate-50/80'
+                      }`}
+                    >
+                      {/* Left: Chevron + Month Title + Badges */}
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`w-8 h-8 rounded-xl flex items-center justify-center font-black transition-transform duration-200 ${
+                            isExpanded
+                              ? 'bg-indigo-600 text-white shadow-xs rotate-0'
+                              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                          }`}
+                        >
+                          {isExpanded ? (
+                            <ChevronDown className="w-4 h-4" />
+                          ) : (
+                            <ChevronRight className="w-4 h-4" />
+                          )}
+                        </div>
+
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-sm sm:text-base font-black text-slate-900 tracking-tight">
+                              {group.title}
+                            </span>
+                            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-indigo-100 text-indigo-900 border border-indigo-200/80">
+                              {group.count} {group.count === 1 ? 'Bill' : 'Bills'}
+                            </span>
+                            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-900 border border-emerald-200/80 font-mono">
+                              ₹{(group.totalAmount / 100000).toFixed(2)}L
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-500 mt-0.5">
+                            Total Value: <strong className="text-slate-800 font-mono">₹{group.totalAmount.toLocaleString('en-IN')}</strong>
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Right: Quick CSV Export + Toggle status */}
+                      <div className="flex items-center gap-2 ml-11 sm:ml-0" onClick={e => e.stopPropagation()}>
+                        <button
+                          onClick={e => handleExportGroupCsv(group, e)}
+                          className="px-3 py-1 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold text-xs rounded-xl shadow-2xs transition flex items-center gap-1.5 cursor-pointer min-h-[30px]"
+                          title={`Export ${group.title} bills to CSV`}
+                        >
+                          <Download className="w-3.5 h-3.5 text-slate-500" />
+                          <span>Export CSV</span>
+                        </button>
+
+                        <button
+                          onClick={() => toggleMonthAccordion(group.key)}
+                          className="px-3 py-1 bg-indigo-50/80 hover:bg-indigo-100 border border-indigo-200 text-indigo-800 font-extrabold text-xs rounded-xl transition flex items-center gap-1 cursor-pointer min-h-[30px]"
+                        >
+                          <span>{isExpanded ? 'Collapse' : 'Expand'}</span>
+                          {isExpanded ? (
+                            <ChevronDown className="w-3.5 h-3.5 text-indigo-700" />
+                          ) : (
+                            <ChevronRight className="w-3.5 h-3.5 text-indigo-700" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Month Bills Table (Visible when expanded) */}
+                    {isExpanded && (
+                      <div className="overflow-x-auto p-2 sm:p-3 animate-in fade-in duration-150">
+                        <table className="w-full text-left text-xs min-w-[950px]">
+                          <thead className="bg-slate-100/90 text-slate-700 uppercase tracking-wider font-bold border-b border-slate-200">
+                            <tr>
+                              <th className="py-2.5 px-3.5 whitespace-nowrap">Header ID</th>
+                              <th className="py-2.5 px-3.5 whitespace-nowrap">BR No</th>
+                              <th className="py-2.5 px-3.5 whitespace-nowrap">BR Date</th>
+                              <th className="py-2.5 px-3.5 whitespace-nowrap">Bill No</th>
+                              <th className="py-2.5 px-4 whitespace-nowrap">Supplier Party</th>
+                              <th className="py-2.5 px-3.5 whitespace-nowrap">Category</th>
+                              <th className="py-2.5 px-3.5 whitespace-nowrap">Amount</th>
+                              <th className="py-2.5 px-3.5 whitespace-nowrap">Tally Export Date</th>
+                              <th className="py-2.5 px-3.5 text-right whitespace-nowrap">Status</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
+                            {group.bills.map(b => (
+                              <tr
+                                key={b.header_id}
+                                onClick={() => onSelectBill(b)}
+                                className="hover:bg-indigo-50/40 transition cursor-pointer"
+                              >
+                                <td className="py-3 px-3.5 font-mono font-bold text-slate-500 whitespace-nowrap">
+                                  #{b.header_id}
+                                </td>
+                                <td className="py-3 px-3.5 font-extrabold text-sky-700 font-mono whitespace-nowrap">
+                                  {b.br_no}
+                                </td>
+                                <td className="py-3 px-3.5 font-mono text-slate-600 whitespace-nowrap">
+                                  {formatDateOnly(b.br_date)}
+                                </td>
+                                <td className="py-3 px-3.5 font-mono font-semibold text-slate-800 whitespace-nowrap">
+                                  {b.bill_no}
+                                </td>
+                                <td className="py-3 px-4 font-bold text-slate-900 whitespace-nowrap">
+                                  {b.supplier}
+                                </td>
+                                <td className="py-3 px-3.5 whitespace-nowrap">
+                                  <span className="inline-flex items-center justify-center whitespace-nowrap px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-800 font-bold text-[11px] border border-slate-200">
+                                    {b.category}
+                                  </span>
+                                </td>
+                                <td className="py-3 px-3.5 font-black text-slate-900 font-mono whitespace-nowrap">
+                                  ₹{b.amount.toLocaleString('en-IN')}
+                                </td>
+                                <td className="py-3 px-3.5 font-mono font-bold text-emerald-800 whitespace-nowrap">
+                                  {formatDateOnly(b.tally_exported_date)}
+                                </td>
+                                <td className="py-3 px-3.5 text-right whitespace-nowrap" onClick={e => e.stopPropagation()}>
+                                  <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-lg inline-flex items-center gap-1">
+                                    <Check className="w-3.5 h-3.5 text-emerald-600" /> Exported & Closed
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
