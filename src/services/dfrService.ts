@@ -611,6 +611,24 @@ class DfrService {
 
     this.saveStateToStorage();
 
+    // Persist to backend MongoDB
+    try {
+      fetch('/api/tally/mark-exported', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('DFR_AUTH_SESSION_TOKEN_V2') || ''}`,
+        },
+        body: JSON.stringify({
+          header_id: headerId,
+          tally_exported_date: nowIso,
+          bill_data: erp,
+        }),
+      }).catch(e => console.warn('Tally backend sync notice:', e));
+    } catch (e) {
+      // Offline fallback
+    }
+
     const actor = authService.getCurrentUser();
     auditService.log(
       'MOVE_TO_TALLY',
@@ -936,6 +954,23 @@ class DfrService {
     }
 
     this.saveStateToStorage();
+
+    // Non-destructive persist & merge with backend MongoDB
+    try {
+      fetch('/api/tally/sync-merge', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('DFR_AUTH_SESSION_TOKEN_V2') || ''}`,
+        },
+        body: JSON.stringify({
+          bills: this.state.erpBills,
+        }),
+      }).catch(e => console.warn('Backend tally merge notice:', e));
+    } catch (e) {
+      // Offline fallback
+    }
+
     return this.state.syncState;
   }
 
