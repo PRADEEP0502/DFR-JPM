@@ -91,6 +91,8 @@ export const getMockSelsoftDataset = (): ErpBill[] => {
     let rejectedBy = '';
     let rejectionReason = '';
 
+    let tallyExportedDate: string | undefined = undefined;
+
     if (i % 11 === 0) {
       approvalStatus = 'Rejected';
       rejectedBy = 'AUDIT TEAM';
@@ -101,6 +103,12 @@ export const getMockSelsoftDataset = (): ErpBill[] => {
       nextApprover = 'Accounts';
       tallyStatus = 'Exported';
       billStatus = 'OPEN';
+      // Distribute export dates across months of FY 2026-27 & FY 2025-26
+      const monthOffset = (i % 12);
+      const exportMonth = (4 + (i % 6)); // April (4) to September (9)
+      const exportDay = String(1 + (i % 27)).padStart(2, '0');
+      const exportYear = i > 100 ? 2025 : 2026;
+      tallyExportedDate = `${exportYear}-${String(exportMonth).padStart(2, '0')}-${exportDay}`;
     } else if (i % 4 === 0) {
       approvalStatus = 'Waiting for Approval';
       nextApprover = 'JMD';
@@ -126,6 +134,7 @@ export const getMockSelsoftDataset = (): ErpBill[] => {
       rejected_by: rejectedBy,
       rejection_reason: rejectionReason,
       tally_status: tallyStatus,
+      tally_exported_date: tallyExportedDate,
       bill_status: billStatus,
       last_modified_datetime: brDateStr,
       raw_payload: {
@@ -140,6 +149,7 @@ export const getMockSelsoftDataset = (): ErpBill[] => {
         ApprovalStatus: approvalStatus,
         NextApprover: nextApprover,
         TallyStatus: tallyStatus,
+        TallyExportedDate: tallyExportedDate,
       },
     });
   }

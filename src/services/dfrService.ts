@@ -699,9 +699,24 @@ class DfrService {
       const modifiedAfter = forceFullSync ? undefined : (this.state.syncState.last_synced_at || undefined);
       const result = await selsoftApiClient.fetchAllBills(50, modifiedAfter);
 
-      if (result.allBills.length > 0) {
-        // Populate directly from live Selsoft ERP API
-        this.state.erpBills = result.allBills;
+        // Merge into erpBills to preserve historical completed/exported records permanently
+        const incomingMap = new Map(result.allBills.map(b => [b.header_id, b]));
+        const mergedList = [...(this.state.erpBills || [])];
+        for (const inc of result.allBills) {
+          const idx = mergedList.findIndex(b => b.header_id === inc.header_id);
+          if (idx >= 0) {
+            const existing = mergedList[idx];
+            const isLocalExported = existing.tally_status === 'EXPORTED' || existing.tally_status === 'POSTED';
+            mergedList[idx] = {
+              ...inc,
+              tally_status: isLocalExported ? existing.tally_status : inc.tally_status,
+              tally_exported_date: existing.tally_exported_date || inc.tally_exported_date,
+            };
+          } else {
+            mergedList.push(inc);
+          }
+        }
+        this.state.erpBills = mergedList;
 
         const existingDfrMap = new Map(this.state.dfrBills.map(b => [b.header_id, b]));
 
@@ -850,7 +865,6 @@ class DfrService {
             }
           }
         }
-      }
 
       // Refresh A-10 alerts strictly for active, non-exported bills
       // Rule: Exclude all bills that have been Accounts/Tally Exported from A-10 Critical
