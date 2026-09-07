@@ -35,3 +35,23 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/* Strict Anti-Overlap & Layout Safety */
+table th, table td {
+  white-space: nowrap !important;
+  vertical-align: middle;
+}
+
+table th {
+  line-height: 1.4 !important;
+  letter-spacing: 0.04em;
+}
+
+table td {
+  line-height: 1.4 !important;
+}
+
+span[class*="rounded"] {
+  white-space: nowrap !important;
+  line-height: 1.3 !important;
+}
