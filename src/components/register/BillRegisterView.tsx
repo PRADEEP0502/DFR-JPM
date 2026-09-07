@@ -106,11 +106,22 @@ export const BillRegisterView: React.FC<BillRegisterViewProps> = ({
   const [sortField, setSortField] = useState<keyof BillRegisterItem>('header_id');
   const [sortAsc, setSortAsc] = useState<boolean>(false);
 
-  // Unique Categories extracted from actual dataset
+  // Helper to check if a bill has been exported to Tally
+  const isExportedToTally = (b: BillRegisterItem): boolean => {
+    return (
+      b.tally_status?.toUpperCase() === 'EXPORTED' ||
+      b.tally_status?.toUpperCase() === 'POSTED' ||
+      b.dfr_status === 'TALLY_DONE' ||
+      b.bill_status === 'PAID' ||
+      Boolean(b.tally_exported_date)
+    );
+  };
+
+  // Unique Categories extracted from active non-exported dataset
   const uniqueCategories = useMemo(() => {
     const set = new Set<string>();
     bills.forEach(b => {
-      if (b.category) set.add(b.category);
+      if (!isExportedToTally(b) && b.category) set.add(b.category);
     });
     return Array.from(set).sort();
   }, [bills]);
@@ -237,6 +248,9 @@ export const BillRegisterView: React.FC<BillRegisterViewProps> = ({
 
   const filteredBills = useMemo(() => {
     return bills.filter(b => {
+      // Exclude all bills that have been exported to Tally
+      if (isExportedToTally(b)) return false;
+
       // Date Filter (BR Date / Inward Date)
       if (!isWithinDateFilter(b)) return false;
 
