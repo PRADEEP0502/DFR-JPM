@@ -206,6 +206,10 @@ export const App: React.FC = () => {
               onSelectTab={setCurrentTab}
               onSelectBill={setSelectedBill}
               onAcknowledgeAlert={handleAcknowledgeAlert}
+              onSelectHolder={holderId => {
+                setSelectedHolderFilter(holderId);
+                setCurrentTab('register');
+              }}
             />
           )}
 

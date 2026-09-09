@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   FileText,
   Clock,
@@ -42,6 +42,7 @@ interface DashboardViewProps {
   onSelectTab: (tab: ViewTab) => void;
   onSelectBill: (bill: BillRegisterItem) => void;
   onAcknowledgeAlert: (alertId: number) => void;
+  onSelectHolder?: (holderId: string) => void;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
@@ -52,6 +53,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onSelectTab,
   onSelectBill,
   onAcknowledgeAlert,
+  onSelectHolder,
 }) => {
   // Business Rule: Exclude all bills that are Paid, Closed, or Exported to Tally/Accounts from Active Pending counts
   const isExportedOrDone = (b: BillRegisterItem) => {
@@ -67,54 +69,169 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   };
 
   // Filter truly active pending bills before Tally/Accounts export
-  const activeBills = bills.filter(b => !isExportedOrDone(b));
+  const activeBills = useMemo(() => bills.filter(b => !isExportedOrDone(b)), [bills]);
 
   // Strict Ageing metrics
-  const normalBills = activeBills.filter(b => b.age_band === 'NORMAL');
-  const a3Bills = activeBills.filter(b => b.age_band === 'A-3');
-  const a5Bills = activeBills.filter(b => b.age_band === 'A-5');
-  const a10Bills = activeBills.filter(b => b.age_band === 'A-10');
+  const normalBills = useMemo(() => activeBills.filter(b => b.age_band === 'NORMAL'), [activeBills]);
+  const a3Bills = useMemo(() => activeBills.filter(b => b.age_band === 'A-3'), [activeBills]);
+  const a5Bills = useMemo(() => activeBills.filter(b => b.age_band === 'A-5'), [activeBills]);
+  const a10Bills = useMemo(() => activeBills.filter(b => b.age_band === 'A-10'), [activeBills]);
 
-  const totalPendingAmount = activeBills.reduce((sum, b) => sum + b.amount, 0);
+  const totalPendingAmount = useMemo(
+    () => activeBills.reduce((sum, b) => sum + b.amount, 0),
+    [activeBills]
+  );
   const totalPendingCount = activeBills.length;
-  const criticalPendingAmount = a10Bills.reduce((sum, b) => sum + b.amount, 0);
+  const criticalPendingAmount = useMemo(
+    () => a10Bills.reduce((sum, b) => sum + b.amount, 0),
+    [a10Bills]
+  );
 
   // Tally stats
-  const tallyPendingBills = activeBills.filter(
-    b => b.tally_status === 'WAITING' || b.tally_status === 'PENDING'
+  const tallyPendingBills = useMemo(
+    () =>
+      activeBills.filter(
+        b => b.tally_status === 'WAITING' || b.tally_status === 'PENDING'
+      ),
+    [activeBills]
   );
-  const tallyPendingAmount = tallyPendingBills.reduce((sum, b) => sum + b.amount, 0);
-
-  const tallyDoneBills = activeBills.filter(
-    b => b.tally_status === 'EXPORTED' || b.tally_status === 'POSTED'
+  const tallyPendingAmount = useMemo(
+    () => tallyPendingBills.reduce((sum, b) => sum + b.amount, 0),
+    [tallyPendingBills]
   );
-  const tallyDoneAmount = tallyDoneBills.reduce((sum, b) => sum + b.amount, 0);
 
-  // Group by Holder (All Active Custodians without hardcoded exclusions)
-  const holderStats: Record<string, { count: number; amount: number; a10Count: number }> = {};
-  
-  activeBills.forEach(b => {
-    const name = (b.current_holder_name || 'Unassigned').trim();
-    if (name) {
-      if (!holderStats[name]) {
-        holderStats[name] = { count: 0, amount: 0, a10Count: 0 };
+  const tallyDoneBills = useMemo(
+    () =>
+      activeBills.filter(
+        b => b.tally_status === 'EXPORTED' || b.tally_status === 'POSTED'
+      ),
+    [activeBills]
+  );
+  const tallyDoneAmount = useMemo(
+    () => tallyDoneBills.reduce((sum, b) => sum + b.amount, 0),
+    [tallyDoneBills]
+  );
+
+  // Person-wise Holder Workload for List/Table View
+  const excludedUsernames = useMemo(
+    () => new Set(['gm', 'md_mam', 'md', 'dfr_admin', 'admin']),
+    []
+  );
+  const excludedFullNames = useMemo(
+    () =>
+      new Set([
+        'GM',
+        'MD_MAM',
+        'MD MAM',
+        'MD',
+        'DFR_ADMIN',
+        'DFR ADMIN',
+        'SUPER ADMIN',
+        'SYSTEM ADMIN',
+      ]),
+    []
+  );
+
+  const activeUsers = useMemo(() => {
+    return users.filter(u => {
+      if (
+        u.id === 'user-000' ||
+        u.id === 'user-006' ||
+        u.id === 'user-008' ||
+        u.id === 'user-009' ||
+        u.id === 'user-010'
+      ) {
+        return false;
       }
-      holderStats[name].count += 1;
-      holderStats[name].amount += b.amount;
-      if (b.age_band === 'A-10') {
-        holderStats[name].a10Count += 1;
+      if (excludedUsernames.has(u.username?.toLowerCase().trim())) {
+        return false;
       }
+      if (excludedFullNames.has(u.full_name?.toUpperCase().trim())) {
+        return false;
+      }
+      return true;
+    });
+  }, [users, excludedUsernames, excludedFullNames]);
+
+  const sortedHolderWorkload = useMemo(() => {
+    const list = activeUsers.map(user => {
+      const isIad =
+        user.username?.toLowerCase() === 'iad' ||
+        user.full_name?.toUpperCase() === 'IAD' ||
+        user.id === 'user-004';
+      const isAo =
+        user.username?.toLowerCase() === 'ao' ||
+        user.full_name?.toUpperCase() === 'AO' ||
+        user.id === 'user-005';
+      const isJmd =
+        user.username?.toLowerCase() === 'jmd' ||
+        user.full_name?.toUpperCase() === 'JMD' ||
+        user.id === 'user-007';
+      const isAccounts =
+        user.username?.toLowerCase() === 'accounts' ||
+        user.full_name?.toUpperCase() === 'ACCOUNTS' ||
+        user.department === 'ACCOUNTS' ||
+        user.id === 'user-011' ||
+        user.id === 'user-accounts';
+
+      const personBills = activeBills.filter(b => {
+        if (isIad) return b.current_stage === 'IAD' || b.current_holder_name === 'IAD';
+        if (isAo) return b.current_stage === 'AO' || b.current_holder_name === 'AO';
+        if (isJmd) return b.current_stage === 'JMD' || b.current_holder_name === 'JMD';
+        if (isAccounts) {
+          return (
+            (b.current_stage === 'ACCOUNTS' ||
+              b.current_stage === 'TALLY' ||
+              b.current_holder_name?.toUpperCase() === 'ACCOUNTS' ||
+              b.current_holder_id === user.id) &&
+            !isExportedOrDone(b)
+          );
+        }
+
+        return (
+          (b.current_holder_id === user.id ||
+            b.current_holder_name?.toUpperCase() === user.full_name?.toUpperCase()) &&
+          b.current_stage === 'BILL_INWARD' &&
+          !isExportedOrDone(b)
+        );
+      });
+
+      const totalAmount = personBills.reduce((sum, b) => sum + b.amount, 0);
+      const oldestAge = personBills.reduce((max, b) => Math.max(max, b.age_days), 0);
+      const criticalCount = personBills.filter(b => b.age_band === 'A-10').length;
+
+      return {
+        user,
+        personBills,
+        totalAmount,
+        oldestAge,
+        criticalCount,
+      };
+    });
+
+    return list.sort((a, b) => {
+      if (b.personBills.length !== a.personBills.length) {
+        return b.personBills.length - a.personBills.length;
+      }
+      return b.totalAmount - a.totalAmount;
+    });
+  }, [activeUsers, activeBills]);
+
+  const formatAmountK = (amount: number): string => {
+    if (amount === 0) return '₹0';
+    if (amount >= 1000) {
+      return `₹${Math.round(amount / 1000)}K`;
     }
-  });
+    return `₹${amount.toLocaleString('en-IN')}`;
+  };
 
-  const sortedHolderNames = Object.keys(holderStats).sort(
-    (a, b) => holderStats[b].count - holderStats[a].count
-  );
-
-  const holderChartData: Bar3DItem[] = sortedHolderNames.map(name => ({
-    name,
-    bills: holderStats[name].count,
-  }));
+  const handleOpenHolderBills = (userId: string) => {
+    if (onSelectHolder) {
+      onSelectHolder(userId);
+    } else {
+      onSelectTab('register');
+    }
+  };
 
   // Group by Process Stage
   const stageOrder: ProcessStage[] = ['BILL_INWARD', 'IAD', 'AO', 'JMD', 'ACCOUNTS'];
@@ -157,7 +274,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
   return (
     <div className="space-y-6 sm:space-y-8 pb-16 max-w-full overflow-hidden text-slate-900 font-sans">
-      
       {/* Executive Hero Banner */}
       <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-slate-900 via-sky-950 to-slate-900 p-4 sm:p-6 md:p-8 text-white shadow-2xl border border-sky-500/20">
         <div className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 sm:w-96 sm:h-96 rounded-full bg-gradient-to-br from-sky-500/20 to-indigo-500/0 blur-3xl pointer-events-none" />
@@ -344,33 +460,275 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       </Card3D>
 
       {/* ========================================================================= */}
-      {/* FULL-WIDTH ROW 2: HOLDER WORKLOAD DISTRIBUTION                            */}
+      {/* FULL-WIDTH ROW 2: PENDING BILLS BY CURRENT HOLDER (COMPACT LIST/TABLE)    */}
       {/* ========================================================================= */}
-      <Card3D noTilt={true} className="p-5 sm:p-7 shadow-sm border border-slate-200" glowColor="rgba(2, 132, 199, 0.15)">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4 mb-4">
+      <Card3D noTilt={true} className="p-0 overflow-hidden shadow-sm border border-slate-200/90" glowColor="rgba(2, 132, 199, 0.15)">
+        <div className="p-4 sm:p-5 border-b border-slate-100 bg-slate-50/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-sky-100 text-sky-700 flex items-center justify-center font-bold">
+            <div className="w-10 h-10 rounded-2xl bg-sky-100 text-sky-700 flex items-center justify-center font-bold shadow-xs">
               <Users className="w-5 h-5" />
             </div>
             <div>
               <h2 className="text-base font-black text-slate-900 uppercase tracking-wide">
-                BILLS BY HOLDER
+                Pending Bills by Current Holder
               </h2>
+              <p className="text-xs text-slate-500 font-medium">
+                Live custodian workload ranked descending by pending bill volume, financial exposure, and age escalation
+              </p>
             </div>
           </div>
 
           <button
             onClick={() => onSelectTab('by_holder')}
-            className="text-xs text-sky-600 font-bold hover:underline flex items-center gap-1 bg-sky-50 border border-sky-200 px-3 py-1.5 rounded-xl self-start sm:self-auto cursor-pointer"
+            className="text-xs text-sky-600 font-bold hover:underline flex items-center gap-1 bg-white border border-sky-200 px-3 py-1.5 rounded-xl self-start sm:self-auto cursor-pointer shadow-2xs"
           >
-            View Holder Matrix
+            <span>Full Holder Matrix</span>
             <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
 
-        {/* Dedicated 3D Bar Visualizer for Holders */}
-        <div className="w-full pt-2">
-          <BarChart3D data={holderChartData} colorScheme="blue" />
+        {/* 7-Column Table for Desktop / Tablet */}
+        <div className="hidden sm:block overflow-x-auto">
+          <table className="w-full text-left text-xs min-w-[760px] border-collapse">
+            <thead className="bg-slate-100/95 text-slate-600 uppercase tracking-wider font-extrabold text-[11px] border-b border-slate-200 sticky top-0 z-10 backdrop-blur">
+              <tr>
+                <th className="py-3.5 px-4 w-16 text-center">Rank</th>
+                <th className="py-3.5 px-4 min-w-[180px]">Current Holder</th>
+                <th className="py-3.5 px-4 w-32">Pending Bills</th>
+                <th className="py-3.5 px-4 w-36">Pending Amount</th>
+                <th className="py-3.5 px-4 w-28">Max Age</th>
+                <th className="py-3.5 px-4 w-36">Critical A-10 Count</th>
+                <th className="py-3.5 px-4 w-32 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 font-medium text-slate-800 bg-white">
+              {sortedHolderWorkload.map(
+                ({ user, personBills, totalAmount, oldestAge, criticalCount }, index) => {
+                  return (
+                    <tr
+                      key={user.id}
+                      onClick={() => handleOpenHolderBills(user.id)}
+                      className="hover:bg-sky-50/70 hover:shadow-xs transition-all duration-150 group cursor-pointer"
+                    >
+                      {/* 1. Rank */}
+                      <td className="py-3 px-4 text-center whitespace-nowrap">
+                        <span
+                          className={`inline-flex items-center justify-center font-black text-xs px-2.5 py-1 rounded-lg border shadow-2xs font-mono transition-transform duration-150 group-hover:scale-105 ${
+                            index === 0
+                              ? 'bg-amber-500/15 text-amber-800 border-amber-400/50 ring-1 ring-amber-400/30'
+                              : index === 1
+                              ? 'bg-slate-200/90 text-slate-800 border-slate-300'
+                              : index === 2
+                              ? 'bg-amber-700/10 text-amber-900 border-amber-600/30'
+                              : 'bg-slate-100 text-slate-600 border-slate-200'
+                          }`}
+                        >
+                          #{index + 1}
+                        </span>
+                      </td>
+
+                      {/* 2. Current Holder */}
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-sky-500 to-indigo-600 text-white font-black flex items-center justify-center text-xs shadow-xs shrink-0 group-hover:from-sky-600 group-hover:to-indigo-700 transition-colors">
+                            {user.full_name.charAt(0)}
+                          </div>
+                          <div className="min-w-0">
+                            <span className="font-extrabold text-slate-900 text-sm tracking-tight block uppercase truncate group-hover:text-sky-700 transition-colors">
+                              {user.full_name}
+                            </span>
+                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block truncate">
+                              {user.role}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* 3. Pending Bills */}
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-base font-black text-slate-900 font-mono">
+                            {personBills.length}
+                          </span>
+                          <span className="text-[11px] text-slate-400 font-bold">bills</span>
+                        </div>
+                      </td>
+
+                      {/* 4. Pending Amount */}
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        <div>
+                          <span className="text-sm font-black text-emerald-600 font-mono tracking-tight block">
+                            {formatAmountK(totalAmount)}
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-semibold block">
+                            ₹{totalAmount.toLocaleString('en-IN')}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* 5. Max Age */}
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        {personBills.length === 0 ? (
+                          <span className="text-xs text-slate-400 font-semibold">—</span>
+                        ) : (
+                          <span
+                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-black font-mono border shadow-2xs ${
+                              oldestAge >= 10
+                                ? 'bg-red-500/10 text-red-700 border-red-300 ring-1 ring-red-400/20 animate-pulse'
+                                : oldestAge >= 5
+                                ? 'bg-amber-500/10 text-amber-800 border-amber-300'
+                                : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            }`}
+                          >
+                            <Clock className="w-3 h-3 shrink-0" />
+                            <span>{oldestAge}d</span>
+                          </span>
+                        )}
+                      </td>
+
+                      {/* 6. Critical A-10 Count */}
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        {criticalCount > 0 ? (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-500 text-white text-xs font-black shadow-xs shadow-red-500/20 animate-pulse">
+                            <AlertOctagon className="w-3.5 h-3.5 shrink-0" />
+                            <span>{criticalCount}</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-md bg-slate-100 text-slate-400 text-xs font-bold font-mono">
+                            0
+                          </span>
+                        )}
+                      </td>
+
+                      {/* 7. Action */}
+                      <td className="py-3 px-4 text-right whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={e => {
+                            e.stopPropagation();
+                            handleOpenHolderBills(user.id);
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-50 group-hover:bg-sky-600 text-slate-700 group-hover:text-white rounded-xl border border-slate-200 group-hover:border-sky-600 font-black text-xs transition-all duration-150 shadow-2xs group-hover:shadow-md cursor-pointer whitespace-nowrap active:scale-95 touch-manipulation"
+                        >
+                          <span>View Bills</span>
+                          <ArrowRight className="w-3.5 h-3.5 transition-transform duration-150 group-hover:translate-x-0.5" />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                }
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Mobile View: Compact Responsive List */}
+        <div className="sm:hidden divide-y divide-slate-100 p-2 space-y-2">
+          {sortedHolderWorkload.map(
+            ({ user, personBills, totalAmount, oldestAge, criticalCount }, index) => {
+              return (
+                <div
+                  key={user.id}
+                  onClick={() => handleOpenHolderBills(user.id)}
+                  className="p-3.5 rounded-2xl bg-white border border-slate-200/80 hover:border-sky-400 hover:bg-sky-50/50 shadow-xs transition cursor-pointer active:scale-[0.99] touch-manipulation space-y-3"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span
+                        className={`inline-flex items-center justify-center font-black text-xs px-2 py-0.5 rounded-lg border shadow-2xs font-mono shrink-0 ${
+                          index === 0
+                            ? 'bg-amber-500/15 text-amber-800 border-amber-400/50'
+                            : index === 1
+                            ? 'bg-slate-200/90 text-slate-800 border-slate-300'
+                            : index === 2
+                            ? 'bg-amber-700/10 text-amber-900 border-amber-600/30'
+                            : 'bg-slate-100 text-slate-600 border-slate-200'
+                        }`}
+                      >
+                        #{index + 1}
+                      </span>
+                      <div className="min-w-0">
+                        <h3 className="font-black text-slate-900 text-sm uppercase truncate">
+                          {user.full_name}
+                        </h3>
+                        <span className="text-[10px] text-slate-500 font-bold uppercase block">
+                          {user.role}
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={e => {
+                        e.stopPropagation();
+                        handleOpenHolderBills(user.id);
+                      }}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-sky-50 text-sky-700 rounded-xl border border-sky-200 font-black text-xs shrink-0 cursor-pointer active:scale-95"
+                    >
+                      <span>View Bills</span>
+                      <ArrowRight className="w-3 h-3" />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-1.5 text-center pt-1 border-t border-slate-100">
+                    <div className="bg-slate-50 p-2 rounded-xl border border-slate-100">
+                      <span className="text-[9px] text-slate-400 font-extrabold uppercase block">
+                        Bills
+                      </span>
+                      <span className="text-xs font-black text-slate-900 font-mono mt-0.5 block">
+                        {personBills.length}
+                      </span>
+                    </div>
+
+                    <div className="bg-slate-50 p-2 rounded-xl border border-slate-100">
+                      <span className="text-[9px] text-slate-400 font-extrabold uppercase block">
+                        Amount
+                      </span>
+                      <span className="text-xs font-black text-emerald-600 font-mono mt-0.5 block">
+                        {formatAmountK(totalAmount)}
+                      </span>
+                    </div>
+
+                    <div
+                      className={`p-2 rounded-xl border ${
+                        oldestAge >= 10
+                          ? 'bg-red-50 text-red-700 border-red-200 font-black animate-pulse'
+                          : oldestAge >= 5
+                          ? 'bg-amber-50 text-amber-800 border-amber-200 font-bold'
+                          : 'bg-slate-50 text-slate-700 border-slate-100'
+                      }`}
+                    >
+                      <span className="text-[9px] text-slate-400 font-extrabold uppercase block">
+                        Max Age
+                      </span>
+                      <span className="text-xs font-black font-mono mt-0.5 block">
+                        {personBills.length === 0 ? '—' : `${oldestAge}d`}
+                      </span>
+                    </div>
+
+                    <div
+                      className={`p-2 rounded-xl border ${
+                        criticalCount > 0
+                          ? 'bg-red-500 text-white border-red-500 font-black animate-pulse'
+                          : 'bg-slate-50 text-slate-400 border-slate-100'
+                      }`}
+                    >
+                      <span
+                        className={`text-[9px] font-extrabold uppercase block ${
+                          criticalCount > 0 ? 'text-white/80' : 'text-slate-400'
+                        }`}
+                      >
+                        A-10
+                      </span>
+                      <span className="text-xs font-black font-mono mt-0.5 block">
+                        {criticalCount}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+          )}
         </div>
       </Card3D>
 
@@ -539,11 +897,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
                 {a10Bills.slice(0, 6).map(bill => {
-                  const alertObj = alerts.find(
-                    a => a.header_id === bill.header_id && a.band === 'A-10'
-                  );
-                  const isAcked = !!alertObj?.acknowledged_at;
-
                   return (
                     <tr
                       key={bill.header_id}
