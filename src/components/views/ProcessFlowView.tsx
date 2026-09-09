@@ -852,135 +852,137 @@ export const ProcessFlowView: React.FC = () => {
       {/* ========================================================================= */}
       {/* SECTION 3: KEY POINTS & PROCESS AT A GLANCE                               */}
       {/* ========================================================================= */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 md:gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 md:gap-6 items-stretch">
         {/* Left Column: Key Points Card */}
-        <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-7 shadow-xs space-y-4">
-          <div className="flex items-center gap-2.5 border-b border-slate-100 pb-3">
-            <div className="w-8 h-8 rounded-full bg-sky-600 text-white flex items-center justify-center shadow-xs">
-              <Info className="w-4 h-4" />
-            </div>
-            <h2 className="text-base font-black text-slate-900 tracking-tight">Key Points</h2>
-          </div>
-
-          <div className="space-y-3 pt-1">
-            <div className="flex items-start gap-3">
-              <div className="w-5 h-5 rounded-full bg-sky-600 text-white flex items-center justify-center text-xs shrink-0 mt-0.5 shadow-2xs">
-                <Check className="w-3 h-3 stroke-[3]" />
+        <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-7 shadow-xs flex flex-col justify-between space-y-4">
+          <div>
+            <div className="flex items-center gap-2.5 border-b border-slate-100 pb-3">
+              <div className="w-8 h-8 rounded-full bg-sky-600 text-white flex items-center justify-center shadow-xs">
+                <Info className="w-4 h-4" />
               </div>
-              <p className="text-xs sm:text-sm text-slate-700 font-semibold leading-relaxed">
-                All approvals are mandatory as per the process flow.
-              </p>
+              <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">Key Points</h2>
             </div>
 
-            <div className="flex items-start gap-3">
-              <div className="w-5 h-5 rounded-full bg-sky-600 text-white flex items-center justify-center text-xs shrink-0 mt-0.5 shadow-2xs">
-                <Check className="w-3 h-3 stroke-[3]" />
+            <div className="space-y-3 pt-3.5">
+              <div className="flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full bg-sky-600 text-white flex items-center justify-center text-xs shrink-0 mt-0.5 shadow-2xs">
+                  <Check className="w-3 h-3 stroke-[3]" />
+                </div>
+                <p className="text-xs sm:text-sm text-slate-700 font-semibold leading-relaxed">
+                  All approvals are mandatory as per the process flow.
+                </p>
               </div>
-              <p className="text-xs sm:text-sm text-slate-700 font-semibold leading-relaxed">
-                This is the official JPM process for purchase and bill processing.
-              </p>
-            </div>
 
-            <div className="flex items-start gap-3">
-              <div className="w-5 h-5 rounded-full bg-sky-600 text-white flex items-center justify-center text-xs shrink-0 mt-0.5 shadow-2xs">
-                <Check className="w-3 h-3 stroke-[3]" />
+              <div className="flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full bg-sky-600 text-white flex items-center justify-center text-xs shrink-0 mt-0.5 shadow-2xs">
+                  <Check className="w-3 h-3 stroke-[3]" />
+                </div>
+                <p className="text-xs sm:text-sm text-slate-700 font-semibold leading-relaxed">
+                  This is the official JPM process for purchase and bill processing.
+                </p>
               </div>
-              <p className="text-xs sm:text-sm text-slate-700 font-semibold leading-relaxed">
-                Use this as a reference to understand the complete flow.
-              </p>
-            </div>
 
-            <div className="flex items-start gap-3">
-              <div className="w-5 h-5 rounded-full bg-sky-600 text-white flex items-center justify-center text-xs shrink-0 mt-0.5 shadow-2xs">
-                <Check className="w-3 h-3 stroke-[3]" />
+              <div className="flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full bg-sky-600 text-white flex items-center justify-center text-xs shrink-0 mt-0.5 shadow-2xs">
+                  <Check className="w-3 h-3 stroke-[3]" />
+                </div>
+                <p className="text-xs sm:text-sm text-slate-700 font-semibold leading-relaxed">
+                  Use this as a reference to understand the complete flow.
+                </p>
               </div>
-              <p className="text-xs sm:text-sm text-slate-700 font-semibold leading-relaxed">
-                Your current DFR workflow (
-                <strong className="text-slate-900">
-                  Bill Inward &rarr; IAD &rarr; AO &rarr; JMD &rarr; Accounts &rarr; Tally
-                </strong>
-                ) remains unchanged.
-              </p>
-            </div>
 
-            <div className="flex items-start gap-3">
-              <div className="w-5 h-5 rounded-full bg-sky-600 text-white flex items-center justify-center text-xs shrink-0 mt-0.5 shadow-2xs">
-                <Check className="w-3 h-3 stroke-[3]" />
+              <div className="flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full bg-sky-600 text-white flex items-center justify-center text-xs shrink-0 mt-0.5 shadow-2xs">
+                  <Check className="w-3 h-3 stroke-[3]" />
+                </div>
+                <p className="text-xs sm:text-sm text-slate-700 font-semibold leading-relaxed">
+                  Your current DFR workflow (
+                  <strong className="text-slate-900">
+                    Bill Inward &rarr; IAD &rarr; AO &rarr; JMD &rarr; Accounts &rarr; Tally
+                  </strong>
+                  ) remains unchanged.
+                </p>
               </div>
-              <p className="text-xs sm:text-sm text-slate-700 font-semibold leading-relaxed">
-                For any process-related queries, contact the Purchase Department.
-              </p>
+
+              <div className="flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full bg-sky-600 text-white flex items-center justify-center text-xs shrink-0 mt-0.5 shadow-2xs">
+                  <Check className="w-3 h-3 stroke-[3]" />
+                </div>
+                <p className="text-xs sm:text-sm text-slate-700 font-semibold leading-relaxed">
+                  For any process-related queries, contact the Purchase Department.
+                </p>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Right Column: Process at a Glance Card */}
-        <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-7 shadow-xs space-y-4">
+        <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-7 shadow-xs flex flex-col justify-between space-y-4">
           <div className="flex items-center gap-2.5 border-b border-slate-100 pb-3">
             <div className="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center shadow-xs">
               <Layers className="w-4 h-4" />
             </div>
-            <h2 className="text-base font-black text-slate-900 tracking-tight">
+            <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
               Process at a Glance
             </h2>
           </div>
 
-          {/* 4 Stat Tiles Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5 md:gap-3 pt-1">
+          {/* 4 Stat Tiles Grid: Clean 2x2 Grid with Ample Room */}
+          <div className="grid grid-cols-2 gap-3 pt-1 flex-1">
             {/* Tile 1: 7 Main Stages */}
-            <div className="bg-sky-50/50 border border-sky-200/80 rounded-2xl p-2.5 sm:p-3 text-center flex flex-col items-center justify-center shadow-2xs">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center mb-1 shadow-2xs">
-                <FileSpreadsheet className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <div className="bg-sky-50/50 hover:bg-sky-50/80 border border-sky-200/80 rounded-2xl p-3.5 sm:p-4 text-center flex flex-col items-center justify-center shadow-2xs transition">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center mb-1.5 shadow-2xs">
+                <FileSpreadsheet className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
               </div>
-              <p className="text-xl sm:text-2xl font-black text-slate-900 font-mono tracking-tight">7</p>
-              <p className="text-[10px] sm:text-[11px] font-black text-slate-800 uppercase tracking-tight mt-0.5">
+              <p className="text-2xl sm:text-3xl font-black text-slate-900 font-mono tracking-tight">7</p>
+              <p className="text-xs sm:text-sm font-black text-slate-800 uppercase tracking-tight mt-0.5">
                 Main Stages
               </p>
-              <p className="text-[9px] sm:text-[10px] text-slate-500 font-semibold mt-0.5 leading-tight">
+              <p className="text-[11px] text-slate-500 font-semibold mt-0.5">
                 From PRN to Payment
               </p>
             </div>
 
             {/* Tile 2: 5 Key Departments */}
-            <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-2.5 sm:p-3 text-center flex flex-col items-center justify-center shadow-2xs">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-slate-200 text-slate-700 flex items-center justify-center mb-1 shadow-2xs">
-                <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <div className="bg-slate-50 hover:bg-slate-100/70 border border-slate-200/80 rounded-2xl p-3.5 sm:p-4 text-center flex flex-col items-center justify-center shadow-2xs transition">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-200 text-slate-700 flex items-center justify-center mb-1.5 shadow-2xs">
+                <Users className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
               </div>
-              <p className="text-xl sm:text-2xl font-black text-slate-900 font-mono tracking-tight">5</p>
-              <p className="text-[10px] sm:text-[11px] font-black text-slate-800 uppercase tracking-tight mt-0.5">
+              <p className="text-2xl sm:text-3xl font-black text-slate-900 font-mono tracking-tight">5</p>
+              <p className="text-xs sm:text-sm font-black text-slate-800 uppercase tracking-tight mt-0.5">
                 Key Departments
               </p>
-              <p className="text-[9px] sm:text-[10px] text-slate-500 font-semibold mt-0.5 leading-tight">
+              <p className="text-[11px] text-slate-500 font-semibold mt-0.5">
                 In Bill Passing
               </p>
             </div>
 
             {/* Tile 3: 100% Approvals Mandatory */}
-            <div className="bg-emerald-50/50 border border-emerald-200/80 rounded-2xl p-2.5 sm:p-3 text-center flex flex-col items-center justify-center shadow-2xs">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center mb-1 shadow-2xs">
-                <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[3]" />
+            <div className="bg-emerald-50/50 hover:bg-emerald-50/80 border border-emerald-200/80 rounded-2xl p-3.5 sm:p-4 text-center flex flex-col items-center justify-center shadow-2xs transition">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-emerald-500 text-white flex items-center justify-center mb-1.5 shadow-2xs">
+                <Check className="w-4 h-4 sm:w-4.5 sm:h-4.5 stroke-[3]" />
               </div>
-              <p className="text-xl sm:text-2xl font-black text-emerald-600 font-mono tracking-tight">100%</p>
-              <p className="text-[10px] sm:text-[11px] font-black text-slate-800 uppercase tracking-tight mt-0.5">
+              <p className="text-2xl sm:text-3xl font-black text-emerald-600 font-mono tracking-tight">100%</p>
+              <p className="text-xs sm:text-sm font-black text-slate-800 uppercase tracking-tight mt-0.5">
                 Approvals Mandatory
               </p>
-              <p className="text-[9px] sm:text-[10px] text-slate-500 font-semibold mt-0.5 leading-tight">
+              <p className="text-[11px] text-slate-500 font-semibold mt-0.5">
                 As per policy
               </p>
             </div>
 
             {/* Tile 4: One Goal */}
-            <div className="bg-amber-50/50 border border-amber-200/80 rounded-2xl p-2.5 sm:p-3 text-center flex flex-col items-center justify-center shadow-2xs">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-amber-400 text-slate-900 flex items-center justify-center mb-1 shadow-2xs font-black text-xs">
+            <div className="bg-amber-50/50 hover:bg-amber-50/80 border border-amber-200/80 rounded-2xl p-3.5 sm:p-4 text-center flex flex-col items-center justify-center shadow-2xs transition">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-amber-400 text-slate-900 flex items-center justify-center mb-1.5 shadow-2xs font-black text-xs sm:text-sm">
                 ★
               </div>
               <p className="text-sm sm:text-base font-black text-amber-900 tracking-tight leading-tight">
                 One Goal
               </p>
-              <p className="text-[10px] sm:text-[11px] font-black text-slate-800 uppercase tracking-tight mt-0.5">
+              <p className="text-xs sm:text-sm font-black text-slate-800 uppercase tracking-tight mt-0.5">
                 Accurate Processing
               </p>
-              <p className="text-[9px] sm:text-[10px] text-slate-500 font-semibold mt-0.5 leading-tight">
+              <p className="text-[11px] text-slate-500 font-semibold mt-0.5">
                 Timely Payment
               </p>
             </div>
