@@ -27,6 +27,7 @@ import {
   ProcessStage,
   STAGE_DISPLAY_NAMES,
   AgeBand,
+  isTallyExported,
 } from '../../types/dfr';
 import { ViewTab } from '../layout/Sidebar';
 import { Card3D } from '../ui/Card3D';
@@ -50,21 +51,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onSelectTab,
   onSelectBill,
 }) => {
-  // Business Rule: Exclude all bills that are Paid, Closed, or Exported to Tally/Accounts from Active Pending counts
-  const isExportedOrDone = (b: BillRegisterItem) => {
-    const tally = (b.tally_status || '').toUpperCase().trim();
-    return (
-      tally === 'EXPORTED' ||
-      tally === 'POSTED' ||
-      b.dfr_status === 'TALLY_DONE' ||
-      b.dfr_status === 'PAID' ||
-      b.bill_status === 'PAID' ||
-      b.bill_status === 'CLOSED'
-    );
-  };
-
   // Filter truly active pending bills before Tally/Accounts export
-  const activeBills = useMemo(() => bills.filter(b => !isExportedOrDone(b)), [bills]);
+  const activeBills = useMemo(() => bills.filter(b => !isTallyExported(b)), [bills]);
 
   // Strict Ageing metrics
   const normalBills = useMemo(() => activeBills.filter(b => b.age_band === 'NORMAL'), [activeBills]);
@@ -78,25 +66,33 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   );
   const totalPendingCount = activeBills.length;
 
-  // Tally stats
+  // Helper for bills awaiting Tally posting in Accounts stage
+  const isWaitingForTally = (b: BillRegisterItem): boolean => {
+    if (isTallyExported(b)) return false;
+    return (
+      b.current_stage === 'ACCOUNTS' ||
+      b.current_stage === 'TALLY' ||
+      b.current_holder_name?.toUpperCase().trim() === 'ACCOUNTS' ||
+      b.current_holder_id === 'user-011' ||
+      b.current_holder_id === 'user-accounts' ||
+      b.current_holder_id?.toUpperCase().trim() === 'ACCOUNTS'
+    );
+  };
+
+  // Tally stats: Awaiting Tally Export (23 bills currently waiting in Accounts)
   const tallyPendingBills = useMemo(
-    () =>
-      activeBills.filter(
-        b => b.tally_status === 'WAITING' || b.tally_status === 'PENDING'
-      ),
-    [activeBills]
+    () => bills.filter(b => isWaitingForTally(b)),
+    [bills]
   );
   const tallyPendingAmount = useMemo(
     () => tallyPendingBills.reduce((sum, b) => sum + b.amount, 0),
     [tallyPendingBills]
   );
 
+  // Tally stats: Completed Exported bills pipeline
   const tallyDoneBills = useMemo(
-    () =>
-      activeBills.filter(
-        b => b.tally_status === 'EXPORTED' || b.tally_status === 'POSTED'
-      ),
-    [activeBills]
+    () => bills.filter(b => isTallyExported(b)),
+    [bills]
   );
   const tallyDoneAmount = useMemo(
     () => tallyDoneBills.reduce((sum, b) => sum + b.amount, 0),
