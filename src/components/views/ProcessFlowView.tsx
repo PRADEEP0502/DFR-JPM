@@ -6,6 +6,7 @@ import {
   Users,
   Layers,
   ArrowRight,
+  ArrowDown,
   Info,
   Check,
   FileSpreadsheet,
@@ -445,23 +446,23 @@ export const ProcessFlowView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 sm:space-y-8 pb-16 max-w-full overflow-hidden text-slate-900 font-sans print:p-0 print:space-y-4">
+    <div className="space-y-5 sm:space-y-6 md:space-y-8 pb-16 max-w-full overflow-x-hidden text-slate-900 font-sans print:p-0 print:space-y-4">
       {/* ========================================================================= */}
       {/* HEADER SECTION: Title, Subtitle, Reference Badge, and Info Box            */}
       {/* ========================================================================= */}
-      <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-5 sm:p-7 shadow-xs relative overflow-hidden">
-        <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-5">
+      <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-7 shadow-xs relative overflow-hidden">
+        <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4 sm:gap-5">
           {/* Title Area */}
-          <div className="space-y-2 max-w-2xl min-w-0">
+          <div className="space-y-1.5 sm:space-y-2 max-w-2xl min-w-0">
             {/* Green Reference Tag */}
             <div className="flex items-center gap-2">
-              <span className="w-6 h-1 bg-emerald-500 rounded-full inline-block" />
-              <span className="text-[11px] font-black text-emerald-700 uppercase tracking-widest">
+              <span className="w-5 sm:w-6 h-1 bg-emerald-500 rounded-full inline-block" />
+              <span className="text-[10px] sm:text-[11px] font-black text-emerald-700 uppercase tracking-widest">
                 PROCESS REFERENCE
               </span>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 tracking-tight leading-tight">
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-slate-900 tracking-tight leading-tight">
               JPM Purchase &amp; Bill Process Flow
             </h1>
 
@@ -476,7 +477,7 @@ export const ProcessFlowView: React.FC = () => {
           {/* Top Right: Cursive Slogan + Print Button + Green Info Card */}
           <div className="flex flex-col sm:flex-row lg:flex-col items-start lg:items-end gap-3 shrink-0">
             <div className="flex items-center gap-3 self-stretch sm:self-auto justify-between lg:justify-end">
-              <span className="italic text-slate-500 font-serif text-xs sm:text-sm tracking-wide hidden sm:inline">
+              <span className="italic text-slate-500 font-serif text-xs sm:text-sm tracking-wide hidden md:inline">
                 From Request to Payment &ndash; Together for a Stronger JPM
               </span>
 
@@ -491,11 +492,11 @@ export const ProcessFlowView: React.FC = () => {
             </div>
 
             {/* Light Green Information Box */}
-            <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-2xl p-3.5 flex items-start gap-3 shadow-2xs max-w-md">
-              <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 shadow-2xs">
-                <Lightbulb className="w-4 h-4" />
+            <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-2xl p-3 sm:p-3.5 flex items-start gap-3 shadow-2xs max-w-md w-full sm:w-auto">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 shadow-2xs">
+                <Lightbulb className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
-              <p className="text-xs text-slate-700 font-semibold leading-snug">
+              <p className="text-[11px] sm:text-xs text-slate-700 font-semibold leading-snug">
                 This is a reference flow to help everyone understand the overall process at JPM. It does
                 not change the existing DFR workflow.
               </p>
@@ -507,14 +508,14 @@ export const ProcessFlowView: React.FC = () => {
       {/* ========================================================================= */}
       {/* SECTION 1: MAIN PURCHASE & BILL PROCESS FLOW (01 TO 07)                   */}
       {/* ========================================================================= */}
-      <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-5 sm:p-7 shadow-xs">
-        {/* 7-Step Horizontal Flow Grid with connecting arrows */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3 sm:gap-4 pt-4">
+      <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-7 shadow-xs">
+        {/* Responsive Flow Grid: 1 col on mobile, 2 col on small tablet, 4 col on tablet/iPad, 7 col on laptop/desktop */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3 sm:gap-4 pt-3 sm:pt-4">
           {/* STEP 01: PRN */}
-          <div className="relative group">
-            <div className="bg-sky-50/40 hover:bg-sky-50/70 border border-sky-200/80 hover:border-sky-400 rounded-2xl p-4 pt-6 flex flex-col items-center text-center shadow-2xs hover:shadow-md transition-all duration-200 h-full">
+          <div className="relative group flex flex-col">
+            <div className="bg-sky-50/40 hover:bg-sky-50/70 border border-sky-200/80 hover:border-sky-400 rounded-2xl p-3.5 sm:p-4 pt-6 flex flex-col items-center text-center shadow-2xs hover:shadow-md transition-all duration-200 h-full">
               {/* Number Badge at Top Center */}
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-sky-500 text-white font-black text-xs flex items-center justify-center shadow-xs border-2 border-white ring-2 ring-sky-100 font-mono">
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-sky-500 text-white font-black text-xs flex items-center justify-center shadow-xs border-2 border-white ring-2 ring-sky-100 font-mono">
                 01
               </div>
 
@@ -524,7 +525,7 @@ export const ProcessFlowView: React.FC = () => {
               </p>
 
               {/* Graphic Illustration */}
-              <div className="my-3 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <div className="my-2 sm:my-3 flex items-center justify-center group-hover:scale-105 transition-transform">
                 <PrnIllustration />
               </div>
 
@@ -536,16 +537,21 @@ export const ProcessFlowView: React.FC = () => {
               </div>
             </div>
 
-            {/* Desktop Connector Arrow */}
+            {/* Desktop Connector Arrow (Laptop xl) */}
             <div className="hidden xl:flex absolute top-1/2 -right-3 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-sky-700 shadow-xs">
               <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
+            </div>
+
+            {/* Mobile Downward Connector Arrow (Mobile only <640px) */}
+            <div className="flex sm:hidden justify-center my-1 text-sky-400">
+              <ArrowDown className="w-4 h-4 stroke-[2.5]" />
             </div>
           </div>
 
           {/* STEP 02: QUOTATION */}
-          <div className="relative group">
-            <div className="bg-emerald-50/40 hover:bg-emerald-50/70 border border-emerald-200/80 hover:border-emerald-400 rounded-2xl p-4 pt-6 flex flex-col items-center text-center shadow-2xs hover:shadow-md transition-all duration-200 h-full">
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-emerald-500 text-white font-black text-xs flex items-center justify-center shadow-xs border-2 border-white ring-2 ring-emerald-100 font-mono">
+          <div className="relative group flex flex-col">
+            <div className="bg-emerald-50/40 hover:bg-emerald-50/70 border border-emerald-200/80 hover:border-emerald-400 rounded-2xl p-3.5 sm:p-4 pt-6 flex flex-col items-center text-center shadow-2xs hover:shadow-md transition-all duration-200 h-full">
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-emerald-500 text-white font-black text-xs flex items-center justify-center shadow-xs border-2 border-white ring-2 ring-emerald-100 font-mono">
                 02
               </div>
 
@@ -556,7 +562,7 @@ export const ProcessFlowView: React.FC = () => {
                 Quotation Preparation &amp; Issue
               </p>
 
-              <div className="my-3 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <div className="my-2 sm:my-3 flex items-center justify-center group-hover:scale-105 transition-transform">
                 <QuotationIllustration />
               </div>
 
@@ -572,12 +578,16 @@ export const ProcessFlowView: React.FC = () => {
             <div className="hidden xl:flex absolute top-1/2 -right-3 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-emerald-700 shadow-xs">
               <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
             </div>
+
+            <div className="flex sm:hidden justify-center my-1 text-emerald-400">
+              <ArrowDown className="w-4 h-4 stroke-[2.5]" />
+            </div>
           </div>
 
           {/* STEP 03: PO */}
-          <div className="relative group">
-            <div className="bg-amber-50/40 hover:bg-amber-50/70 border border-amber-200/80 hover:border-amber-400 rounded-2xl p-4 pt-6 flex flex-col items-center text-center shadow-2xs hover:shadow-md transition-all duration-200 h-full">
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-amber-500 text-white font-black text-xs flex items-center justify-center shadow-xs border-2 border-white ring-2 ring-amber-100 font-mono">
+          <div className="relative group flex flex-col">
+            <div className="bg-amber-50/40 hover:bg-amber-50/70 border border-amber-200/80 hover:border-amber-400 rounded-2xl p-3.5 sm:p-4 pt-6 flex flex-col items-center text-center shadow-2xs hover:shadow-md transition-all duration-200 h-full">
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-amber-500 text-white font-black text-xs flex items-center justify-center shadow-xs border-2 border-white ring-2 ring-amber-100 font-mono">
                 03
               </div>
 
@@ -586,7 +596,7 @@ export const ProcessFlowView: React.FC = () => {
                 Purchase Order
               </p>
 
-              <div className="my-3 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <div className="my-2 sm:my-3 flex items-center justify-center group-hover:scale-105 transition-transform">
                 <PoIllustration />
               </div>
 
@@ -602,12 +612,16 @@ export const ProcessFlowView: React.FC = () => {
             <div className="hidden xl:flex absolute top-1/2 -right-3 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-amber-700 shadow-xs">
               <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
             </div>
+
+            <div className="flex sm:hidden justify-center my-1 text-amber-400">
+              <ArrowDown className="w-4 h-4 stroke-[2.5]" />
+            </div>
           </div>
 
           {/* STEP 04: MI */}
-          <div className="relative group">
-            <div className="bg-purple-50/40 hover:bg-purple-50/70 border border-purple-200/80 hover:border-purple-400 rounded-2xl p-4 pt-6 flex flex-col items-center text-center shadow-2xs hover:shadow-md transition-all duration-200 h-full">
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-purple-500 text-white font-black text-xs flex items-center justify-center shadow-xs border-2 border-white ring-2 ring-purple-100 font-mono">
+          <div className="relative group flex flex-col">
+            <div className="bg-purple-50/40 hover:bg-purple-50/70 border border-purple-200/80 hover:border-purple-400 rounded-2xl p-3.5 sm:p-4 pt-6 flex flex-col items-center text-center shadow-2xs hover:shadow-md transition-all duration-200 h-full">
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-purple-500 text-white font-black text-xs flex items-center justify-center shadow-xs border-2 border-white ring-2 ring-purple-100 font-mono">
                 04
               </div>
 
@@ -616,7 +630,7 @@ export const ProcessFlowView: React.FC = () => {
                 Material Inward
               </p>
 
-              <div className="my-3 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <div className="my-2 sm:my-3 flex items-center justify-center group-hover:scale-105 transition-transform">
                 <MiIllustration />
               </div>
 
@@ -630,12 +644,16 @@ export const ProcessFlowView: React.FC = () => {
             <div className="hidden xl:flex absolute top-1/2 -right-3 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-purple-700 shadow-xs">
               <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
             </div>
+
+            <div className="flex sm:hidden justify-center my-1 text-purple-400">
+              <ArrowDown className="w-4 h-4 stroke-[2.5]" />
+            </div>
           </div>
 
           {/* STEP 05: GRN */}
-          <div className="relative group">
-            <div className="bg-teal-50/40 hover:bg-teal-50/70 border border-teal-200/80 hover:border-teal-400 rounded-2xl p-4 pt-6 flex flex-col items-center text-center shadow-2xs hover:shadow-md transition-all duration-200 h-full">
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-teal-500 text-white font-black text-xs flex items-center justify-center shadow-xs border-2 border-white ring-2 ring-teal-100 font-mono">
+          <div className="relative group flex flex-col">
+            <div className="bg-teal-50/40 hover:bg-teal-50/70 border border-teal-200/80 hover:border-teal-400 rounded-2xl p-3.5 sm:p-4 pt-6 flex flex-col items-center text-center shadow-2xs hover:shadow-md transition-all duration-200 h-full">
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-teal-500 text-white font-black text-xs flex items-center justify-center shadow-xs border-2 border-white ring-2 ring-teal-100 font-mono">
                 05
               </div>
 
@@ -644,7 +662,7 @@ export const ProcessFlowView: React.FC = () => {
                 Goods Receipt Note
               </p>
 
-              <div className="my-3 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <div className="my-2 sm:my-3 flex items-center justify-center group-hover:scale-105 transition-transform">
                 <GrnIllustration />
               </div>
 
@@ -658,12 +676,16 @@ export const ProcessFlowView: React.FC = () => {
             <div className="hidden xl:flex absolute top-1/2 -right-3 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-teal-700 shadow-xs">
               <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
             </div>
+
+            <div className="flex sm:hidden justify-center my-1 text-teal-400">
+              <ArrowDown className="w-4 h-4 stroke-[2.5]" />
+            </div>
           </div>
 
           {/* STEP 06: BILL INWARD */}
-          <div className="relative group">
-            <div className="bg-rose-50/40 hover:bg-rose-50/70 border border-rose-200/80 hover:border-rose-400 rounded-2xl p-4 pt-6 flex flex-col items-center text-center shadow-2xs hover:shadow-md transition-all duration-200 h-full">
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-rose-500 text-white font-black text-xs flex items-center justify-center shadow-xs border-2 border-white ring-2 ring-rose-100 font-mono">
+          <div className="relative group flex flex-col">
+            <div className="bg-rose-50/40 hover:bg-rose-50/70 border border-rose-200/80 hover:border-rose-400 rounded-2xl p-3.5 sm:p-4 pt-6 flex flex-col items-center text-center shadow-2xs hover:shadow-md transition-all duration-200 h-full">
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-rose-500 text-white font-black text-xs flex items-center justify-center shadow-xs border-2 border-white ring-2 ring-rose-100 font-mono">
                 06
               </div>
 
@@ -674,7 +696,7 @@ export const ProcessFlowView: React.FC = () => {
                 Bill Inward
               </p>
 
-              <div className="my-3 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <div className="my-2 sm:my-3 flex items-center justify-center group-hover:scale-105 transition-transform">
                 <BillInwardIllustration />
               </div>
 
@@ -688,12 +710,16 @@ export const ProcessFlowView: React.FC = () => {
             <div className="hidden xl:flex absolute top-1/2 -right-3 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-rose-700 shadow-xs">
               <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
             </div>
+
+            <div className="flex sm:hidden justify-center my-1 text-rose-400">
+              <ArrowDown className="w-4 h-4 stroke-[2.5]" />
+            </div>
           </div>
 
           {/* STEP 07: BILL PASSING */}
-          <div className="relative group">
-            <div className="bg-amber-50/50 hover:bg-amber-50/80 border border-amber-300/90 hover:border-amber-500 rounded-2xl p-4 pt-6 flex flex-col items-center text-center shadow-2xs hover:shadow-md transition-all duration-200 h-full">
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-amber-400 text-slate-950 font-black text-xs flex items-center justify-center shadow-xs border-2 border-white ring-2 ring-amber-200 font-mono">
+          <div className="relative group flex flex-col">
+            <div className="bg-amber-50/50 hover:bg-amber-50/80 border border-amber-300/90 hover:border-amber-500 rounded-2xl p-3.5 sm:p-4 pt-6 flex flex-col items-center text-center shadow-2xs hover:shadow-md transition-all duration-200 h-full">
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-amber-400 text-slate-950 font-black text-xs flex items-center justify-center shadow-xs border-2 border-white ring-2 ring-amber-200 font-mono">
                 07
               </div>
 
@@ -704,7 +730,7 @@ export const ProcessFlowView: React.FC = () => {
                 Final Approval &amp; Payment Processing
               </p>
 
-              <div className="my-3 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <div className="my-2 sm:my-3 flex items-center justify-center group-hover:scale-105 transition-transform">
                 <BillPassingIllustration />
               </div>
 
@@ -721,7 +747,7 @@ export const ProcessFlowView: React.FC = () => {
       {/* ========================================================================= */}
       {/* SECTION 2: BILL PASSING APPROVAL FLOW (IAD -> AO -> JMD -> ACCOUNTS)      */}
       {/* ========================================================================= */}
-      <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-5 sm:p-7 shadow-xs space-y-6">
+      <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-7 shadow-xs space-y-5 sm:space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
           <div className="flex items-center gap-2">
             <span className="w-1.5 h-4 bg-emerald-500 rounded-full inline-block" />
@@ -734,11 +760,11 @@ export const ProcessFlowView: React.FC = () => {
           </span>
         </div>
 
-        {/* 4 Cards Grid with Clean Arrow Connectors */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* 4 Cards Grid with Clean Arrow Connectors: 1 col on mobile, 2 col on tablet/iPad portrait, 4 col on laptop/desktop */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {/* Card 1: IAD */}
-          <div className="relative group">
-            <div className="bg-sky-50/40 hover:bg-sky-50/70 border border-sky-200/80 rounded-2xl p-4 sm:p-5 flex items-center gap-4 shadow-2xs hover:shadow-xs transition">
+          <div className="relative group flex flex-col">
+            <div className="bg-sky-50/40 hover:bg-sky-50/70 border border-sky-200/80 rounded-2xl p-3.5 sm:p-5 flex items-center gap-3.5 sm:gap-4 shadow-2xs hover:shadow-xs transition h-full">
               <IadAvatar />
               <div className="min-w-0 flex-1">
                 <h3 className="font-black text-slate-900 text-base tracking-tight">IAD</h3>
@@ -748,14 +774,19 @@ export const ProcessFlowView: React.FC = () => {
                 <FileText className="w-3.5 h-3.5" />
               </div>
             </div>
+            {/* Desktop / iPad Landscape Arrow */}
             <div className="hidden lg:flex absolute top-1/2 -right-2.5 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-teal-700 shadow-2xs">
               <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
+            </div>
+            {/* Mobile Downward Connector */}
+            <div className="flex sm:hidden justify-center my-0.5 text-sky-400">
+              <ArrowDown className="w-3.5 h-3.5 stroke-[2.5]" />
             </div>
           </div>
 
           {/* Card 2: AO */}
-          <div className="relative group">
-            <div className="bg-emerald-50/40 hover:bg-emerald-50/70 border border-emerald-200/80 rounded-2xl p-4 sm:p-5 flex items-center gap-4 shadow-2xs hover:shadow-xs transition">
+          <div className="relative group flex flex-col">
+            <div className="bg-emerald-50/40 hover:bg-emerald-50/70 border border-emerald-200/80 rounded-2xl p-3.5 sm:p-5 flex items-center gap-3.5 sm:gap-4 shadow-2xs hover:shadow-xs transition h-full">
               <AoAvatar />
               <div className="min-w-0 flex-1">
                 <h3 className="font-black text-slate-900 text-base tracking-tight">AO</h3>
@@ -768,11 +799,14 @@ export const ProcessFlowView: React.FC = () => {
             <div className="hidden lg:flex absolute top-1/2 -right-2.5 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-teal-700 shadow-2xs">
               <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
             </div>
+            <div className="flex sm:hidden justify-center my-0.5 text-emerald-400">
+              <ArrowDown className="w-3.5 h-3.5 stroke-[2.5]" />
+            </div>
           </div>
 
           {/* Card 3: JMD */}
-          <div className="relative group">
-            <div className="bg-amber-50/40 hover:bg-amber-50/70 border border-amber-200/80 rounded-2xl p-4 sm:p-5 flex items-center gap-4 shadow-2xs hover:shadow-xs transition">
+          <div className="relative group flex flex-col">
+            <div className="bg-amber-50/40 hover:bg-amber-50/70 border border-amber-200/80 rounded-2xl p-3.5 sm:p-5 flex items-center gap-3.5 sm:gap-4 shadow-2xs hover:shadow-xs transition h-full">
               <JmdAvatar />
               <div className="min-w-0 flex-1">
                 <h3 className="font-black text-slate-900 text-base tracking-tight">JMD</h3>
@@ -785,11 +819,14 @@ export const ProcessFlowView: React.FC = () => {
             <div className="hidden lg:flex absolute top-1/2 -right-2.5 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-teal-700 shadow-2xs">
               <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
             </div>
+            <div className="flex sm:hidden justify-center my-0.5 text-amber-400">
+              <ArrowDown className="w-3.5 h-3.5 stroke-[2.5]" />
+            </div>
           </div>
 
           {/* Card 4: ACCOUNTS */}
-          <div className="relative group">
-            <div className="bg-purple-50/40 hover:bg-purple-50/70 border border-purple-200/80 rounded-2xl p-4 sm:p-5 flex items-center gap-4 shadow-2xs hover:shadow-xs transition">
+          <div className="relative group flex flex-col">
+            <div className="bg-purple-50/40 hover:bg-purple-50/70 border border-purple-200/80 rounded-2xl p-3.5 sm:p-5 flex items-center gap-3.5 sm:gap-4 shadow-2xs hover:shadow-xs transition h-full">
               <AccountsAvatar />
               <div className="min-w-0 flex-1">
                 <h3 className="font-black text-slate-900 text-base tracking-tight">ACCOUNTS</h3>
@@ -806,9 +843,9 @@ export const ProcessFlowView: React.FC = () => {
       {/* ========================================================================= */}
       {/* SECTION 3: KEY POINTS & PROCESS AT A GLANCE                               */}
       {/* ========================================================================= */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 md:gap-6">
         {/* Left Column: Key Points Card */}
-        <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-5 sm:p-7 shadow-xs space-y-4">
+        <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-7 shadow-xs space-y-4">
           <div className="flex items-center gap-2.5 border-b border-slate-100 pb-3">
             <div className="w-8 h-8 rounded-full bg-sky-600 text-white flex items-center justify-center shadow-xs">
               <Info className="w-4 h-4" />
@@ -869,7 +906,7 @@ export const ProcessFlowView: React.FC = () => {
         </div>
 
         {/* Right Column: Process at a Glance Card */}
-        <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-5 sm:p-7 shadow-xs space-y-4">
+        <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-7 shadow-xs space-y-4">
           <div className="flex items-center gap-2.5 border-b border-slate-100 pb-3">
             <div className="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center shadow-xs">
               <Layers className="w-4 h-4" />
@@ -880,55 +917,55 @@ export const ProcessFlowView: React.FC = () => {
           </div>
 
           {/* 4 Stat Tiles Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 pt-1">
             {/* Tile 1: 7 Main Stages */}
-            <div className="bg-sky-50/50 border border-sky-200/80 rounded-2xl p-3.5 text-center flex flex-col items-center justify-center shadow-2xs">
-              <div className="w-8 h-8 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center mb-1 shadow-2xs">
-                <FileSpreadsheet className="w-4 h-4" />
+            <div className="bg-sky-50/50 border border-sky-200/80 rounded-2xl p-3 sm:p-3.5 text-center flex flex-col items-center justify-center shadow-2xs">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center mb-1 shadow-2xs">
+                <FileSpreadsheet className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
-              <p className="text-2xl font-black text-slate-900 font-mono tracking-tight">7</p>
-              <p className="text-[11px] font-black text-slate-800 uppercase tracking-tight mt-0.5">
+              <p className="text-xl sm:text-2xl font-black text-slate-900 font-mono tracking-tight">7</p>
+              <p className="text-[10px] sm:text-[11px] font-black text-slate-800 uppercase tracking-tight mt-0.5">
                 Main Stages
               </p>
-              <p className="text-[10px] text-slate-500 font-semibold mt-0.5">From PRN to Payment</p>
+              <p className="text-[9px] sm:text-[10px] text-slate-500 font-semibold mt-0.5">From PRN to Payment</p>
             </div>
 
             {/* Tile 2: 5 Key Departments */}
-            <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3.5 text-center flex flex-col items-center justify-center shadow-2xs">
-              <div className="w-8 h-8 rounded-xl bg-slate-200 text-slate-700 flex items-center justify-center mb-1 shadow-2xs">
-                <Users className="w-4 h-4" />
+            <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3 sm:p-3.5 text-center flex flex-col items-center justify-center shadow-2xs">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-slate-200 text-slate-700 flex items-center justify-center mb-1 shadow-2xs">
+                <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
-              <p className="text-2xl font-black text-slate-900 font-mono tracking-tight">5</p>
-              <p className="text-[11px] font-black text-slate-800 uppercase tracking-tight mt-0.5">
+              <p className="text-xl sm:text-2xl font-black text-slate-900 font-mono tracking-tight">5</p>
+              <p className="text-[10px] sm:text-[11px] font-black text-slate-800 uppercase tracking-tight mt-0.5">
                 Key Departments
               </p>
-              <p className="text-[10px] text-slate-500 font-semibold mt-0.5">In Bill Passing</p>
+              <p className="text-[9px] sm:text-[10px] text-slate-500 font-semibold mt-0.5">In Bill Passing</p>
             </div>
 
             {/* Tile 3: 100% Approvals Mandatory */}
-            <div className="bg-emerald-50/50 border border-emerald-200/80 rounded-2xl p-3.5 text-center flex flex-col items-center justify-center shadow-2xs">
-              <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center mb-1 shadow-2xs">
-                <Check className="w-4 h-4 stroke-[3]" />
+            <div className="bg-emerald-50/50 border border-emerald-200/80 rounded-2xl p-3 sm:p-3.5 text-center flex flex-col items-center justify-center shadow-2xs">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center mb-1 shadow-2xs">
+                <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[3]" />
               </div>
-              <p className="text-2xl font-black text-emerald-600 font-mono tracking-tight">100%</p>
-              <p className="text-[11px] font-black text-slate-800 uppercase tracking-tight mt-0.5">
+              <p className="text-xl sm:text-2xl font-black text-emerald-600 font-mono tracking-tight">100%</p>
+              <p className="text-[10px] sm:text-[11px] font-black text-slate-800 uppercase tracking-tight mt-0.5">
                 Approvals Mandatory
               </p>
-              <p className="text-[10px] text-slate-500 font-semibold mt-0.5">As per policy</p>
+              <p className="text-[9px] sm:text-[10px] text-slate-500 font-semibold mt-0.5">As per policy</p>
             </div>
 
             {/* Tile 4: One Goal */}
-            <div className="bg-amber-50/50 border border-amber-200/80 rounded-2xl p-3.5 text-center flex flex-col items-center justify-center shadow-2xs">
-              <div className="w-8 h-8 rounded-full bg-amber-400 text-slate-900 flex items-center justify-center mb-1 shadow-2xs font-black text-xs">
+            <div className="bg-amber-50/50 border border-amber-200/80 rounded-2xl p-3 sm:p-3.5 text-center flex flex-col items-center justify-center shadow-2xs">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-amber-400 text-slate-900 flex items-center justify-center mb-1 shadow-2xs font-black text-xs">
                 ★
               </div>
-              <p className="text-base font-black text-amber-900 tracking-tight">
+              <p className="text-sm sm:text-base font-black text-amber-900 tracking-tight">
                 One Goal
               </p>
-              <p className="text-[11px] font-black text-slate-800 uppercase tracking-tight mt-0.5">
+              <p className="text-[10px] sm:text-[11px] font-black text-slate-800 uppercase tracking-tight mt-0.5">
                 Accurate Processing
               </p>
-              <p className="text-[10px] text-slate-500 font-semibold mt-0.5">Timely Payment</p>
+              <p className="text-[9px] sm:text-[10px] text-slate-500 font-semibold mt-0.5">Timely Payment</p>
             </div>
           </div>
         </div>
@@ -937,7 +974,7 @@ export const ProcessFlowView: React.FC = () => {
       {/* ========================================================================= */}
       {/* FOOTER NOTE / WATERMARK                                                   */}
       {/* ========================================================================= */}
-      <div className="flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 font-medium pt-2 px-1 border-t border-slate-200/80 gap-2">
+      <div className="flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 font-medium pt-2 px-1 border-t border-slate-200/80 gap-2 text-center sm:text-left">
         <span>&copy; 2026 Junior Processing Mill (JPM). All rights reserved.</span>
         <span className="hidden sm:inline">DFR | Purchase &amp; Bill Process Flow | For Information Only</span>
         <div className="flex items-center gap-2">
