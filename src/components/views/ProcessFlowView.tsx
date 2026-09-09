@@ -360,19 +360,16 @@ const BillPassingIllustration: React.FC = () => (
 
 // IAD: Auditor with Blue Suit & Laptop
 const IadAvatar: React.FC = () => (
-  <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-sky-400 to-indigo-600 p-0.5 shadow-md flex items-center justify-center shrink-0">
+  <div className="w-13 h-13 sm:w-14 sm:h-14 md:w-15 md:h-15 rounded-2xl bg-gradient-to-tr from-sky-400 to-indigo-600 p-0.5 shadow-md flex items-center justify-center shrink-0">
     <div className="w-full h-full bg-sky-50 rounded-2xl flex flex-col items-center justify-end overflow-hidden relative">
-      {/* Head */}
-      <div className="w-8 h-8 rounded-full bg-amber-200 border border-amber-300 relative -mb-1 z-10">
-        <div className="w-8 h-4 rounded-t-full bg-slate-800" />
+      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-amber-200 border border-amber-300 relative -mb-1 z-10">
+        <div className="w-7 h-3.5 sm:w-8 sm:h-4 rounded-t-full bg-slate-800" />
       </div>
-      {/* Body / Blue Suit */}
-      <div className="w-14 h-7 bg-sky-600 rounded-t-xl flex items-center justify-center relative">
-        <div className="w-3 h-5 bg-white -mt-2" />
-        <div className="w-1.5 h-4 bg-sky-900 -mt-1" />
+      <div className="w-11 sm:w-13 h-5.5 sm:h-6.5 bg-sky-600 rounded-t-xl flex items-center justify-center relative">
+        <div className="w-2.5 sm:w-3 h-4 sm:h-5 bg-white -mt-1.5 sm:-mt-2" />
+        <div className="w-1.5 h-3.5 sm:h-4 bg-sky-900 -mt-1" />
       </div>
-      {/* Laptop badge */}
-      <div className="absolute bottom-0 w-10 h-3 bg-slate-800 rounded-t-sm shadow-xs flex items-center justify-center">
+      <div className="absolute bottom-0 w-8 sm:w-9 h-2.5 sm:h-3 bg-slate-800 rounded-t-sm shadow-xs flex items-center justify-center">
         <div className="w-2 h-1 bg-sky-300 rounded-xs" />
       </div>
     </div>
@@ -381,18 +378,15 @@ const IadAvatar: React.FC = () => (
 
 // AO: Officer with Glasses & Tie
 const AoAvatar: React.FC = () => (
-  <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-400 to-teal-600 p-0.5 shadow-md flex items-center justify-center shrink-0">
+  <div className="w-13 h-13 sm:w-14 sm:h-14 md:w-15 md:h-15 rounded-2xl bg-gradient-to-tr from-emerald-400 to-teal-600 p-0.5 shadow-md flex items-center justify-center shrink-0">
     <div className="w-full h-full bg-emerald-50 rounded-2xl flex flex-col items-center justify-end overflow-hidden relative">
-      {/* Head with Glasses */}
-      <div className="w-8 h-8 rounded-full bg-amber-200 border border-amber-300 relative -mb-1 z-10 flex items-center justify-center">
-        <div className="w-8 h-4 rounded-t-full bg-slate-800 absolute top-0" />
-        {/* Glasses */}
-        <div className="w-6 h-2 border-2 border-slate-800 rounded-full mt-2" />
+      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-amber-200 border border-amber-300 relative -mb-1 z-10 flex items-center justify-center">
+        <div className="w-7 h-3.5 sm:w-8 sm:h-4 rounded-t-full bg-slate-800 absolute top-0" />
+        <div className="w-5 sm:w-6 h-2 border-2 border-slate-800 rounded-full mt-1.5 sm:mt-2" />
       </div>
-      {/* Body / Shirt + Tie */}
-      <div className="w-14 h-7 bg-teal-600 rounded-t-xl flex items-center justify-center relative">
-        <div className="w-3 h-5 bg-white -mt-2" />
-        <div className="w-1.5 h-4 bg-emerald-900 -mt-1" />
+      <div className="w-11 sm:w-13 h-5.5 sm:h-6.5 bg-teal-600 rounded-t-xl flex items-center justify-center relative">
+        <div className="w-2.5 sm:w-3 h-4 sm:h-5 bg-white -mt-1.5 sm:-mt-2" />
+        <div className="w-1.5 h-3.5 sm:h-4 bg-emerald-900 -mt-1" />
       </div>
     </div>
   </div>
@@ -400,16 +394,14 @@ const AoAvatar: React.FC = () => (
 
 // JMD: Executive in Black Suit & Tie
 const JmdAvatar: React.FC = () => (
-  <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-400 to-orange-600 p-0.5 shadow-md flex items-center justify-center shrink-0">
+  <div className="w-13 h-13 sm:w-14 sm:h-14 md:w-15 md:h-15 rounded-2xl bg-gradient-to-tr from-amber-400 to-orange-600 p-0.5 shadow-md flex items-center justify-center shrink-0">
     <div className="w-full h-full bg-amber-50 rounded-2xl flex flex-col items-center justify-end overflow-hidden relative">
-      {/* Head */}
-      <div className="w-8 h-8 rounded-full bg-amber-200 border border-amber-300 relative -mb-1 z-10">
-        <div className="w-8 h-4 rounded-t-full bg-slate-900" />
+      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-amber-200 border border-amber-300 relative -mb-1 z-10">
+        <div className="w-7 h-3.5 sm:w-8 sm:h-4 rounded-t-full bg-slate-900" />
       </div>
-      {/* Body / Executive Suit */}
-      <div className="w-14 h-7 bg-slate-900 rounded-t-xl flex items-center justify-center relative">
-        <div className="w-3.5 h-5 bg-white -mt-2" />
-        <div className="w-1.5 h-4 bg-red-600 -mt-1" />
+      <div className="w-11 sm:w-13 h-5.5 sm:h-6.5 bg-slate-900 rounded-t-xl flex items-center justify-center relative">
+        <div className="w-3 sm:w-3.5 h-4 sm:h-5 bg-white -mt-1.5 sm:-mt-2" />
+        <div className="w-1.5 h-3.5 sm:h-4 bg-red-600 -mt-1" />
       </div>
     </div>
   </div>
@@ -417,20 +409,17 @@ const JmdAvatar: React.FC = () => (
 
 // ACCOUNTS: Female Accounts Manager with Gold Coins
 const AccountsAvatar: React.FC = () => (
-  <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-purple-400 to-indigo-600 p-0.5 shadow-md flex items-center justify-center shrink-0">
+  <div className="w-13 h-13 sm:w-14 sm:h-14 md:w-15 md:h-15 rounded-2xl bg-gradient-to-tr from-purple-400 to-indigo-600 p-0.5 shadow-md flex items-center justify-center shrink-0">
     <div className="w-full h-full bg-purple-50 rounded-2xl flex flex-col items-center justify-end overflow-hidden relative">
-      {/* Head with Hair */}
-      <div className="w-8 h-8 rounded-full bg-amber-200 border border-amber-300 relative -mb-1 z-10">
-        <div className="w-9 h-5 rounded-t-full bg-slate-900 -ml-0.5" />
+      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-amber-200 border border-amber-300 relative -mb-1 z-10">
+        <div className="w-7.5 sm:w-8.5 h-4 sm:h-5 rounded-t-full bg-slate-900 -ml-0.5" />
       </div>
-      {/* Body / Purple Blazer */}
-      <div className="w-14 h-7 bg-purple-700 rounded-t-xl flex items-center justify-center relative">
-        <div className="w-3 h-5 bg-white -mt-2" />
+      <div className="w-11 sm:w-13 h-5.5 sm:h-6.5 bg-purple-700 rounded-t-xl flex items-center justify-center relative">
+        <div className="w-2.5 sm:w-3 h-4 sm:h-5 bg-white -mt-1.5 sm:-mt-2" />
       </div>
-      {/* Coins badge */}
       <div className="absolute bottom-0 right-1 flex items-end -space-x-1">
-        <div className="w-3 h-3 rounded-full bg-amber-400 border border-amber-600 shadow-xs" />
-        <div className="w-3.5 h-3.5 rounded-full bg-yellow-400 border border-yellow-600 shadow-xs" />
+        <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-amber-400 border border-amber-600 shadow-xs" />
+        <div className="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-yellow-400 border border-yellow-600 shadow-xs" />
       </div>
     </div>
   </div>
@@ -760,22 +749,27 @@ export const ProcessFlowView: React.FC = () => {
           </span>
         </div>
 
-        {/* 4 Cards Grid with Clean Arrow Connectors: 1 col on mobile, 2 col on tablet/iPad portrait, 4 col on laptop/desktop */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        {/* 4 Cards Grid: 1 col mobile, 2x2 grid on Tablet/iPad (portrait & landscape), 4-col on wide desktop */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5 sm:gap-4">
           {/* Card 1: IAD */}
           <div className="relative group flex flex-col">
-            <div className="bg-sky-50/40 hover:bg-sky-50/70 border border-sky-200/80 rounded-2xl p-3.5 sm:p-5 flex items-center gap-3.5 sm:gap-4 shadow-2xs hover:shadow-xs transition h-full">
+            <div className="bg-sky-50/40 hover:bg-sky-50/70 border border-sky-200/80 rounded-2xl p-3.5 sm:p-4 md:p-5 flex items-center gap-3 sm:gap-4 shadow-2xs hover:shadow-xs transition h-full">
               <IadAvatar />
               <div className="min-w-0 flex-1">
-                <h3 className="font-black text-slate-900 text-base tracking-tight">IAD</h3>
-                <p className="text-xs text-slate-500 font-bold leading-tight">Internal Audit Department</p>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-black text-sky-700 font-mono bg-sky-100 px-1.5 py-0.5 rounded-md">01</span>
+                  <h3 className="font-black text-slate-900 text-sm sm:text-base tracking-tight">IAD</h3>
+                </div>
+                <p className="text-xs text-slate-600 font-semibold leading-snug mt-0.5">
+                  Internal Audit Department
+                </p>
               </div>
-              <div className="w-7 h-7 rounded-xl bg-white text-sky-600 border border-sky-200/80 flex items-center justify-center shrink-0 shadow-2xs">
-                <FileText className="w-3.5 h-3.5" />
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white text-sky-600 border border-sky-200/80 flex items-center justify-center shrink-0 shadow-2xs">
+                <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
             </div>
-            {/* Desktop / iPad Landscape Arrow */}
-            <div className="hidden lg:flex absolute top-1/2 -right-2.5 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-teal-700 shadow-2xs">
+            {/* Desktop 4-in-a-row Arrow (xl) */}
+            <div className="hidden xl:flex absolute top-1/2 -right-2.5 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-teal-700 shadow-2xs">
               <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
             </div>
             {/* Mobile Downward Connector */}
@@ -786,17 +780,22 @@ export const ProcessFlowView: React.FC = () => {
 
           {/* Card 2: AO */}
           <div className="relative group flex flex-col">
-            <div className="bg-emerald-50/40 hover:bg-emerald-50/70 border border-emerald-200/80 rounded-2xl p-3.5 sm:p-5 flex items-center gap-3.5 sm:gap-4 shadow-2xs hover:shadow-xs transition h-full">
+            <div className="bg-emerald-50/40 hover:bg-emerald-50/70 border border-emerald-200/80 rounded-2xl p-3.5 sm:p-4 md:p-5 flex items-center gap-3 sm:gap-4 shadow-2xs hover:shadow-xs transition h-full">
               <AoAvatar />
               <div className="min-w-0 flex-1">
-                <h3 className="font-black text-slate-900 text-base tracking-tight">AO</h3>
-                <p className="text-xs text-slate-500 font-bold leading-tight">Administrative Officer</p>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-black text-emerald-700 font-mono bg-emerald-100 px-1.5 py-0.5 rounded-md">02</span>
+                  <h3 className="font-black text-slate-900 text-sm sm:text-base tracking-tight">AO</h3>
+                </div>
+                <p className="text-xs text-slate-600 font-semibold leading-snug mt-0.5">
+                  Administrative Officer
+                </p>
               </div>
-              <div className="w-7 h-7 rounded-xl bg-white text-emerald-600 border border-emerald-200/80 flex items-center justify-center shrink-0 shadow-2xs">
-                <FileText className="w-3.5 h-3.5" />
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white text-emerald-600 border border-emerald-200/80 flex items-center justify-center shrink-0 shadow-2xs">
+                <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
             </div>
-            <div className="hidden lg:flex absolute top-1/2 -right-2.5 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-teal-700 shadow-2xs">
+            <div className="hidden xl:flex absolute top-1/2 -right-2.5 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-teal-700 shadow-2xs">
               <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
             </div>
             <div className="flex sm:hidden justify-center my-0.5 text-emerald-400">
@@ -806,17 +805,22 @@ export const ProcessFlowView: React.FC = () => {
 
           {/* Card 3: JMD */}
           <div className="relative group flex flex-col">
-            <div className="bg-amber-50/40 hover:bg-amber-50/70 border border-amber-200/80 rounded-2xl p-3.5 sm:p-5 flex items-center gap-3.5 sm:gap-4 shadow-2xs hover:shadow-xs transition h-full">
+            <div className="bg-amber-50/40 hover:bg-amber-50/70 border border-amber-200/80 rounded-2xl p-3.5 sm:p-4 md:p-5 flex items-center gap-3 sm:gap-4 shadow-2xs hover:shadow-xs transition h-full">
               <JmdAvatar />
               <div className="min-w-0 flex-1">
-                <h3 className="font-black text-slate-900 text-base tracking-tight">JMD</h3>
-                <p className="text-xs text-slate-500 font-bold leading-tight">Junior Managing Director</p>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-black text-amber-700 font-mono bg-amber-100 px-1.5 py-0.5 rounded-md">03</span>
+                  <h3 className="font-black text-slate-900 text-sm sm:text-base tracking-tight">JMD</h3>
+                </div>
+                <p className="text-xs text-slate-600 font-semibold leading-snug mt-0.5">
+                  Junior Managing Director
+                </p>
               </div>
-              <div className="w-7 h-7 rounded-xl bg-white text-amber-600 border border-amber-200/80 flex items-center justify-center shrink-0 shadow-2xs">
-                <FileText className="w-3.5 h-3.5" />
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white text-amber-600 border border-amber-200/80 flex items-center justify-center shrink-0 shadow-2xs">
+                <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
             </div>
-            <div className="hidden lg:flex absolute top-1/2 -right-2.5 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-teal-700 shadow-2xs">
+            <div className="hidden xl:flex absolute top-1/2 -right-2.5 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-teal-700 shadow-2xs">
               <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
             </div>
             <div className="flex sm:hidden justify-center my-0.5 text-amber-400">
@@ -826,14 +830,19 @@ export const ProcessFlowView: React.FC = () => {
 
           {/* Card 4: ACCOUNTS */}
           <div className="relative group flex flex-col">
-            <div className="bg-purple-50/40 hover:bg-purple-50/70 border border-purple-200/80 rounded-2xl p-3.5 sm:p-5 flex items-center gap-3.5 sm:gap-4 shadow-2xs hover:shadow-xs transition h-full">
+            <div className="bg-purple-50/40 hover:bg-purple-50/70 border border-purple-200/80 rounded-2xl p-3.5 sm:p-4 md:p-5 flex items-center gap-3 sm:gap-4 shadow-2xs hover:shadow-xs transition h-full">
               <AccountsAvatar />
               <div className="min-w-0 flex-1">
-                <h3 className="font-black text-slate-900 text-base tracking-tight">ACCOUNTS</h3>
-                <p className="text-xs text-slate-500 font-bold leading-tight">Processing &amp; Payment</p>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-black text-purple-700 font-mono bg-purple-100 px-1.5 py-0.5 rounded-md">04</span>
+                  <h3 className="font-black text-slate-900 text-sm sm:text-base tracking-tight">ACCOUNTS</h3>
+                </div>
+                <p className="text-xs text-slate-600 font-semibold leading-snug mt-0.5">
+                  Processing &amp; Payment
+                </p>
               </div>
-              <div className="w-7 h-7 rounded-xl bg-white text-purple-600 border border-purple-200/80 flex items-center justify-center shrink-0 shadow-2xs">
-                <FileText className="w-3.5 h-3.5" />
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white text-purple-600 border border-purple-200/80 flex items-center justify-center shrink-0 shadow-2xs">
+                <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
             </div>
           </div>
@@ -917,9 +926,9 @@ export const ProcessFlowView: React.FC = () => {
           </div>
 
           {/* 4 Stat Tiles Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 pt-1">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5 md:gap-3 pt-1">
             {/* Tile 1: 7 Main Stages */}
-            <div className="bg-sky-50/50 border border-sky-200/80 rounded-2xl p-3 sm:p-3.5 text-center flex flex-col items-center justify-center shadow-2xs">
+            <div className="bg-sky-50/50 border border-sky-200/80 rounded-2xl p-2.5 sm:p-3 text-center flex flex-col items-center justify-center shadow-2xs">
               <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center mb-1 shadow-2xs">
                 <FileSpreadsheet className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
@@ -927,11 +936,13 @@ export const ProcessFlowView: React.FC = () => {
               <p className="text-[10px] sm:text-[11px] font-black text-slate-800 uppercase tracking-tight mt-0.5">
                 Main Stages
               </p>
-              <p className="text-[9px] sm:text-[10px] text-slate-500 font-semibold mt-0.5">From PRN to Payment</p>
+              <p className="text-[9px] sm:text-[10px] text-slate-500 font-semibold mt-0.5 leading-tight">
+                From PRN to Payment
+              </p>
             </div>
 
             {/* Tile 2: 5 Key Departments */}
-            <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3 sm:p-3.5 text-center flex flex-col items-center justify-center shadow-2xs">
+            <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-2.5 sm:p-3 text-center flex flex-col items-center justify-center shadow-2xs">
               <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-slate-200 text-slate-700 flex items-center justify-center mb-1 shadow-2xs">
                 <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
@@ -939,11 +950,13 @@ export const ProcessFlowView: React.FC = () => {
               <p className="text-[10px] sm:text-[11px] font-black text-slate-800 uppercase tracking-tight mt-0.5">
                 Key Departments
               </p>
-              <p className="text-[9px] sm:text-[10px] text-slate-500 font-semibold mt-0.5">In Bill Passing</p>
+              <p className="text-[9px] sm:text-[10px] text-slate-500 font-semibold mt-0.5 leading-tight">
+                In Bill Passing
+              </p>
             </div>
 
             {/* Tile 3: 100% Approvals Mandatory */}
-            <div className="bg-emerald-50/50 border border-emerald-200/80 rounded-2xl p-3 sm:p-3.5 text-center flex flex-col items-center justify-center shadow-2xs">
+            <div className="bg-emerald-50/50 border border-emerald-200/80 rounded-2xl p-2.5 sm:p-3 text-center flex flex-col items-center justify-center shadow-2xs">
               <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center mb-1 shadow-2xs">
                 <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[3]" />
               </div>
@@ -951,21 +964,25 @@ export const ProcessFlowView: React.FC = () => {
               <p className="text-[10px] sm:text-[11px] font-black text-slate-800 uppercase tracking-tight mt-0.5">
                 Approvals Mandatory
               </p>
-              <p className="text-[9px] sm:text-[10px] text-slate-500 font-semibold mt-0.5">As per policy</p>
+              <p className="text-[9px] sm:text-[10px] text-slate-500 font-semibold mt-0.5 leading-tight">
+                As per policy
+              </p>
             </div>
 
             {/* Tile 4: One Goal */}
-            <div className="bg-amber-50/50 border border-amber-200/80 rounded-2xl p-3 sm:p-3.5 text-center flex flex-col items-center justify-center shadow-2xs">
+            <div className="bg-amber-50/50 border border-amber-200/80 rounded-2xl p-2.5 sm:p-3 text-center flex flex-col items-center justify-center shadow-2xs">
               <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-amber-400 text-slate-900 flex items-center justify-center mb-1 shadow-2xs font-black text-xs">
                 ★
               </div>
-              <p className="text-sm sm:text-base font-black text-amber-900 tracking-tight">
+              <p className="text-sm sm:text-base font-black text-amber-900 tracking-tight leading-tight">
                 One Goal
               </p>
               <p className="text-[10px] sm:text-[11px] font-black text-slate-800 uppercase tracking-tight mt-0.5">
                 Accurate Processing
               </p>
-              <p className="text-[9px] sm:text-[10px] text-slate-500 font-semibold mt-0.5">Timely Payment</p>
+              <p className="text-[9px] sm:text-[10px] text-slate-500 font-semibold mt-0.5 leading-tight">
+                Timely Payment
+              </p>
             </div>
           </div>
         </div>
