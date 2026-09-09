@@ -205,9 +205,6 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
               <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight leading-tight">
                 Pending Bills by Current Holder
               </h1>
-              <p className="text-xs sm:text-sm text-sky-100/80 mt-1 font-medium">
-                Live custodian workload ranking ordered descending by pending bill volume, financial exposure, and age escalation
-              </p>
             </div>
           </div>
         </div>
