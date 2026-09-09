@@ -4,11 +4,8 @@ import {
   AlertOctagon,
   ArrowRight,
   Clock,
-  IndianRupee,
   Layers,
-  FileSpreadsheet,
   CheckCircle2,
-  ShieldAlert,
 } from 'lucide-react';
 import { BillRegisterItem, DfrUser } from '../../types/dfr';
 import { ViewTab } from '../layout/Sidebar';
@@ -33,7 +30,6 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
     const dfr = (b.dfr_status || '').toUpperCase().trim();
     const bill = (b.bill_status || '').toUpperCase().trim();
 
-    // If status is Waiting, Pending, or Open, it is NOT exported
     if (
       tally.includes('WAITING') ||
       tally.includes('PENDING') ||
@@ -122,7 +118,6 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
         if (isAo) return b.current_stage === 'AO' || b.current_holder_name === 'AO';
         if (isJmd) return b.current_stage === 'JMD' || b.current_holder_name === 'JMD';
         if (isAccounts) {
-          // Bills that have reached ACCOUNTS / TALLY stage and are strictly awaiting export to Tally
           return (
             (b.current_stage === 'ACCOUNTS' ||
               b.current_stage === 'TALLY' ||
@@ -132,8 +127,6 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
           );
         }
 
-        // Purchase / Bill Inward Staff: ONLY show bills currently at Bill Inward stage!
-        // Any bill that has progressed to IAD, AO, JMD, ACCOUNTS, or TALLY is strictly excluded!
         return (
           (b.current_holder_id === user.id ||
             b.current_holder_name?.toUpperCase() === user.full_name?.toUpperCase()) &&
@@ -155,7 +148,6 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
       };
     });
 
-    // Sort descending by pending bills, secondary sort by total amount
     return list.sort((a, b) => {
       if (b.personBills.length !== a.personBills.length) {
         return b.personBills.length - a.personBills.length;
@@ -193,25 +185,24 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
   };
 
   return (
-    <div className="space-y-6 pb-16 max-w-full overflow-hidden text-slate-900 font-sans">
-      {/* Top Banner & Aggregate KPI Strip */}
-      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-slate-900 via-sky-950 to-slate-900 p-5 sm:p-7 text-white shadow-2xl border border-sky-500/20 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-        <div className="relative z-10 min-w-0">
-          <div className="flex items-center gap-3 sm:gap-4">
-            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-sky-500/15 border border-sky-400/30 flex items-center justify-center text-sky-400 shrink-0 shadow-lg shadow-sky-500/20">
-              <Users className="w-6 h-6 sm:w-7 sm:h-7" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight leading-tight">
-                Pending Bills by Current Holder
-              </h1>
-            </div>
+    <div className="space-y-5 sm:space-y-6 pb-16 max-w-full overflow-hidden text-slate-900 font-sans">
+      {/* Top Executive Banner (Optimized for Tablet & Desktop) */}
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-slate-900 via-sky-950 to-slate-900 p-5 sm:p-6 md:p-7 text-white shadow-2xl border border-sky-500/20 flex flex-col xl:flex-row xl:items-center justify-between gap-5 sm:gap-6">
+        {/* Banner Left: Icon + Title */}
+        <div className="relative z-10 flex items-center gap-3.5 sm:gap-4 min-w-0">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-sky-500/15 border border-sky-400/30 flex items-center justify-center text-sky-400 shrink-0 shadow-lg shadow-sky-500/20">
+            <Users className="w-6 h-6 sm:w-7 sm:h-7" />
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight leading-tight whitespace-normal">
+              Pending Bills by Current Holder
+            </h1>
           </div>
         </div>
 
-        {/* 4 Executive Summary Badges */}
+        {/* Banner Right: 4 Executive Badges in Responsive Grid */}
         <div className="relative z-10 grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 shrink-0">
-          <div className="bg-slate-800/80 backdrop-blur border border-slate-700/80 px-4 py-2.5 rounded-2xl shadow-xs">
+          <div className="bg-slate-800/80 backdrop-blur border border-slate-700/80 px-3.5 sm:px-4 py-2.5 rounded-2xl shadow-xs">
             <span className="text-[10px] text-slate-400 uppercase font-extrabold tracking-wider block">
               Custodians
             </span>
@@ -220,7 +211,7 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
             </p>
           </div>
 
-          <div className="bg-slate-800/80 backdrop-blur border border-slate-700/80 px-4 py-2.5 rounded-2xl shadow-xs">
+          <div className="bg-slate-800/80 backdrop-blur border border-slate-700/80 px-3.5 sm:px-4 py-2.5 rounded-2xl shadow-xs">
             <span className="text-[10px] text-sky-400 uppercase font-extrabold tracking-wider block">
               Pending Bills
             </span>
@@ -229,7 +220,7 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
             </p>
           </div>
 
-          <div className="bg-slate-800/80 backdrop-blur border border-slate-700/80 px-4 py-2.5 rounded-2xl shadow-xs">
+          <div className="bg-slate-800/80 backdrop-blur border border-slate-700/80 px-3.5 sm:px-4 py-2.5 rounded-2xl shadow-xs">
             <span className="text-[10px] text-emerald-400 uppercase font-extrabold tracking-wider block">
               Exposure Value
             </span>
@@ -238,7 +229,7 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
             </p>
           </div>
 
-          <div className="bg-slate-800/80 backdrop-blur border border-slate-700/80 px-4 py-2.5 rounded-2xl shadow-xs">
+          <div className="bg-slate-800/80 backdrop-blur border border-slate-700/80 px-3.5 sm:px-4 py-2.5 rounded-2xl shadow-xs">
             <span className="text-[10px] text-rose-400 uppercase font-extrabold tracking-wider block">
               Critical (A-10)
             </span>
@@ -254,7 +245,7 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
         {/* Table Header Controls / Title */}
         <div className="p-4 sm:p-5 border-b border-slate-100 bg-slate-50/70 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center font-bold">
+            <div className="w-8 h-8 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center font-bold shadow-2xs">
               <Layers className="w-4 h-4" />
             </div>
             <div>
@@ -283,23 +274,23 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
           <>
             {/* Desktop / Tablet View (7-Column Table) */}
             <div className="hidden sm:block overflow-x-auto">
-              <table className="w-full text-left text-xs min-w-[760px] border-collapse">
+              <table className="w-full text-left text-xs min-w-[680px] border-collapse">
                 <thead className="bg-slate-100/95 text-slate-600 uppercase tracking-wider font-extrabold text-[11px] border-b border-slate-200 sticky top-0 z-10 backdrop-blur">
                   <tr>
                     {/* 1. Rank */}
-                    <th className="py-3.5 px-4 w-16 text-center">Rank</th>
+                    <th className="py-3.5 px-3 sm:px-4 w-14 text-center">Rank</th>
                     {/* 2. Current Holder */}
-                    <th className="py-3.5 px-4 min-w-[180px]">Current Holder</th>
+                    <th className="py-3.5 px-3 sm:px-4 min-w-[150px]">Current Holder</th>
                     {/* 3. Pending Bills */}
-                    <th className="py-3.5 px-4 w-32">Pending Bills</th>
+                    <th className="py-3.5 px-3 sm:px-4 w-28">Pending Bills</th>
                     {/* 4. Pending Amount */}
-                    <th className="py-3.5 px-4 w-36">Pending Amount</th>
+                    <th className="py-3.5 px-3 sm:px-4 w-32">Pending Amount</th>
                     {/* 5. Max Age */}
-                    <th className="py-3.5 px-4 w-28">Max Age</th>
+                    <th className="py-3.5 px-3 sm:px-4 w-24">Max Age</th>
                     {/* 6. Critical A-10 Count */}
-                    <th className="py-3.5 px-4 w-36">Critical A-10 Count</th>
+                    <th className="py-3.5 px-3 sm:px-4 w-32">Critical A-10 Count</th>
                     {/* 7. Action */}
-                    <th className="py-3.5 px-4 w-32 text-right">Action</th>
+                    <th className="py-3.5 px-3 sm:px-4 w-28 text-right">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-medium text-slate-800 bg-white">
@@ -308,7 +299,6 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
                       { user, personBills, totalAmount, oldestAge, criticalCount },
                       index
                     ) => {
-                      const hasCritical = criticalCount > 0 || oldestAge >= 10;
                       return (
                         <tr
                           key={user.id}
@@ -316,7 +306,7 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
                           className="hover:bg-sky-50/70 hover:shadow-xs transition-all duration-150 group cursor-pointer"
                         >
                           {/* 1. Rank */}
-                          <td className="py-3 px-4 text-center whitespace-nowrap">
+                          <td className="py-3 px-3 sm:px-4 text-center whitespace-nowrap">
                             <span
                               className={`inline-flex items-center justify-center font-black text-xs px-2.5 py-1 rounded-lg border shadow-2xs font-mono transition-transform duration-150 group-hover:scale-105 ${
                                 index === 0
@@ -333,8 +323,8 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
                           </td>
 
                           {/* 2. Current Holder */}
-                          <td className="py-3 px-4 whitespace-nowrap">
-                            <div className="flex items-center gap-3">
+                          <td className="py-3 px-3 sm:px-4 whitespace-nowrap">
+                            <div className="flex items-center gap-2.5 sm:gap-3">
                               <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-sky-500 to-indigo-600 text-white font-black flex items-center justify-center text-xs shadow-xs shrink-0 group-hover:from-sky-600 group-hover:to-indigo-700 transition-colors">
                                 {user.full_name.charAt(0)}
                               </div>
@@ -350,7 +340,7 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
                           </td>
 
                           {/* 3. Pending Bills */}
-                          <td className="py-3 px-4 whitespace-nowrap">
+                          <td className="py-3 px-3 sm:px-4 whitespace-nowrap">
                             <div className="flex items-center gap-1.5">
                               <span className="text-base font-black text-slate-900 font-mono">
                                 {personBills.length}
@@ -362,7 +352,7 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
                           </td>
 
                           {/* 4. Pending Amount */}
-                          <td className="py-3 px-4 whitespace-nowrap">
+                          <td className="py-3 px-3 sm:px-4 whitespace-nowrap">
                             <div>
                               <span className="text-sm font-black text-emerald-600 font-mono tracking-tight block">
                                 {formatAmountK(totalAmount)}
@@ -374,7 +364,7 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
                           </td>
 
                           {/* 5. Max Age */}
-                          <td className="py-3 px-4 whitespace-nowrap">
+                          <td className="py-3 px-3 sm:px-4 whitespace-nowrap">
                             {personBills.length === 0 ? (
                               <span className="text-xs text-slate-400 font-semibold">—</span>
                             ) : (
@@ -394,7 +384,7 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
                           </td>
 
                           {/* 6. Critical A-10 Count */}
-                          <td className="py-3 px-4 whitespace-nowrap">
+                          <td className="py-3 px-3 sm:px-4 whitespace-nowrap">
                             {criticalCount > 0 ? (
                               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-500 text-white text-xs font-black shadow-xs shadow-red-500/20 animate-pulse">
                                 <AlertOctagon className="w-3.5 h-3.5 shrink-0" />
@@ -408,14 +398,14 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
                           </td>
 
                           {/* 7. Action */}
-                          <td className="py-3 px-4 text-right whitespace-nowrap">
+                          <td className="py-3 px-3 sm:px-4 text-right whitespace-nowrap">
                             <button
                               type="button"
                               onClick={e => {
                                 e.stopPropagation();
                                 handleOpenHolderBills(user.id);
                               }}
-                              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-50 group-hover:bg-sky-600 text-slate-700 group-hover:text-white rounded-xl border border-slate-200 group-hover:border-sky-600 font-black text-xs transition-all duration-150 shadow-2xs group-hover:shadow-md cursor-pointer whitespace-nowrap active:scale-95 touch-manipulation"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 group-hover:bg-sky-600 text-slate-700 group-hover:text-white rounded-xl border border-slate-200 group-hover:border-sky-600 font-black text-xs transition-all duration-150 shadow-2xs group-hover:shadow-md cursor-pointer whitespace-nowrap active:scale-95 touch-manipulation"
                             >
                               <span>View Bills</span>
                               <ArrowRight className="w-3.5 h-3.5 transition-transform duration-150 group-hover:translate-x-0.5" />
@@ -442,7 +432,6 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
                       onClick={() => handleOpenHolderBills(user.id)}
                       className="p-3.5 rounded-2xl bg-white border border-slate-200/80 hover:border-sky-400 hover:bg-sky-50/50 shadow-xs transition cursor-pointer active:scale-[0.99] touch-manipulation space-y-3"
                     >
-                      {/* Top row: Rank, User, Action button */}
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2.5 min-w-0">
                           <span
@@ -481,9 +470,7 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
                         </button>
                       </div>
 
-                      {/* Bottom metrics grid (4 compact stats) */}
                       <div className="grid grid-cols-4 gap-1.5 text-center pt-1 border-t border-slate-100">
-                        {/* Pending Bills */}
                         <div className="bg-slate-50 p-2 rounded-xl border border-slate-100">
                           <span className="text-[9px] text-slate-400 font-extrabold uppercase block">
                             Bills
@@ -493,7 +480,6 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
                           </span>
                         </div>
 
-                        {/* Amount */}
                         <div className="bg-slate-50 p-2 rounded-xl border border-slate-100">
                           <span className="text-[9px] text-slate-400 font-extrabold uppercase block">
                             Amount
@@ -503,7 +489,6 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
                           </span>
                         </div>
 
-                        {/* Max Age */}
                         <div
                           className={`p-2 rounded-xl border ${
                             oldestAge >= 10
@@ -521,7 +506,6 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
                           </span>
                         </div>
 
-                        {/* Critical A-10 */}
                         <div
                           className={`p-2 rounded-xl border ${
                             criticalCount > 0
