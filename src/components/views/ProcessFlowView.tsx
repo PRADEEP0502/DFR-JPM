@@ -813,7 +813,7 @@ export const ProcessFlowView: React.FC = () => {
                   <h3 className="font-black text-slate-900 text-sm sm:text-base tracking-tight">JMD</h3>
                 </div>
                 <p className="text-xs text-slate-600 font-semibold leading-snug mt-1">
-                  Junior Managing Director
+                  Joint Managing Director
                 </p>
               </div>
               <div className="w-8 h-8 rounded-xl bg-white text-amber-600 border border-amber-200/80 flex items-center justify-center shrink-0 shadow-2xs hidden sm:flex">
