@@ -7,7 +7,7 @@ import {
   Layers,
   CheckCircle2,
 } from 'lucide-react';
-import { BillRegisterItem, DfrUser } from '../../types/dfr';
+import { BillRegisterItem, DfrUser, isTallyExported, isBillHeldByUser } from '../../types/dfr';
 import { ViewTab } from '../layout/Sidebar';
 import { Card3D } from '../ui/Card3D';
 
@@ -24,31 +24,6 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
   users,
   onSelectHolder,
 }) => {
-  // Exclude truly exported to Tally, posted, paid, and closed bills from active holder counts
-  const isTallyExported = (b: BillRegisterItem): boolean => {
-    const tally = (b.tally_status || '').toUpperCase().trim();
-    const dfr = (b.dfr_status || '').toUpperCase().trim();
-    const bill = (b.bill_status || '').toUpperCase().trim();
-
-    if (
-      tally.includes('WAITING') ||
-      tally.includes('PENDING') ||
-      tally === 'OPEN' ||
-      tally === 'IN PROGRESS'
-    ) {
-      return false;
-    }
-
-    return (
-      tally === 'EXPORTED' ||
-      tally === 'POSTED' ||
-      dfr === 'TALLY_DONE' ||
-      dfr === 'PAID' ||
-      bill === 'PAID' ||
-      bill === 'CLOSED'
-    );
-  };
-
   const activeBills = useMemo(() => bills.filter(b => !isTallyExported(b)), [bills]);
 
   const excludedUsernames = useMemo(
@@ -94,47 +69,7 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
 
   const sortedUserWorkload = useMemo(() => {
     const list = activeUsers.map(user => {
-      const isIad =
-        user.username?.toLowerCase() === 'iad' ||
-        user.full_name?.toUpperCase() === 'IAD' ||
-        user.id === 'user-004';
-      const isAo =
-        user.username?.toLowerCase() === 'ao' ||
-        user.full_name?.toUpperCase() === 'AO' ||
-        user.id === 'user-005';
-      const isJmd =
-        user.username?.toLowerCase() === 'jmd' ||
-        user.full_name?.toUpperCase() === 'JMD' ||
-        user.id === 'user-007';
-      const isAccounts =
-        user.username?.toLowerCase() === 'accounts' ||
-        user.full_name?.toUpperCase() === 'ACCOUNTS' ||
-        user.department === 'ACCOUNTS' ||
-        user.id === 'user-011' ||
-        user.id === 'user-accounts';
-
-      const personBills = activeBills.filter(b => {
-        if (isIad) return b.current_stage === 'IAD' || b.current_holder_name === 'IAD';
-        if (isAo) return b.current_stage === 'AO' || b.current_holder_name === 'AO';
-        if (isJmd) return b.current_stage === 'JMD' || b.current_holder_name === 'JMD';
-        if (isAccounts) {
-          return (
-            (b.current_stage === 'ACCOUNTS' ||
-              b.current_stage === 'TALLY' ||
-              b.current_holder_name?.toUpperCase() === 'ACCOUNTS' ||
-              b.current_holder_id === user.id) &&
-            !isTallyExported(b)
-          );
-        }
-
-        return (
-          (b.current_holder_id === user.id ||
-            b.current_holder_name?.toUpperCase() === user.full_name?.toUpperCase()) &&
-          b.current_stage === 'BILL_INWARD' &&
-          !isTallyExported(b)
-        );
-      });
-
+      const personBills = activeBills.filter(b => isBillHeldByUser(b, user));
       const totalAmount = personBills.reduce((sum, b) => sum + b.amount, 0);
       const oldestAge = personBills.reduce((max, b) => Math.max(max, b.age_days), 0);
       const criticalCount = personBills.filter(b => b.age_band === 'A-10').length;

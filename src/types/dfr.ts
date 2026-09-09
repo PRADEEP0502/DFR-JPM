@@ -208,3 +208,110 @@ export interface SyncState {
   sync_errors_count: number;
   last_error?: string;
 }
+
+/**
+ * Checks if a bill is fully completed/exported to Tally, paid, or closed.
+ * Exported bills are excluded from active master bill register and current holder workload.
+ */
+export const isTallyExported = (b: BillRegisterItem): boolean => {
+  const tally = (b.tally_status || '').toUpperCase().trim();
+  const dfr = (b.dfr_status || '').toUpperCase().trim();
+  const bill = (b.bill_status || '').toUpperCase().trim();
+
+  if (
+    tally.includes('WAITING') ||
+    tally.includes('PENDING') ||
+    tally === 'OPEN' ||
+    tally === 'IN PROGRESS'
+  ) {
+    return false;
+  }
+
+  return (
+    tally === 'EXPORTED' ||
+    tally === 'POSTED' ||
+    dfr === 'TALLY_DONE' ||
+    dfr === 'PAID' ||
+    bill === 'PAID' ||
+    bill === 'CLOSED' ||
+    Boolean(b.tally_exported_date)
+  );
+};
+
+/**
+ * Checks if an active (non-exported) bill is currently held by a specific user/role.
+ */
+export const isBillHeldByUser = (b: BillRegisterItem, user: DfrUser): boolean => {
+  if (isTallyExported(b)) return false;
+
+  const isIad =
+    user.username?.toLowerCase() === 'iad' ||
+    user.full_name?.toUpperCase() === 'IAD' ||
+    user.id === 'user-004';
+  const isAo =
+    user.username?.toLowerCase() === 'ao' ||
+    user.full_name?.toUpperCase() === 'AO' ||
+    user.id === 'user-005';
+  const isJmd =
+    user.username?.toLowerCase() === 'jmd' ||
+    user.full_name?.toUpperCase() === 'JMD' ||
+    user.id === 'user-007';
+  const isAccounts =
+    user.username?.toLowerCase() === 'accounts' ||
+    user.full_name?.toUpperCase() === 'ACCOUNTS' ||
+    user.department === 'ACCOUNTS' ||
+    user.id === 'user-011' ||
+    user.id === 'user-accounts';
+
+  if (isIad) {
+    return (
+      b.current_stage === 'IAD' ||
+      b.current_holder_name?.toUpperCase().trim() === 'IAD' ||
+      b.current_holder_id === user.id ||
+      b.current_holder_id === 'user-004'
+    );
+  }
+
+  if (isAo) {
+    return (
+      b.current_stage === 'AO' ||
+      b.current_holder_name?.toUpperCase().trim() === 'AO' ||
+      b.current_holder_id === user.id ||
+      b.current_holder_id === 'user-005'
+    );
+  }
+
+  if (isJmd) {
+    return (
+      b.current_stage === 'JMD' ||
+      b.current_holder_name?.toUpperCase().trim() === 'JMD' ||
+      b.current_holder_id === user.id ||
+      b.current_holder_id === 'user-007'
+    );
+  }
+
+  if (isAccounts) {
+    return (
+      b.current_stage === 'ACCOUNTS' ||
+      b.current_stage === 'TALLY' ||
+      b.current_holder_name?.toUpperCase().trim() === 'ACCOUNTS' ||
+      b.current_holder_id === user.id ||
+      b.current_holder_id === 'user-011' ||
+      b.current_holder_id === 'user-accounts'
+    );
+  }
+
+  // Staff / Purchase Inward custodians (e.g. VANITHA, JAYASURIYA, KRITHIKA)
+  const matchesId = b.current_holder_id === user.id;
+  const matchesName = Boolean(
+    b.current_holder_name &&
+      (b.current_holder_name.trim().toUpperCase() === user.full_name.trim().toUpperCase() ||
+        b.current_holder_name.trim().toUpperCase() === user.username?.trim().toUpperCase())
+  );
+
+  return (
+    (matchesId || matchesName) &&
+    (b.current_stage === 'BILL_INWARD' ||
+      !['IAD', 'AO', 'JMD', 'ACCOUNTS', 'TALLY'].includes(b.current_stage))
+  );
+};
