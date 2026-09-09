@@ -12,6 +12,7 @@ import {
   LogOut,
   Shield,
   X,
+  Building2,
 } from 'lucide-react';
 import { DfrUser } from '../../types/dfr';
 import { isTallyTrackerAuthorized, isAdminSettingsAuthorized } from '../../services/authService';
@@ -149,6 +150,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
           );
         })}
       </nav>
+
+      {/* JPM Bottom Mill Brand Card */}
+      <div className="mx-3 my-2 bg-gradient-to-b from-sky-50/70 to-slate-50 border border-sky-100 rounded-2xl p-3 text-center space-y-1 shadow-2xs">
+        <div className="w-full h-12 rounded-xl overflow-hidden bg-sky-100/60 flex items-center justify-center border border-sky-200/60 shadow-inner">
+          <Building2 className="w-7 h-7 text-sky-700 opacity-90" />
+        </div>
+        <div className="pt-0.5">
+          <p className="text-xs font-black text-slate-900 tracking-tight leading-none">JPM</p>
+          <p className="text-[10px] font-bold text-slate-600 mt-0.5 leading-tight">Junior Processing Mill</p>
+          <p className="text-[8px] text-slate-400 font-bold uppercase tracking-wider">People | Process | Progress</p>
+        </div>
+        <p className="text-[9px] italic text-slate-500 font-serif pt-0.5 leading-tight">
+          &ldquo;Better Process Stronger Tomorrow&rdquo;
+        </p>
+      </div>
 
       {/* Authenticated User Profile & Logout */}
       <div className="p-3 border-t border-slate-200/80 bg-slate-50/70 space-y-2">
