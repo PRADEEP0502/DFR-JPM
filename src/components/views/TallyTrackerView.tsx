@@ -20,7 +20,7 @@ import {
   Layers,
   Sparkles,
 } from 'lucide-react';
-import { BillRegisterItem, DfrUser, STAGE_DISPLAY_NAMES } from '../../types/dfr';
+import { BillRegisterItem, DfrUser, STAGE_DISPLAY_NAMES, isTallyExported } from '../../types/dfr';
 import { dfrService } from '../../services/dfrService';
 
 const formatDateOnly = (dateStr?: string | null): string => {
@@ -159,31 +159,26 @@ export const TallyTrackerView: React.FC<TallyTrackerViewProps> = ({
   const [selectedMonthIndex, setSelectedMonthIndex] = useState<number | null>(null);
   const [historySearch, setHistorySearch] = useState<string>('');
 
-  const isExported = (b: BillRegisterItem): boolean => {
-    const status = (b.tally_status || '').toUpperCase().trim();
-    const dfr = (b.dfr_status || '').toUpperCase().trim();
-    const bill = (b.bill_status || '').toUpperCase().trim();
-
-    if (status.includes('WAITING') || status.includes('PENDING') || status === 'OPEN') {
-      return false;
-    }
-
+  const isWaitingForTally = (b: BillRegisterItem): boolean => {
+    if (isTallyExported(b)) return false;
     return (
-      status === 'EXPORTED' ||
-      status === 'POSTED' ||
-      dfr === 'TALLY_DONE' ||
-      dfr === 'PAID' ||
-      bill === 'PAID' ||
-      bill === 'CLOSED' ||
-      Boolean(b.tally_exported_date)
+      b.current_stage === 'ACCOUNTS' ||
+      b.current_stage === 'TALLY' ||
+      b.current_holder_name?.toUpperCase().trim() === 'ACCOUNTS' ||
+      b.current_holder_id === 'user-011' ||
+      b.current_holder_id === 'user-accounts' ||
+      b.current_holder_id?.toUpperCase().trim() === 'ACCOUNTS'
     );
   };
 
-  // 1. Awaiting Tally Export (Active pending bills)
-  const awaitingBills = useMemo(() => bills.filter(b => !isExported(b)), [bills]);
+  // 1. Awaiting Tally Export (Bills currently held by Accounts/Tally waiting for export)
+  const awaitingBills = useMemo(
+    () => bills.filter(b => isWaitingForTally(b)),
+    [bills]
+  );
 
   // 2. Exported to Tally (Completed bills)
-  const exportedBills = useMemo(() => bills.filter(b => isExported(b)), [bills]);
+  const exportedBills = useMemo(() => bills.filter(b => isTallyExported(b)), [bills]);
 
   const awaitingAmount = useMemo(
     () => awaitingBills.reduce((sum, b) => sum + b.amount, 0),
