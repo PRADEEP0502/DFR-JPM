@@ -753,19 +753,19 @@ export const ProcessFlowView: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5 sm:gap-4">
           {/* Card 1: IAD */}
           <div className="relative group flex flex-col">
-            <div className="bg-sky-50/40 hover:bg-sky-50/70 border border-sky-200/80 rounded-2xl p-3.5 sm:p-4 md:p-5 flex items-center gap-3 sm:gap-4 shadow-2xs hover:shadow-xs transition h-full">
+            <div className="bg-sky-50/40 hover:bg-sky-50/70 border border-sky-200/80 rounded-2xl p-4 flex flex-row items-center gap-3.5 shadow-2xs hover:shadow-xs transition h-full">
               <IadAvatar />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
                   <span className="text-[10px] font-black text-sky-700 font-mono bg-sky-100 px-1.5 py-0.5 rounded-md">01</span>
                   <h3 className="font-black text-slate-900 text-sm sm:text-base tracking-tight">IAD</h3>
                 </div>
-                <p className="text-xs text-slate-600 font-semibold leading-snug mt-0.5">
+                <p className="text-xs text-slate-600 font-semibold leading-snug mt-1">
                   Internal Audit Department
                 </p>
               </div>
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white text-sky-600 border border-sky-200/80 flex items-center justify-center shrink-0 shadow-2xs">
-                <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <div className="w-8 h-8 rounded-xl bg-white text-sky-600 border border-sky-200/80 flex items-center justify-center shrink-0 shadow-2xs hidden sm:flex">
+                <FileText className="w-4 h-4" />
               </div>
             </div>
             {/* Desktop 4-in-a-row Arrow (xl) */}
@@ -780,19 +780,19 @@ export const ProcessFlowView: React.FC = () => {
 
           {/* Card 2: AO */}
           <div className="relative group flex flex-col">
-            <div className="bg-emerald-50/40 hover:bg-emerald-50/70 border border-emerald-200/80 rounded-2xl p-3.5 sm:p-4 md:p-5 flex items-center gap-3 sm:gap-4 shadow-2xs hover:shadow-xs transition h-full">
+            <div className="bg-emerald-50/40 hover:bg-emerald-50/70 border border-emerald-200/80 rounded-2xl p-4 flex flex-row items-center gap-3.5 shadow-2xs hover:shadow-xs transition h-full">
               <AoAvatar />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
                   <span className="text-[10px] font-black text-emerald-700 font-mono bg-emerald-100 px-1.5 py-0.5 rounded-md">02</span>
                   <h3 className="font-black text-slate-900 text-sm sm:text-base tracking-tight">AO</h3>
                 </div>
-                <p className="text-xs text-slate-600 font-semibold leading-snug mt-0.5">
+                <p className="text-xs text-slate-600 font-semibold leading-snug mt-1">
                   Administrative Officer
                 </p>
               </div>
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white text-emerald-600 border border-emerald-200/80 flex items-center justify-center shrink-0 shadow-2xs">
-                <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <div className="w-8 h-8 rounded-xl bg-white text-emerald-600 border border-emerald-200/80 flex items-center justify-center shrink-0 shadow-2xs hidden sm:flex">
+                <FileText className="w-4 h-4" />
               </div>
             </div>
             <div className="hidden xl:flex absolute top-1/2 -right-2.5 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-teal-700 shadow-2xs">
@@ -805,19 +805,19 @@ export const ProcessFlowView: React.FC = () => {
 
           {/* Card 3: JMD */}
           <div className="relative group flex flex-col">
-            <div className="bg-amber-50/40 hover:bg-amber-50/70 border border-amber-200/80 rounded-2xl p-3.5 sm:p-4 md:p-5 flex items-center gap-3 sm:gap-4 shadow-2xs hover:shadow-xs transition h-full">
+            <div className="bg-amber-50/40 hover:bg-amber-50/70 border border-amber-200/80 rounded-2xl p-4 flex flex-row items-center gap-3.5 shadow-2xs hover:shadow-xs transition h-full">
               <JmdAvatar />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
                   <span className="text-[10px] font-black text-amber-700 font-mono bg-amber-100 px-1.5 py-0.5 rounded-md">03</span>
                   <h3 className="font-black text-slate-900 text-sm sm:text-base tracking-tight">JMD</h3>
                 </div>
-                <p className="text-xs text-slate-600 font-semibold leading-snug mt-0.5">
+                <p className="text-xs text-slate-600 font-semibold leading-snug mt-1">
                   Junior Managing Director
                 </p>
               </div>
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white text-amber-600 border border-amber-200/80 flex items-center justify-center shrink-0 shadow-2xs">
-                <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <div className="w-8 h-8 rounded-xl bg-white text-amber-600 border border-amber-200/80 flex items-center justify-center shrink-0 shadow-2xs hidden sm:flex">
+                <FileText className="w-4 h-4" />
               </div>
             </div>
             <div className="hidden xl:flex absolute top-1/2 -right-2.5 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-teal-700 shadow-2xs">
@@ -830,19 +830,19 @@ export const ProcessFlowView: React.FC = () => {
 
           {/* Card 4: ACCOUNTS */}
           <div className="relative group flex flex-col">
-            <div className="bg-purple-50/40 hover:bg-purple-50/70 border border-purple-200/80 rounded-2xl p-3.5 sm:p-4 md:p-5 flex items-center gap-3 sm:gap-4 shadow-2xs hover:shadow-xs transition h-full">
+            <div className="bg-purple-50/40 hover:bg-purple-50/70 border border-purple-200/80 rounded-2xl p-4 flex flex-row items-center gap-3.5 shadow-2xs hover:shadow-xs transition h-full">
               <AccountsAvatar />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
                   <span className="text-[10px] font-black text-purple-700 font-mono bg-purple-100 px-1.5 py-0.5 rounded-md">04</span>
                   <h3 className="font-black text-slate-900 text-sm sm:text-base tracking-tight">ACCOUNTS</h3>
                 </div>
-                <p className="text-xs text-slate-600 font-semibold leading-snug mt-0.5">
+                <p className="text-xs text-slate-600 font-semibold leading-snug mt-1">
                   Processing &amp; Payment
                 </p>
               </div>
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white text-purple-600 border border-purple-200/80 flex items-center justify-center shrink-0 shadow-2xs">
-                <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <div className="w-8 h-8 rounded-xl bg-white text-purple-600 border border-purple-200/80 flex items-center justify-center shrink-0 shadow-2xs hidden sm:flex">
+                <FileText className="w-4 h-4" />
               </div>
             </div>
           </div>
