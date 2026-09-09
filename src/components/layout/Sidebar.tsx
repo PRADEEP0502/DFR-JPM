@@ -22,6 +22,7 @@ export type ViewTab =
   | 'critical'
   | 'by_holder'
   | 'tally'
+  | 'process_flow'
   | 'labels'
   | 'category_mapping'
   | 'reports'
@@ -63,6 +64,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     ...(canAccessTally
       ? [{ id: 'tally', label: 'Tally Tracker', icon: Calculator }]
       : []),
+    { id: 'process_flow', label: 'Process Flow', icon: GitFork },
     { id: 'labels', label: 'Labels Manager', icon: Tags },
     { id: 'category_mapping', label: 'Category Mappings', icon: GitFork },
     { id: 'reports', label: 'Reports / Export', icon: FileText },

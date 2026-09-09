@@ -9,6 +9,7 @@ import { TallyTrackerView } from './components/views/TallyTrackerView';
 import { LabelsManagerView } from './components/views/LabelsManagerView';
 import { CategoryMappingView } from './components/views/CategoryMappingView';
 import { ReportsView } from './components/views/ReportsView';
+import { ProcessFlowView } from './components/views/ProcessFlowView';
 import { AdminSettingsView } from './components/views/AdminSettingsView';
 import { LoginView } from './components/auth/LoginView';
 import { BillDetailDrawer } from './components/drawers/BillDetailDrawer';
@@ -276,6 +277,8 @@ export const App: React.FC = () => {
               </div>
             )
           )}
+
+          {currentTab === 'process_flow' && <ProcessFlowView />}
 
           {currentTab === 'labels' && (
             <LabelsManagerView
