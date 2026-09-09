@@ -262,7 +262,7 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
             </div>
             <div>
               <h2 className="text-sm sm:text-base font-black text-slate-900 uppercase tracking-wide">
-                Custodian Workload Leaderboard
+                Current Holder Leaderboard
               </h2>
               <p className="text-xs text-slate-500 font-medium hidden sm:block">
                 Click any row or &quot;View Bills&quot; to inspect bills in the Master Register
