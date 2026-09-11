@@ -19,6 +19,7 @@ import {
   Activity,
   Calculator,
   UserCheck,
+  Users,
 } from 'lucide-react';
 import {
   BillRegisterItem,
@@ -28,6 +29,7 @@ import {
   STAGE_DISPLAY_NAMES,
   AgeBand,
   isTallyExported,
+  isBillHeldByUser,
 } from '../../types/dfr';
 import { ViewTab } from '../layout/Sidebar';
 import { Card3D } from '../ui/Card3D';
@@ -47,9 +49,11 @@ interface DashboardViewProps {
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
   bills,
+  users = [],
   alerts,
   onSelectTab,
   onSelectBill,
+  onSelectHolder,
 }) => {
   // Filter truly active pending bills before Tally/Accounts export
   const activeBills = useMemo(() => bills.filter(b => !isTallyExported(b)), [bills]);
@@ -124,6 +128,37 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     name: STAGE_DISPLAY_NAMES[st],
     bills: stageStats[st].count,
   }));
+
+  // Group by Holder for Bills by Holder Chart
+  const excludedUsernames = useMemo(
+    () => new Set(['admin', 'superadmin', 'md', 'system']),
+    []
+  );
+  const excludedFullNames = useMemo(
+    () => new Set(['MANAGING DIRECTOR', 'SUPER ADMIN', 'SYSTEM ADMIN']),
+    []
+  );
+
+  const activeHolders = useMemo(() => {
+    return (users || []).filter(u => {
+      if (excludedUsernames.has(u.username?.toLowerCase().trim())) return false;
+      if (excludedFullNames.has(u.full_name?.toUpperCase().trim())) return false;
+      return true;
+    });
+  }, [users, excludedUsernames, excludedFullNames]);
+
+  const holderChartData: Bar3DItem[] = useMemo(() => {
+    return activeHolders
+      .map(user => {
+        const count = activeBills.filter(b => isBillHeldByUser(b, user)).length;
+        return {
+          name: user.full_name,
+          bills: count,
+        };
+      })
+      .filter(h => h.bills > 0)
+      .sort((a, b) => b.bills - a.bills);
+  }, [activeHolders, activeBills]);
 
   // 3D Ageing Distribution Donut Data
   const ageDistributionData: Pie3DSlice[] = [
@@ -322,6 +357,48 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         {/* Dedicated 3D Bar Visualizer for Stages */}
         <div className="w-full pt-2">
           <BarChart3D data={stageChartData} colorScheme="purple" />
+        </div>
+      </Card3D>
+
+      {/* ========================================================================= */}
+      {/* FULL-WIDTH ROW 2: HOLDER WORKLOAD DISTRIBUTION                            */}
+      {/* ========================================================================= */}
+      <Card3D noTilt={true} className="p-5 sm:p-7 shadow-sm border border-slate-200" glowColor="rgba(2, 132, 199, 0.15)">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4 mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-sky-100 text-sky-700 flex items-center justify-center font-bold">
+              <Users className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-base font-black text-slate-900 uppercase tracking-wide">
+                BILLS BY HOLDER
+              </h2>
+              <p className="text-xs text-slate-500 font-medium mt-0.5">
+                Active bills distributed across current custodians
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <button
+              onClick={() => onSelectTab('by_holder')}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-700 rounded-xl border border-sky-200 font-bold text-xs transition cursor-pointer shadow-2xs"
+            >
+              <span>View Leaderboard</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Dedicated 3D Bar Visualizer for Holders */}
+        <div className="w-full pt-2">
+          {holderChartData.length > 0 ? (
+            <BarChart3D data={holderChartData} colorScheme="blue" />
+          ) : (
+            <div className="py-12 text-center text-slate-400 text-xs font-bold">
+              No active pending bills assigned to holders
+            </div>
+          )}
         </div>
       </Card3D>
 
