@@ -497,236 +497,218 @@ export const ProcessFlowView: React.FC = () => {
       {/* ========================================================================= */}
       {/* SECTION 1: MAIN PURCHASE & BILL PROCESS FLOW (01 TO 07)                   */}
       {/* ========================================================================= */}
-      <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-7 shadow-xs">
-        {/* Responsive Flow Grid: 1 col on mobile, 2 col on small tablet, 4 col on tablet/iPad, 7 col on laptop/desktop */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3 sm:gap-4 pt-3 sm:pt-4">
-          {/* STEP 01: PRN */}
-          <div className="relative group flex flex-col">
-            <div className="bg-sky-50/40 hover:bg-sky-50/70 border border-sky-200/80 hover:border-sky-400 rounded-2xl p-3.5 sm:p-4 pt-6 flex flex-col items-center text-center shadow-2xs hover:shadow-md transition-all duration-200 h-full">
-              {/* Number Badge at Top Center */}
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-sky-500 text-white font-black text-xs flex items-center justify-center shadow-xs border-2 border-white ring-2 ring-sky-100 font-mono">
-                01
+      <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-7 shadow-xs overflow-hidden">
+        {/* Responsive Flow Container: Seamless horizontal 7-stage sequence with connecting arrows across Tablet & Desktop */}
+        <div className="overflow-x-auto pb-3 pt-3.5 -mx-1 px-1">
+          <div className="grid grid-cols-7 gap-2.5 sm:gap-3 lg:gap-3.5 xl:gap-4 min-w-[780px] xl:min-w-0">
+            {/* STEP 01: PRN */}
+            <div className="relative group flex flex-col">
+              <div className="bg-sky-50/40 hover:bg-sky-50/70 border border-sky-200/80 hover:border-sky-400 rounded-2xl p-3.5 sm:p-4 pt-6 flex flex-col items-center text-center shadow-2xs hover:shadow-md transition-all duration-200 h-full">
+                {/* Number Badge at Top Center */}
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-sky-500 text-white font-black text-xs flex items-center justify-center shadow-xs border-2 border-white ring-2 ring-sky-100 font-mono">
+                  01
+                </div>
+
+                <h3 className="font-black text-sky-950 text-base tracking-tight mt-1">PRN</h3>
+                <p className="text-[11px] text-slate-600 font-bold mt-0.5 leading-tight">
+                  Purchase Request Note
+                </p>
+
+                {/* Graphic Illustration */}
+                <div className="my-2 sm:my-3 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <PrnIllustration />
+                </div>
+
+                {/* Action / Responsibility Badge */}
+                <div className="w-full bg-white/95 border border-sky-100 text-slate-700 text-[11px] font-bold rounded-xl py-2 px-2 mt-auto shadow-2xs leading-snug">
+                  Raised by
+                  <br />
+                  <span className="text-slate-900 font-black">Reputed Department</span>
+                </div>
               </div>
 
-              <h3 className="font-black text-sky-950 text-base tracking-tight mt-1">PRN</h3>
-              <p className="text-[11px] text-slate-600 font-bold mt-0.5 leading-tight">
-                Purchase Request Note
-              </p>
-
-              {/* Graphic Illustration */}
-              <div className="my-2 sm:my-3 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <PrnIllustration />
-              </div>
-
-              {/* Action / Responsibility Badge */}
-              <div className="w-full bg-white/95 border border-sky-100 text-slate-700 text-[11px] font-bold rounded-xl py-2 px-2 mt-auto shadow-2xs leading-snug">
-                Raised by
-                <br />
-                <span className="text-slate-900 font-black">Reputed Department</span>
-              </div>
-            </div>
-
-            {/* Desktop Connector Arrow (Laptop xl) */}
-            <div className="hidden xl:flex absolute top-1/2 -right-3 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-sky-700 shadow-xs">
-              <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
-            </div>
-
-            {/* Mobile Downward Connector Arrow (Mobile only <640px) */}
-            <div className="flex sm:hidden justify-center my-1 text-sky-400">
-              <ArrowDown className="w-4 h-4 stroke-[2.5]" />
-            </div>
-          </div>
-
-          {/* STEP 02: QUOTATION */}
-          <div className="relative group flex flex-col">
-            <div className="bg-emerald-50/40 hover:bg-emerald-50/70 border border-emerald-200/80 hover:border-emerald-400 rounded-2xl p-3.5 sm:p-4 pt-6 flex flex-col items-center text-center shadow-2xs hover:shadow-md transition-all duration-200 h-full">
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-emerald-500 text-white font-black text-xs flex items-center justify-center shadow-xs border-2 border-white ring-2 ring-emerald-100 font-mono">
-                02
-              </div>
-
-              <h3 className="font-black text-emerald-950 text-base tracking-tight mt-1">
-                QUOTATION
-              </h3>
-              <p className="text-[11px] text-slate-600 font-bold mt-0.5 leading-tight">
-                Quotation Preparation &amp; Issue
-              </p>
-
-              <div className="my-2 sm:my-3 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <QuotationIllustration />
-              </div>
-
-              <div className="w-full bg-white/95 border border-emerald-100 text-slate-700 text-[11px] font-bold rounded-xl py-2 px-2 mt-auto shadow-2xs leading-snug">
-                Prepared &amp; Issued
-                <br />
-                <span className="text-emerald-800 font-extrabold text-[10px]">
-                  (Approved by IAD &amp; AO)
-                </span>
+              {/* Horizontal Connector Arrow */}
+              <div className="flex absolute top-1/2 -right-2.5 sm:-right-3 -translate-y-1/2 z-10 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-sky-700 shadow-xs pointer-events-none">
+                <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.5]" />
               </div>
             </div>
 
-            <div className="hidden xl:flex absolute top-1/2 -right-3 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-emerald-700 shadow-xs">
-              <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
-            </div>
+            {/* STEP 02: QUOTATION */}
+            <div className="relative group flex flex-col">
+              <div className="bg-emerald-50/40 hover:bg-emerald-50/70 border border-emerald-200/80 hover:border-emerald-400 rounded-2xl p-3.5 sm:p-4 pt-6 flex flex-col items-center text-center shadow-2xs hover:shadow-md transition-all duration-200 h-full">
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-emerald-500 text-white font-black text-xs flex items-center justify-center shadow-xs border-2 border-white ring-2 ring-emerald-100 font-mono">
+                  02
+                </div>
 
-            <div className="flex sm:hidden justify-center my-1 text-emerald-400">
-              <ArrowDown className="w-4 h-4 stroke-[2.5]" />
-            </div>
-          </div>
+                <h3 className="font-black text-emerald-950 text-base tracking-tight mt-1">
+                  QUOTATION
+                </h3>
+                <p className="text-[11px] text-slate-600 font-bold mt-0.5 leading-tight">
+                  Quotation Preparation &amp; Issue
+                </p>
 
-          {/* STEP 03: PO */}
-          <div className="relative group flex flex-col">
-            <div className="bg-amber-50/40 hover:bg-amber-50/70 border border-amber-200/80 hover:border-amber-400 rounded-2xl p-3.5 sm:p-4 pt-6 flex flex-col items-center text-center shadow-2xs hover:shadow-md transition-all duration-200 h-full">
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-amber-500 text-white font-black text-xs flex items-center justify-center shadow-xs border-2 border-white ring-2 ring-amber-100 font-mono">
-                03
+                <div className="my-2 sm:my-3 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <QuotationIllustration />
+                </div>
+
+                <div className="w-full bg-white/95 border border-emerald-100 text-slate-700 text-[11px] font-bold rounded-xl py-2 px-2 mt-auto shadow-2xs leading-snug">
+                  Prepared &amp; Issued
+                  <br />
+                  <span className="text-emerald-800 font-extrabold text-[10px]">
+                    (Approved by IAD &amp; AO)
+                  </span>
+                </div>
               </div>
 
-              <h3 className="font-black text-amber-950 text-base tracking-tight mt-1">PO</h3>
-              <p className="text-[11px] text-slate-600 font-bold mt-0.5 leading-tight">
-                Purchase Order
-              </p>
-
-              <div className="my-2 sm:my-3 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <PoIllustration />
-              </div>
-
-              <div className="w-full bg-white/95 border border-amber-100 text-slate-700 text-[11px] font-bold rounded-xl py-2 px-2 mt-auto shadow-2xs leading-snug">
-                Prepared &amp; Issued
-                <br />
-                <span className="text-amber-800 font-extrabold text-[10px]">
-                  (Approved by IAD &amp; AO)
-                </span>
-              </div>
-            </div>
-
-            <div className="hidden xl:flex absolute top-1/2 -right-3 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-amber-700 shadow-xs">
-              <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
-            </div>
-
-            <div className="flex sm:hidden justify-center my-1 text-amber-400">
-              <ArrowDown className="w-4 h-4 stroke-[2.5]" />
-            </div>
-          </div>
-
-          {/* STEP 04: MI */}
-          <div className="relative group flex flex-col">
-            <div className="bg-purple-50/40 hover:bg-purple-50/70 border border-purple-200/80 hover:border-purple-400 rounded-2xl p-3.5 sm:p-4 pt-6 flex flex-col items-center text-center shadow-2xs hover:shadow-md transition-all duration-200 h-full">
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-purple-500 text-white font-black text-xs flex items-center justify-center shadow-xs border-2 border-white ring-2 ring-purple-100 font-mono">
-                04
-              </div>
-
-              <h3 className="font-black text-purple-950 text-base tracking-tight mt-1">MI</h3>
-              <p className="text-[11px] text-slate-600 font-bold mt-0.5 leading-tight">
-                Material Inward
-              </p>
-
-              <div className="my-2 sm:my-3 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <MiIllustration />
-              </div>
-
-              <div className="w-full bg-white/95 border border-purple-100 text-slate-700 text-[11px] font-bold rounded-xl py-2 px-2 mt-auto shadow-2xs leading-snug">
-                Material Inward
-                <br />
-                <span className="text-purple-950 font-black">at Stores</span>
+              {/* Horizontal Connector Arrow */}
+              <div className="flex absolute top-1/2 -right-2.5 sm:-right-3 -translate-y-1/2 z-10 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-emerald-700 shadow-xs pointer-events-none">
+                <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.5]" />
               </div>
             </div>
 
-            <div className="hidden xl:flex absolute top-1/2 -right-3 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-purple-700 shadow-xs">
-              <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
-            </div>
+            {/* STEP 03: PO */}
+            <div className="relative group flex flex-col">
+              <div className="bg-amber-50/40 hover:bg-amber-50/70 border border-amber-200/80 hover:border-amber-400 rounded-2xl p-3.5 sm:p-4 pt-6 flex flex-col items-center text-center shadow-2xs hover:shadow-md transition-all duration-200 h-full">
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-amber-500 text-white font-black text-xs flex items-center justify-center shadow-xs border-2 border-white ring-2 ring-amber-100 font-mono">
+                  03
+                </div>
 
-            <div className="flex sm:hidden justify-center my-1 text-purple-400">
-              <ArrowDown className="w-4 h-4 stroke-[2.5]" />
-            </div>
-          </div>
+                <h3 className="font-black text-amber-950 text-base tracking-tight mt-1">PO</h3>
+                <p className="text-[11px] text-slate-600 font-bold mt-0.5 leading-tight">
+                  Purchase Order
+                </p>
 
-          {/* STEP 05: GRN */}
-          <div className="relative group flex flex-col">
-            <div className="bg-teal-50/40 hover:bg-teal-50/70 border border-teal-200/80 hover:border-teal-400 rounded-2xl p-3.5 sm:p-4 pt-6 flex flex-col items-center text-center shadow-2xs hover:shadow-md transition-all duration-200 h-full">
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-teal-500 text-white font-black text-xs flex items-center justify-center shadow-xs border-2 border-white ring-2 ring-teal-100 font-mono">
-                05
+                <div className="my-2 sm:my-3 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <PoIllustration />
+                </div>
+
+                <div className="w-full bg-white/95 border border-amber-100 text-slate-700 text-[11px] font-bold rounded-xl py-2 px-2 mt-auto shadow-2xs leading-snug">
+                  Prepared &amp; Issued
+                  <br />
+                  <span className="text-amber-800 font-extrabold text-[10px]">
+                    (Approved by IAD &amp; AO)
+                  </span>
+                </div>
               </div>
 
-              <h3 className="font-black text-teal-950 text-base tracking-tight mt-1">GRN</h3>
-              <p className="text-[11px] text-slate-600 font-bold mt-0.5 leading-tight">
-                Goods Receipt Note
-              </p>
-
-              <div className="my-2 sm:my-3 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <GrnIllustration />
-              </div>
-
-              <div className="w-full bg-white/95 border border-teal-100 text-slate-700 text-[11px] font-bold rounded-xl py-2 px-2 mt-auto shadow-2xs leading-snug">
-                GRN Preparation
-                <br />
-                <span className="text-teal-950 font-black">&amp; Entry</span>
-              </div>
-            </div>
-
-            <div className="hidden xl:flex absolute top-1/2 -right-3 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-teal-700 shadow-xs">
-              <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
-            </div>
-
-            <div className="flex sm:hidden justify-center my-1 text-teal-400">
-              <ArrowDown className="w-4 h-4 stroke-[2.5]" />
-            </div>
-          </div>
-
-          {/* STEP 06: BILL INWARD */}
-          <div className="relative group flex flex-col">
-            <div className="bg-rose-50/40 hover:bg-rose-50/70 border border-rose-200/80 hover:border-rose-400 rounded-2xl p-3.5 sm:p-4 pt-6 flex flex-col items-center text-center shadow-2xs hover:shadow-md transition-all duration-200 h-full">
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-rose-500 text-white font-black text-xs flex items-center justify-center shadow-xs border-2 border-white ring-2 ring-rose-100 font-mono">
-                06
-              </div>
-
-              <h3 className="font-black text-rose-950 text-base tracking-tight mt-1">
-                BILL INWARD
-              </h3>
-              <p className="text-[11px] text-slate-600 font-bold mt-0.5 leading-tight">
-                Bill Inward
-              </p>
-
-              <div className="my-2 sm:my-3 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <BillInwardIllustration />
-              </div>
-
-              <div className="w-full bg-white/95 border border-rose-100 text-slate-700 text-[11px] font-bold rounded-xl py-2 px-2 mt-auto shadow-2xs leading-snug">
-                Verified by
-                <br />
-                <span className="text-rose-950 font-black">IAD</span>
+              {/* Horizontal Connector Arrow */}
+              <div className="flex absolute top-1/2 -right-2.5 sm:-right-3 -translate-y-1/2 z-10 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-amber-700 shadow-xs pointer-events-none">
+                <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.5]" />
               </div>
             </div>
 
-            <div className="hidden xl:flex absolute top-1/2 -right-3 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-rose-700 shadow-xs">
-              <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
-            </div>
+            {/* STEP 04: MI */}
+            <div className="relative group flex flex-col">
+              <div className="bg-purple-50/40 hover:bg-purple-50/70 border border-purple-200/80 hover:border-purple-400 rounded-2xl p-3.5 sm:p-4 pt-6 flex flex-col items-center text-center shadow-2xs hover:shadow-md transition-all duration-200 h-full">
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-purple-500 text-white font-black text-xs flex items-center justify-center shadow-xs border-2 border-white ring-2 ring-purple-100 font-mono">
+                  04
+                </div>
 
-            <div className="flex sm:hidden justify-center my-1 text-rose-400">
-              <ArrowDown className="w-4 h-4 stroke-[2.5]" />
-            </div>
-          </div>
+                <h3 className="font-black text-purple-950 text-base tracking-tight mt-1">MI</h3>
+                <p className="text-[11px] text-slate-600 font-bold mt-0.5 leading-tight">
+                  Material Inward
+                </p>
 
-          {/* STEP 07: BILL PASSING */}
-          <div className="relative group flex flex-col">
-            <div className="bg-amber-50/50 hover:bg-amber-50/80 border border-amber-300/90 hover:border-amber-500 rounded-2xl p-3.5 sm:p-4 pt-6 flex flex-col items-center text-center shadow-2xs hover:shadow-md transition-all duration-200 h-full">
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-amber-400 text-slate-950 font-black text-xs flex items-center justify-center shadow-xs border-2 border-white ring-2 ring-amber-200 font-mono">
-                07
+                <div className="my-2 sm:my-3 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <MiIllustration />
+                </div>
+
+                <div className="w-full bg-white/95 border border-purple-100 text-slate-700 text-[11px] font-bold rounded-xl py-2 px-2 mt-auto shadow-2xs leading-snug">
+                  Material Inward
+                  <br />
+                  <span className="text-purple-950 font-black">at Stores</span>
+                </div>
               </div>
 
-              <h3 className="font-black text-amber-950 text-base tracking-tight mt-1">
-                BILL PASSING
-              </h3>
-              <p className="text-[11px] text-slate-600 font-bold mt-0.5 leading-tight">
-                Final Approval &amp; Payment Processing
-              </p>
+              {/* Horizontal Connector Arrow */}
+              <div className="flex absolute top-1/2 -right-2.5 sm:-right-3 -translate-y-1/2 z-10 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-purple-700 shadow-xs pointer-events-none">
+                <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.5]" />
+              </div>
+            </div>
 
-              <div className="my-2 sm:my-3 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <BillPassingIllustration />
+            {/* STEP 05: GRN */}
+            <div className="relative group flex flex-col">
+              <div className="bg-teal-50/40 hover:bg-teal-50/70 border border-teal-200/80 hover:border-teal-400 rounded-2xl p-3.5 sm:p-4 pt-6 flex flex-col items-center text-center shadow-2xs hover:shadow-md transition-all duration-200 h-full">
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-teal-500 text-white font-black text-xs flex items-center justify-center shadow-xs border-2 border-white ring-2 ring-teal-100 font-mono">
+                  05
+                </div>
+
+                <h3 className="font-black text-teal-950 text-base tracking-tight mt-1">GRN</h3>
+                <p className="text-[11px] text-slate-600 font-bold mt-0.5 leading-tight">
+                  Goods Receipt Note
+                </p>
+
+                <div className="my-2 sm:my-3 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <GrnIllustration />
+                </div>
+
+                <div className="w-full bg-white/95 border border-teal-100 text-slate-700 text-[11px] font-bold rounded-xl py-2 px-2 mt-auto shadow-2xs leading-snug">
+                  GRN Preparation
+                  <br />
+                  <span className="text-teal-950 font-black">&amp; Entry</span>
+                </div>
               </div>
 
-              <div className="w-full bg-white/95 border border-amber-200 text-slate-700 text-[11px] font-bold rounded-xl py-2 px-2 mt-auto shadow-2xs leading-snug">
-                <span className="text-slate-900 font-black">IAD → AO → JMD →</span>
-                <br />
-                <span className="text-emerald-700 font-black">Accounts → Payment</span>
+              {/* Horizontal Connector Arrow */}
+              <div className="flex absolute top-1/2 -right-2.5 sm:-right-3 -translate-y-1/2 z-10 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-teal-700 shadow-xs pointer-events-none">
+                <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.5]" />
+              </div>
+            </div>
+
+            {/* STEP 06: BILL INWARD */}
+            <div className="relative group flex flex-col">
+              <div className="bg-rose-50/40 hover:bg-rose-50/70 border border-rose-200/80 hover:border-rose-400 rounded-2xl p-3.5 sm:p-4 pt-6 flex flex-col items-center text-center shadow-2xs hover:shadow-md transition-all duration-200 h-full">
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-rose-500 text-white font-black text-xs flex items-center justify-center shadow-xs border-2 border-white ring-2 ring-rose-100 font-mono">
+                  06
+                </div>
+
+                <h3 className="font-black text-rose-950 text-base tracking-tight mt-1">
+                  BILL INWARD
+                </h3>
+                <p className="text-[11px] text-slate-600 font-bold mt-0.5 leading-tight">
+                  Bill Inward
+                </p>
+
+                <div className="my-2 sm:my-3 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <BillInwardIllustration />
+                </div>
+
+                <div className="w-full bg-white/95 border border-rose-100 text-slate-700 text-[11px] font-bold rounded-xl py-2 px-2 mt-auto shadow-2xs leading-snug">
+                  Verified by
+                  <br />
+                  <span className="text-rose-950 font-black">IAD</span>
+                </div>
+              </div>
+
+              {/* Horizontal Connector Arrow */}
+              <div className="flex absolute top-1/2 -right-2.5 sm:-right-3 -translate-y-1/2 z-10 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-rose-700 shadow-xs pointer-events-none">
+                <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.5]" />
+              </div>
+            </div>
+
+            {/* STEP 07: BILL PASSING */}
+            <div className="relative group flex flex-col">
+              <div className="bg-amber-50/50 hover:bg-amber-50/80 border border-amber-300/90 hover:border-amber-500 rounded-2xl p-3.5 sm:p-4 pt-6 flex flex-col items-center text-center shadow-2xs hover:shadow-md transition-all duration-200 h-full">
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-amber-400 text-slate-950 font-black text-xs flex items-center justify-center shadow-xs border-2 border-white ring-2 ring-amber-200 font-mono">
+                  07
+                </div>
+
+                <h3 className="font-black text-amber-950 text-base tracking-tight mt-1">
+                  BILL PASSING
+                </h3>
+                <p className="text-[11px] text-slate-600 font-bold mt-0.5 leading-tight">
+                  Final Approval &amp; Payment Processing
+                </p>
+
+                <div className="my-2 sm:my-3 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <BillPassingIllustration />
+                </div>
+
+                <div className="w-full bg-white/95 border border-amber-200 text-slate-700 text-[11px] font-bold rounded-xl py-2 px-2 mt-auto shadow-2xs leading-snug">
+                  <span className="text-slate-900 font-black">IAD → AO → JMD →</span>
+                  <br />
+                  <span className="text-emerald-700 font-black">Accounts → Payment</span>
+                </div>
               </div>
             </div>
           </div>
@@ -749,8 +731,8 @@ export const ProcessFlowView: React.FC = () => {
           </span>
         </div>
 
-        {/* 4 Cards Grid: 1 col mobile, 2x2 grid on Tablet/iPad (portrait & landscape), 4-col on wide desktop */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5 sm:gap-4">
+        {/* 4 Cards Grid: 1 col mobile, 2x2 on small screens, 4-col on Tablet & Desktop */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
           {/* Card 1: IAD */}
           <div className="relative group flex flex-col">
             <div className="bg-sky-50/40 hover:bg-sky-50/70 border border-sky-200/80 rounded-2xl p-4 flex flex-row items-center gap-3.5 shadow-2xs hover:shadow-xs transition h-full">
@@ -768,8 +750,8 @@ export const ProcessFlowView: React.FC = () => {
                 <FileText className="w-4 h-4" />
               </div>
             </div>
-            {/* Desktop 4-in-a-row Arrow (xl) */}
-            <div className="hidden xl:flex absolute top-1/2 -right-2.5 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-teal-700 shadow-2xs">
+            {/* Tablet & Desktop Connector Arrow */}
+            <div className="hidden lg:flex absolute top-1/2 -right-2.5 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-teal-700 shadow-2xs pointer-events-none">
               <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
             </div>
             {/* Mobile Downward Connector */}
@@ -795,7 +777,7 @@ export const ProcessFlowView: React.FC = () => {
                 <FileText className="w-4 h-4" />
               </div>
             </div>
-            <div className="hidden xl:flex absolute top-1/2 -right-2.5 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-teal-700 shadow-2xs">
+            <div className="hidden lg:flex absolute top-1/2 -right-2.5 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-teal-700 shadow-2xs pointer-events-none">
               <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
             </div>
             <div className="flex sm:hidden justify-center my-0.5 text-emerald-400">
@@ -820,7 +802,7 @@ export const ProcessFlowView: React.FC = () => {
                 <FileText className="w-4 h-4" />
               </div>
             </div>
-            <div className="hidden xl:flex absolute top-1/2 -right-2.5 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-teal-700 shadow-2xs">
+            <div className="hidden lg:flex absolute top-1/2 -right-2.5 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-teal-700 shadow-2xs pointer-events-none">
               <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
             </div>
             <div className="flex sm:hidden justify-center my-0.5 text-amber-400">
