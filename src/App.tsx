@@ -31,7 +31,12 @@ export const App: React.FC = () => {
   const [selectedBill, setSelectedBill] = useState<BillRegisterItem | null>(null);
   const [handoverBill, setHandoverBill] = useState<BillRegisterItem | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth >= 1024;
+    }
+    return true;
+  });
   const [selectedLabelFilter, setSelectedLabelFilter] = useState<string>('ALL');
   const [selectedHolderFilter, setSelectedHolderFilter] = useState<string>('ALL');
 
@@ -156,14 +161,17 @@ export const App: React.FC = () => {
             return;
           }
           setCurrentTab(tab);
-          setIsMobileMenuOpen(false);
+          if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+            setIsSidebarOpen(false);
+          }
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
         criticalCount={criticalCount}
         currentUser={currentUser}
         onLogout={handleLogout}
-        isMobileOpen={isMobileMenuOpen}
-        onCloseMobile={() => setIsMobileMenuOpen(false)}
+        isOpen={isSidebarOpen}
+        onToggle={() => setIsSidebarOpen(prev => !prev)}
+        onClose={() => setIsSidebarOpen(false)}
       />
 
       {/* Main Right Content Panel */}
@@ -193,7 +201,8 @@ export const App: React.FC = () => {
               setCurrentTab('register');
             }
           }}
-          onToggleMobileMenu={() => setIsMobileMenuOpen(prev => !prev)}
+          isSidebarOpen={isSidebarOpen}
+          onToggleSidebar={() => setIsSidebarOpen(prev => !prev)}
         />
 
         {/* View Switcher Container */}

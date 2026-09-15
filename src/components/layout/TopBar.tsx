@@ -11,7 +11,8 @@ interface TopBarProps {
   searchQuery: string;
   onSearchChange: (q: string) => void;
   onLogout?: () => void;
-  onToggleMobileMenu?: () => void;
+  isSidebarOpen?: boolean;
+  onToggleSidebar?: () => void;
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
@@ -23,7 +24,8 @@ export const TopBar: React.FC<TopBarProps> = ({
   searchQuery,
   onSearchChange,
   onLogout,
-  onToggleMobileMenu,
+  isSidebarOpen = true,
+  onToggleSidebar,
 }) => {
   const [syncTimeFormatted, setSyncTimeFormatted] = useState<string>('Synced just now');
 
@@ -65,16 +67,17 @@ export const TopBar: React.FC<TopBarProps> = ({
 
   return (
     <header className="h-16 bg-white border-b border-slate-200/90 px-3 sm:px-6 flex items-center justify-between sticky top-0 z-20 shadow-xs shrink-0 gap-2 sm:gap-4 font-sans">
-      {/* Left Area: Mobile Menu Button + Search */}
+      {/* Left Area: Sidebar Toggle + Search */}
       <div className="flex items-center gap-2 flex-1 max-w-xl">
-        {/* Mobile Hamburger Toggle */}
-        {onToggleMobileMenu && (
+        {/* Universal Sidebar Toggle Button (Desktop, Tablet & Mobile) */}
+        {onToggleSidebar && (
           <button
-            onClick={onToggleMobileMenu}
-            className="lg:hidden p-2 rounded-xl text-slate-700 hover:bg-slate-100 active:bg-slate-200 transition min-h-[40px] min-w-[40px] flex items-center justify-center cursor-pointer"
-            aria-label="Toggle navigation menu"
+            onClick={onToggleSidebar}
+            className="p-2 rounded-xl text-slate-700 bg-slate-50 hover:bg-slate-100 active:bg-slate-200 border border-slate-200/90 hover:border-slate-300 transition min-h-[38px] min-w-[38px] flex items-center justify-center cursor-pointer shadow-2xs active:scale-95 shrink-0"
+            aria-label={isSidebarOpen ? 'Collapse sidebar' : 'Open sidebar'}
+            title={isSidebarOpen ? 'Close / Collapse sidebar' : 'Open sidebar'}
           >
-            <Menu className="w-5 h-5" />
+            <Menu className="w-5 h-5 text-slate-700" />
           </button>
         )}
 

@@ -12,6 +12,7 @@ import {
   LogOut,
   Shield,
   X,
+  ChevronLeft,
 } from 'lucide-react';
 import { DfrUser } from '../../types/dfr';
 import { isTallyTrackerAuthorized, isAdminSettingsAuthorized } from '../../services/authService';
@@ -34,8 +35,9 @@ interface SidebarProps {
   criticalCount: number;
   currentUser: DfrUser;
   onLogout: () => void;
-  isMobileOpen?: boolean;
-  onCloseMobile?: () => void;
+  isOpen: boolean;
+  onToggle: () => void;
+  onClose: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -44,8 +46,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   criticalCount,
   currentUser,
   onLogout,
-  isMobileOpen = false,
-  onCloseMobile,
+  isOpen = true,
+  onToggle,
+  onClose,
 }) => {
   const canAccessSettings = isAdminSettingsAuthorized(currentUser);
   const canAccessTally = isTallyTrackerAuthorized(currentUser);
@@ -81,39 +84,39 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const handleItemClick = (tabId: ViewTab) => {
     onSelectTab(tabId);
-    if (onCloseMobile) {
-      onCloseMobile();
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      onClose();
     }
   };
 
   const sidebarContent = (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-white w-64 select-none">
       {/* Brand Header */}
-      <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
-        <div className="flex items-center gap-3">
+      <div className="p-3.5 sm:p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/80 shrink-0">
+        <div className="flex items-center gap-2.5 overflow-hidden">
           <img
             src="/jpm_logo.jpg"
             alt="Junior Processing Mill Logo"
-            className="w-10 h-10 sm:w-11 sm:h-11 rounded-full object-cover border-2 border-red-500/80 shadow-md p-0.5 bg-white shrink-0"
+            className="w-10 h-10 rounded-full object-cover border-2 border-red-500/80 shadow-md p-0.5 bg-white shrink-0"
           />
-          <div>
-            <h1 className="font-extrabold text-slate-900 text-sm tracking-tight leading-tight">
+          <div className="overflow-hidden min-w-0">
+            <h1 className="font-extrabold text-slate-900 text-sm tracking-tight leading-tight truncate">
               Junior Processing Mill
             </h1>
-            <p className="text-[11px] text-red-600 font-bold tracking-tight">DFR Bill Flow Register</p>
+            <p className="text-[11px] text-red-600 font-bold tracking-tight truncate">DFR Bill Flow Register</p>
           </div>
         </div>
 
-        {/* Mobile Close Button */}
-        {onCloseMobile && (
-          <button
-            onClick={onCloseMobile}
-            className="lg:hidden w-8 h-8 rounded-xl bg-slate-200/80 hover:bg-slate-300 text-slate-600 flex items-center justify-center transition"
-            aria-label="Close menu"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        )}
+        {/* Close / Collapse Button */}
+        <button
+          onClick={onClose}
+          className="p-1.5 rounded-xl bg-slate-200/80 hover:bg-slate-300 text-slate-600 hover:text-slate-900 flex items-center justify-center transition cursor-pointer shrink-0 shadow-2xs active:scale-95"
+          title="Close / Collapse sidebar"
+          aria-label="Close sidebar"
+        >
+          <ChevronLeft className="w-4 h-4 hidden lg:block" />
+          <X className="w-4 h-4 lg:hidden" />
+        </button>
       </div>
 
       {/* Navigation Links */}
@@ -128,7 +131,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <button
               key={item.id}
               onClick={() => handleItemClick(item.id as ViewTab)}
-              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 touch-manipulation min-h-[44px] ${
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 touch-manipulation min-h-[44px] cursor-pointer ${
                 isActive
                   ? 'bg-sky-50 text-sky-700 border border-sky-200/80 font-bold shadow-xs'
                   : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 active:bg-slate-200/60'
@@ -151,7 +154,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </nav>
 
       {/* Authenticated User Profile & Logout */}
-      <div className="p-3 border-t border-slate-200/80 bg-slate-50/70 space-y-2">
+      <div className="p-3 border-t border-slate-200/80 bg-slate-50/70 space-y-2 shrink-0">
         <div className="flex items-center justify-between p-2 bg-white border border-slate-200 rounded-xl shadow-xs">
           <div className="flex items-center gap-2.5 overflow-hidden">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 text-white font-black flex items-center justify-center text-xs shrink-0 shadow-xs">
@@ -170,7 +173,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <button
             onClick={onLogout}
             title="Log out"
-            className="p-1.5 rounded-lg bg-slate-100 text-slate-500 hover:text-red-600 hover:bg-red-50 transition shrink-0"
+            className="p-1.5 rounded-lg bg-slate-100 text-slate-500 hover:text-red-600 hover:bg-red-50 transition shrink-0 cursor-pointer"
             aria-label="Logout"
           >
             <LogOut className="w-4 h-4" />
@@ -188,16 +191,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <>
-      {/* Desktop Persistent Sidebar */}
-      <aside className="hidden lg:flex w-64 bg-white border-r border-slate-200/80 flex-col h-screen shrink-0 selection:bg-sky-500 shadow-sm z-30">
-        {sidebarContent}
+      {/* Desktop Collapsible Sidebar */}
+      <aside
+        className={`hidden lg:flex flex-col h-screen shrink-0 bg-white border-r border-slate-200/90 selection:bg-sky-500 shadow-sm z-30 transition-all duration-300 ease-in-out overflow-hidden ${
+          isOpen ? 'w-64 opacity-100' : 'w-0 opacity-0 border-r-0 pointer-events-none'
+        }`}
+      >
+        <div className="w-64 h-full flex flex-col shrink-0">
+          {sidebarContent}
+        </div>
       </aside>
 
       {/* Mobile / Tablet Slide-over Drawer Backdrop */}
-      {isMobileOpen && (
+      {isOpen && (
         <div
           className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs lg:hidden animate-in fade-in duration-200"
-          onClick={onCloseMobile}
+          onClick={onClose}
         >
           <div
             className="w-72 max-w-[85vw] h-full shadow-2xl animate-in slide-in-from-left duration-200"
