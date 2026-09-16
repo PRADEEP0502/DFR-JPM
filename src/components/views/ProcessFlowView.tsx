@@ -10,6 +10,7 @@ import {
   Info,
   Check,
   FileSpreadsheet,
+  Archive,
 } from 'lucide-react';
 
 /* ========================================================================= */
@@ -489,6 +490,26 @@ const AccountsAvatar: React.FC = () => (
   </div>
 );
 
+// FILING: Filing & Archiving Specialist with Folder
+const FilingAvatar: React.FC = () => (
+  <div className="w-13 h-13 sm:w-14 sm:h-14 md:w-15 md:h-15 rounded-2xl bg-gradient-to-tr from-indigo-500 to-blue-700 p-0.5 shadow-md flex items-center justify-center shrink-0">
+    <div className="w-full h-full bg-indigo-50 rounded-2xl flex flex-col items-center justify-end overflow-hidden relative">
+      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-amber-200 border border-amber-300 relative -mb-1 z-10">
+        <div className="w-7 h-3.5 sm:w-8 sm:h-4 rounded-t-full bg-slate-900" />
+      </div>
+      <div className="w-11 sm:w-13 h-5.5 sm:h-6.5 bg-indigo-700 rounded-t-xl flex items-center justify-center relative">
+        <div className="w-2.5 sm:w-3 h-4 sm:h-5 bg-white -mt-1.5 sm:-mt-2" />
+        <div className="w-1.5 h-3.5 sm:h-4 bg-indigo-950 -mt-1" />
+      </div>
+      <div className="absolute bottom-0 right-1 flex items-center justify-center">
+        <div className="w-3 h-2.5 sm:w-3.5 sm:h-3 bg-amber-400 border border-amber-600 rounded-xs shadow-xs flex items-center justify-center">
+          <div className="w-1.5 h-0.5 bg-amber-800 rounded-xs" />
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
 /* ========================================================================= */
 /* MAIN PROCESS FLOW VIEW COMPONENT                                          */
 /* ========================================================================= */
@@ -811,7 +832,7 @@ export const ProcessFlowView: React.FC = () => {
       </div>
 
       {/* ========================================================================= */}
-      {/* SECTION 2: BILL PASSING APPROVAL FLOW (IAD -> AO -> JMD -> ACCOUNTS)      */}
+      {/* SECTION 2: BILL PASSING APPROVAL FLOW (IAD -> AO -> JMD -> ACCOUNTS -> FILING) */}
       {/* ========================================================================= */}
       <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-7 shadow-xs space-y-5 sm:space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
@@ -826,8 +847,8 @@ export const ProcessFlowView: React.FC = () => {
           </span>
         </div>
 
-        {/* 4 Cards Grid: 1 col mobile, 2x2 on small screens, 4-col on Tablet & Desktop */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+        {/* 5 Cards Grid: 1 col mobile, 2 cols on small screens, 5 cols on Desktop */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 sm:gap-4">
           {/* Card 1: IAD */}
           <div className="relative group flex flex-col">
             <div className="bg-sky-50/40 hover:bg-sky-50/70 border border-sky-200/80 rounded-2xl p-4 flex flex-row items-center gap-3.5 shadow-2xs hover:shadow-xs transition h-full">
@@ -920,6 +941,33 @@ export const ProcessFlowView: React.FC = () => {
               </div>
               <div className="w-8 h-8 rounded-xl bg-white text-purple-600 border border-purple-200/80 flex items-center justify-center shrink-0 shadow-2xs hidden sm:flex">
                 <FileText className="w-4 h-4" />
+              </div>
+            </div>
+            {/* Tablet & Desktop Connector Arrow */}
+            <div className="hidden lg:flex absolute top-1/2 -right-2.5 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-teal-700 shadow-2xs pointer-events-none">
+              <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
+            </div>
+            {/* Mobile Downward Connector */}
+            <div className="flex sm:hidden justify-center my-0.5 text-purple-400">
+              <ArrowDown className="w-3.5 h-3.5 stroke-[2.5]" />
+            </div>
+          </div>
+
+          {/* Card 5: FILING */}
+          <div className="relative group flex flex-col">
+            <div className="bg-indigo-50/40 hover:bg-indigo-50/70 border border-indigo-200/80 rounded-2xl p-4 flex flex-row items-center gap-3.5 shadow-2xs hover:shadow-xs transition h-full">
+              <FilingAvatar />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-black text-indigo-700 font-mono bg-indigo-100 px-1.5 py-0.5 rounded-md">05</span>
+                  <h3 className="font-black text-slate-900 text-sm sm:text-base tracking-tight">FILING</h3>
+                </div>
+                <p className="text-xs text-slate-600 font-semibold leading-snug mt-1">
+                  Document Archiving
+                </p>
+              </div>
+              <div className="w-8 h-8 rounded-xl bg-white text-indigo-600 border border-indigo-200/80 flex items-center justify-center shrink-0 shadow-2xs hidden sm:flex">
+                <Archive className="w-4 h-4" />
               </div>
             </div>
           </div>
