@@ -423,91 +423,172 @@ const FilingIllustration: React.FC = () => (
 /* 4 DETAILED 3D CHARACTER AVATARS FOR APPROVAL FLOW                         */
 /* ========================================================================= */
 
-// IAD: Auditor with Blue Suit & Laptop
+// 01. IAD: Internal Audit Department Auditor
 const IadAvatar: React.FC = () => (
-  <div className="w-13 h-13 sm:w-14 sm:h-14 md:w-15 md:h-15 rounded-2xl bg-gradient-to-tr from-sky-400 to-indigo-600 p-0.5 shadow-md flex items-center justify-center shrink-0">
-    <div className="w-full h-full bg-sky-50 rounded-2xl flex flex-col items-center justify-end overflow-hidden relative">
-      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-amber-200 border border-amber-300 relative -mb-1 z-10">
-        <div className="w-7 h-3.5 sm:w-8 sm:h-4 rounded-t-full bg-slate-800" />
-      </div>
-      <div className="w-11 sm:w-13 h-5.5 sm:h-6.5 bg-sky-600 rounded-t-xl flex items-center justify-center relative">
-        <div className="w-2.5 sm:w-3 h-4 sm:h-5 bg-white -mt-1.5 sm:-mt-2" />
-        <div className="w-1.5 h-3.5 sm:h-4 bg-sky-900 -mt-1" />
-      </div>
-      <div className="absolute bottom-0 w-8 sm:w-9 h-2.5 sm:h-3 bg-slate-800 rounded-t-sm shadow-xs flex items-center justify-center">
-        <div className="w-2 h-1 bg-sky-300 rounded-xs" />
-      </div>
-    </div>
-  </div>
+  <svg viewBox="0 0 64 64" className="w-12 h-12 sm:w-14 sm:h-14 shrink-0 drop-shadow-sm">
+    <defs>
+      <linearGradient id="iadBorder" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#38bdf8" />
+        <stop offset="100%" stopColor="#2563eb" />
+      </linearGradient>
+      <linearGradient id="iadBg" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#f0f9ff" />
+        <stop offset="100%" stopColor="#e0f2fe" />
+      </linearGradient>
+      <linearGradient id="iadSuit" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#0284c7" />
+        <stop offset="100%" stopColor="#0369a1" />
+      </linearGradient>
+    </defs>
+    <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#iadBg)" stroke="url(#iadBorder)" strokeWidth="2.5" />
+    <path d="M 12 59 C 12 47 22 43 32 43 C 42 43 52 47 52 59 Z" fill="url(#iadSuit)" />
+    <polygon points="32,43 27,51 37,51" fill="#ffffff" />
+    <polygon points="32,45 30,55 32,59 34,55" fill="#0c4a6e" />
+    <rect x="28" y="37" width="8" height="8" rx="2" fill="#fed7aa" />
+    <circle cx="32" cy="27" r="13" fill="#ffedd5" />
+    <path d="M 19 25 C 19 16 24 13 32 13 C 40 13 45 16 45 25 C 45 23 43 19 32 19 C 22 19 19 23 19 25 Z" fill="#1e293b" />
+    <rect x="23" y="24" width="7" height="6" rx="2" fill="none" stroke="#0f172a" strokeWidth="1.5" />
+    <rect x="34" y="24" width="7" height="6" rx="2" fill="none" stroke="#0f172a" strokeWidth="1.5" />
+    <line x1="30" y1="27" x2="34" y2="27" stroke="#0f172a" strokeWidth="1.5" />
+    <circle cx="26.5" cy="27" r="1" fill="#0f172a" />
+    <circle cx="37.5" cy="27" r="1" fill="#0f172a" />
+    <path d="M 29 33 Q 32 36 35 33" fill="none" stroke="#ea580c" strokeWidth="1.2" strokeLinecap="round" />
+  </svg>
 );
 
-// AO: Officer with Glasses & Tie
+// 02. AO: Administrative Officer
 const AoAvatar: React.FC = () => (
-  <div className="w-13 h-13 sm:w-14 sm:h-14 md:w-15 md:h-15 rounded-2xl bg-gradient-to-tr from-emerald-400 to-teal-600 p-0.5 shadow-md flex items-center justify-center shrink-0">
-    <div className="w-full h-full bg-emerald-50 rounded-2xl flex flex-col items-center justify-end overflow-hidden relative">
-      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-amber-200 border border-amber-300 relative -mb-1 z-10 flex items-center justify-center">
-        <div className="w-7 h-3.5 sm:w-8 sm:h-4 rounded-t-full bg-slate-800 absolute top-0" />
-        <div className="w-5 sm:w-6 h-2 border-2 border-slate-800 rounded-full mt-1.5 sm:mt-2" />
-      </div>
-      <div className="w-11 sm:w-13 h-5.5 sm:h-6.5 bg-teal-600 rounded-t-xl flex items-center justify-center relative">
-        <div className="w-2.5 sm:w-3 h-4 sm:h-5 bg-white -mt-1.5 sm:-mt-2" />
-        <div className="w-1.5 h-3.5 sm:h-4 bg-emerald-900 -mt-1" />
-      </div>
-    </div>
-  </div>
+  <svg viewBox="0 0 64 64" className="w-12 h-12 sm:w-14 sm:h-14 shrink-0 drop-shadow-sm">
+    <defs>
+      <linearGradient id="aoBorder" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#34d399" />
+        <stop offset="100%" stopColor="#059669" />
+      </linearGradient>
+      <linearGradient id="aoBg" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#f0fdf4" />
+        <stop offset="100%" stopColor="#dcfce7" />
+      </linearGradient>
+      <linearGradient id="aoSuit" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#059669" />
+        <stop offset="100%" stopColor="#047857" />
+      </linearGradient>
+    </defs>
+    <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#aoBg)" stroke="url(#aoBorder)" strokeWidth="2.5" />
+    <path d="M 12 59 C 12 47 22 43 32 43 C 42 43 52 47 52 59 Z" fill="url(#aoSuit)" />
+    <polygon points="32,43 27,51 37,51" fill="#ffffff" />
+    <polygon points="32,45 30,55 32,59 34,55" fill="#064e3b" />
+    <rect x="28" y="37" width="8" height="8" rx="2" fill="#fed7aa" />
+    <circle cx="32" cy="27" r="13" fill="#ffedd5" />
+    <path d="M 19 25 C 19 15 25 12 34 12 C 43 12 45 16 45 25 C 44 21 38 17 31 17 C 23 17 20 22 19 25 Z" fill="#334155" />
+    <circle cx="26.5" cy="27" r="3.5" fill="none" stroke="#047857" strokeWidth="1.5" />
+    <circle cx="37.5" cy="27" r="3.5" fill="none" stroke="#047857" strokeWidth="1.5" />
+    <line x1="30" y1="27" x2="34" y2="27" stroke="#047857" strokeWidth="1.5" />
+    <circle cx="26.5" cy="27" r="1" fill="#0f172a" />
+    <circle cx="37.5" cy="27" r="1" fill="#0f172a" />
+    <path d="M 29 33 Q 32 36 35 33" fill="none" stroke="#b45309" strokeWidth="1.2" strokeLinecap="round" />
+  </svg>
 );
 
-// JMD: Executive in Black Suit & Tie
+// 03. JMD: Joint Managing Director (Executive Leader)
 const JmdAvatar: React.FC = () => (
-  <div className="w-13 h-13 sm:w-14 sm:h-14 md:w-15 md:h-15 rounded-2xl bg-gradient-to-tr from-amber-400 to-orange-600 p-0.5 shadow-md flex items-center justify-center shrink-0">
-    <div className="w-full h-full bg-amber-50 rounded-2xl flex flex-col items-center justify-end overflow-hidden relative">
-      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-amber-200 border border-amber-300 relative -mb-1 z-10">
-        <div className="w-7 h-3.5 sm:w-8 sm:h-4 rounded-t-full bg-slate-900" />
-      </div>
-      <div className="w-11 sm:w-13 h-5.5 sm:h-6.5 bg-slate-900 rounded-t-xl flex items-center justify-center relative">
-        <div className="w-3 sm:w-3.5 h-4 sm:h-5 bg-white -mt-1.5 sm:-mt-2" />
-        <div className="w-1.5 h-3.5 sm:h-4 bg-red-600 -mt-1" />
-      </div>
-    </div>
-  </div>
+  <svg viewBox="0 0 64 64" className="w-12 h-12 sm:w-14 sm:h-14 shrink-0 drop-shadow-sm">
+    <defs>
+      <linearGradient id="jmdBorder" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#fbbf24" />
+        <stop offset="100%" stopColor="#d97706" />
+      </linearGradient>
+      <linearGradient id="jmdBg" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#fffbeb" />
+        <stop offset="100%" stopColor="#fef3c7" />
+      </linearGradient>
+      <linearGradient id="jmdSuit" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#1e293b" />
+        <stop offset="100%" stopColor="#0f172a" />
+      </linearGradient>
+    </defs>
+    <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#jmdBg)" stroke="url(#jmdBorder)" strokeWidth="2.5" />
+    <path d="M 12 59 C 12 47 22 43 32 43 C 42 43 52 47 52 59 Z" fill="url(#jmdSuit)" />
+    <polygon points="32,43 26,51 38,51" fill="#ffffff" />
+    <polygon points="32,45 30,55 32,59 34,55" fill="#dc2626" />
+    <circle cx="21" cy="49" r="1.8" fill="#fbbf24" />
+    <rect x="28" y="37" width="8" height="8" rx="2" fill="#fed7aa" />
+    <circle cx="32" cy="27" r="13" fill="#ffedd5" />
+    <path d="M 19 24 C 19 14 26 11 35 11 C 43 11 45 15 45 24 C 44 19 36 15 28 16 C 22 17 20 21 19 24 Z" fill="#0f172a" />
+    <path d="M 24 23 Q 27 21 30 23" fill="none" stroke="#0f172a" strokeWidth="1.2" strokeLinecap="round" />
+    <path d="M 34 23 Q 37 21 40 23" fill="none" stroke="#0f172a" strokeWidth="1.2" strokeLinecap="round" />
+    <circle cx="27" cy="26.5" r="1.3" fill="#0f172a" />
+    <circle cx="37" cy="26.5" r="1.3" fill="#0f172a" />
+    <path d="M 28 32.5 Q 32 36 36 32.5" fill="none" stroke="#b45309" strokeWidth="1.4" strokeLinecap="round" />
+  </svg>
 );
 
-// ACCOUNTS: Female Accounts Manager with Gold Coins
+// 04. ACCOUNTS: Accounts & Finance Professional
 const AccountsAvatar: React.FC = () => (
-  <div className="w-13 h-13 sm:w-14 sm:h-14 md:w-15 md:h-15 rounded-2xl bg-gradient-to-tr from-purple-400 to-indigo-600 p-0.5 shadow-md flex items-center justify-center shrink-0">
-    <div className="w-full h-full bg-purple-50 rounded-2xl flex flex-col items-center justify-end overflow-hidden relative">
-      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-amber-200 border border-amber-300 relative -mb-1 z-10">
-        <div className="w-7.5 sm:w-8.5 h-4 sm:h-5 rounded-t-full bg-slate-900 -ml-0.5" />
-      </div>
-      <div className="w-11 sm:w-13 h-5.5 sm:h-6.5 bg-purple-700 rounded-t-xl flex items-center justify-center relative">
-        <div className="w-2.5 sm:w-3 h-4 sm:h-5 bg-white -mt-1.5 sm:-mt-2" />
-      </div>
-      <div className="absolute bottom-0 right-1 flex items-end -space-x-1">
-        <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-amber-400 border border-amber-600 shadow-xs" />
-        <div className="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-yellow-400 border border-yellow-600 shadow-xs" />
-      </div>
-    </div>
-  </div>
+  <svg viewBox="0 0 64 64" className="w-12 h-12 sm:w-14 sm:h-14 shrink-0 drop-shadow-sm">
+    <defs>
+      <linearGradient id="accBorder" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#c084fc" />
+        <stop offset="100%" stopColor="#7e22ce" />
+      </linearGradient>
+      <linearGradient id="accBg" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#faf5ff" />
+        <stop offset="100%" stopColor="#f3e8ff" />
+      </linearGradient>
+      <linearGradient id="accSuit" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#7e22ce" />
+        <stop offset="100%" stopColor="#581c87" />
+      </linearGradient>
+    </defs>
+    <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#accBg)" stroke="url(#accBorder)" strokeWidth="2.5" />
+    <path d="M 12 59 C 12 47 22 43 32 43 C 42 43 52 47 52 59 Z" fill="url(#accSuit)" />
+    <polygon points="32,43 27,51 37,51" fill="#ffffff" />
+    <rect x="28" y="37" width="8" height="8" rx="2" fill="#fed7aa" />
+    <circle cx="32" cy="27" r="13" fill="#ffedd5" />
+    <path d="M 18 28 C 18 15 25 12 32 12 C 39 12 46 15 46 28 C 44 19 37 16 32 16 C 26 16 20 19 18 28 Z" fill="#1e1b4b" />
+    <circle cx="19" cy="28" r="3" fill="#1e1b4b" />
+    <circle cx="45" cy="28" r="3" fill="#1e1b4b" />
+    <circle cx="27" cy="26.5" r="1.2" fill="#0f172a" />
+    <circle cx="37" cy="26.5" r="1.2" fill="#0f172a" />
+    <path d="M 28.5 32.5 Q 32 35.5 35.5 32.5" fill="none" stroke="#9333ea" strokeWidth="1.3" strokeLinecap="round" />
+    <g transform="translate(42, 42)">
+      <circle cx="8" cy="8" r="7" fill="#fbbf24" stroke="#d97706" strokeWidth="1.2" />
+      <text x="8" y="11.5" textAnchor="middle" fontSize="8" fontWeight="900" fill="#78350f" fontFamily="sans-serif">₹</text>
+    </g>
+  </svg>
 );
 
-// FILING: Filing & Archiving Specialist with Folder
+// 05. FILING: Filing & Archiving Specialist
 const FilingAvatar: React.FC = () => (
-  <div className="w-13 h-13 sm:w-14 sm:h-14 md:w-15 md:h-15 rounded-2xl bg-gradient-to-tr from-indigo-500 to-blue-700 p-0.5 shadow-md flex items-center justify-center shrink-0">
-    <div className="w-full h-full bg-indigo-50 rounded-2xl flex flex-col items-center justify-end overflow-hidden relative">
-      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-amber-200 border border-amber-300 relative -mb-1 z-10">
-        <div className="w-7 h-3.5 sm:w-8 sm:h-4 rounded-t-full bg-slate-900" />
-      </div>
-      <div className="w-11 sm:w-13 h-5.5 sm:h-6.5 bg-indigo-700 rounded-t-xl flex items-center justify-center relative">
-        <div className="w-2.5 sm:w-3 h-4 sm:h-5 bg-white -mt-1.5 sm:-mt-2" />
-        <div className="w-1.5 h-3.5 sm:h-4 bg-indigo-950 -mt-1" />
-      </div>
-      <div className="absolute bottom-0 right-1 flex items-center justify-center">
-        <div className="w-3 h-2.5 sm:w-3.5 sm:h-3 bg-amber-400 border border-amber-600 rounded-xs shadow-xs flex items-center justify-center">
-          <div className="w-1.5 h-0.5 bg-amber-800 rounded-xs" />
-        </div>
-      </div>
-    </div>
-  </div>
+  <svg viewBox="0 0 64 64" className="w-12 h-12 sm:w-14 sm:h-14 shrink-0 drop-shadow-sm">
+    <defs>
+      <linearGradient id="fileBorder" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#818cf8" />
+        <stop offset="100%" stopColor="#4338ca" />
+      </linearGradient>
+      <linearGradient id="fileBg" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#eef2ff" />
+        <stop offset="100%" stopColor="#e0e7ff" />
+      </linearGradient>
+      <linearGradient id="fileSuit" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#4338ca" />
+        <stop offset="100%" stopColor="#312e81" />
+      </linearGradient>
+    </defs>
+    <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#fileBg)" stroke="url(#fileBorder)" strokeWidth="2.5" />
+    <path d="M 12 59 C 12 47 22 43 32 43 C 42 43 52 47 52 59 Z" fill="url(#fileSuit)" />
+    <polygon points="32,43 27,51 37,51" fill="#ffffff" />
+    <polygon points="32,45 30,55 32,59 34,55" fill="#1e1b4b" />
+    <rect x="28" y="37" width="8" height="8" rx="2" fill="#fed7aa" />
+    <circle cx="32" cy="27" r="13" fill="#ffedd5" />
+    <path d="M 19 25 C 19 15 25 12 32 12 C 40 12 45 15 45 25 C 44 20 38 16 32 16 C 24 16 20 20 19 25 Z" fill="#0f172a" />
+    <circle cx="27" cy="26.5" r="1.2" fill="#0f172a" />
+    <circle cx="37" cy="26.5" r="1.2" fill="#0f172a" />
+    <path d="M 28.5 32.5 Q 32 35.5 35.5 32.5" fill="none" stroke="#4338ca" strokeWidth="1.3" strokeLinecap="round" />
+    <g transform="translate(42, 42)">
+      <circle cx="8" cy="8" r="7" fill="#10b981" stroke="#059669" strokeWidth="1.2" />
+      <path d="M 5 8 L 7 10 L 11 5.5" fill="none" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </g>
+  </svg>
 );
 
 /* ========================================================================= */
@@ -834,7 +915,7 @@ export const ProcessFlowView: React.FC = () => {
       {/* ========================================================================= */}
       {/* SECTION 2: BILL PASSING APPROVAL FLOW (IAD -> AO -> JMD -> ACCOUNTS -> FILING) */}
       {/* ========================================================================= */}
-      <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-7 shadow-xs space-y-5 sm:space-y-6">
+      <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-7 shadow-xs space-y-4 sm:space-y-5 overflow-hidden">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
           <div className="flex items-center gap-2">
             <span className="w-1.5 h-4 bg-emerald-500 rounded-full inline-block" />
@@ -847,127 +928,117 @@ export const ProcessFlowView: React.FC = () => {
           </span>
         </div>
 
-        {/* 5 Cards Grid: 1 col mobile, 2 cols on small screens, 5 cols on Desktop */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 sm:gap-4">
-          {/* Card 1: IAD */}
-          <div className="relative group flex flex-col">
-            <div className="bg-sky-50/40 hover:bg-sky-50/70 border border-sky-200/80 rounded-2xl p-4 flex flex-row items-center gap-3.5 shadow-2xs hover:shadow-xs transition h-full">
-              <IadAvatar />
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-black text-sky-700 font-mono bg-sky-100 px-1.5 py-0.5 rounded-md">01</span>
-                  <h3 className="font-black text-slate-900 text-sm sm:text-base tracking-tight">IAD</h3>
+        {/* Responsive Flow Container: Seamless horizontal 5-stage sequence across Mobile, Tablet & Desktop */}
+        <div className="overflow-x-auto pb-3 pt-2 -mx-1 px-1">
+          <div className="grid grid-cols-5 gap-2.5 sm:gap-3 lg:gap-3.5 xl:gap-4 min-w-[760px] xl:min-w-0">
+            {/* Card 1: IAD */}
+            <div className="relative group flex flex-col">
+              <div className="bg-sky-50/40 hover:bg-sky-50/70 border border-sky-200/80 hover:border-sky-400 rounded-2xl p-3.5 sm:p-4 flex flex-row items-center gap-3 shadow-2xs hover:shadow-xs transition h-full">
+                <IadAvatar />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-black text-sky-700 font-mono bg-sky-100 px-1.5 py-0.5 rounded-md">01</span>
+                    <h3 className="font-black text-slate-900 text-sm sm:text-base tracking-tight">IAD</h3>
+                  </div>
+                  <p className="text-xs text-slate-600 font-semibold leading-snug mt-1">
+                    Internal Audit Department
+                  </p>
                 </div>
-                <p className="text-xs text-slate-600 font-semibold leading-snug mt-1">
-                  Internal Audit Department
-                </p>
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white text-sky-600 border border-sky-200/80 flex items-center justify-center shrink-0 shadow-2xs">
+                  <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                </div>
               </div>
-              <div className="w-8 h-8 rounded-xl bg-white text-sky-600 border border-sky-200/80 flex items-center justify-center shrink-0 shadow-2xs hidden sm:flex">
-                <FileText className="w-4 h-4" />
+              {/* Horizontal Connector Arrow */}
+              <div className="flex absolute top-1/2 -right-2.5 sm:-right-3 -translate-y-1/2 z-10 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-sky-700 shadow-xs pointer-events-none">
+                <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.5]" />
               </div>
             </div>
-            {/* Tablet & Desktop Connector Arrow */}
-            <div className="hidden lg:flex absolute top-1/2 -right-2.5 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-teal-700 shadow-2xs pointer-events-none">
-              <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
-            </div>
-            {/* Mobile Downward Connector */}
-            <div className="flex sm:hidden justify-center my-0.5 text-sky-400">
-              <ArrowDown className="w-3.5 h-3.5 stroke-[2.5]" />
-            </div>
-          </div>
 
-          {/* Card 2: AO */}
-          <div className="relative group flex flex-col">
-            <div className="bg-emerald-50/40 hover:bg-emerald-50/70 border border-emerald-200/80 rounded-2xl p-4 flex flex-row items-center gap-3.5 shadow-2xs hover:shadow-xs transition h-full">
-              <AoAvatar />
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-black text-emerald-700 font-mono bg-emerald-100 px-1.5 py-0.5 rounded-md">02</span>
-                  <h3 className="font-black text-slate-900 text-sm sm:text-base tracking-tight">AO</h3>
+            {/* Card 2: AO */}
+            <div className="relative group flex flex-col">
+              <div className="bg-emerald-50/40 hover:bg-emerald-50/70 border border-emerald-200/80 hover:border-emerald-400 rounded-2xl p-3.5 sm:p-4 flex flex-row items-center gap-3 shadow-2xs hover:shadow-xs transition h-full">
+                <AoAvatar />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-black text-emerald-700 font-mono bg-emerald-100 px-1.5 py-0.5 rounded-md">02</span>
+                    <h3 className="font-black text-slate-900 text-sm sm:text-base tracking-tight">AO</h3>
+                  </div>
+                  <p className="text-xs text-slate-600 font-semibold leading-snug mt-1">
+                    Administrative Officer
+                  </p>
                 </div>
-                <p className="text-xs text-slate-600 font-semibold leading-snug mt-1">
-                  Administrative Officer
-                </p>
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white text-emerald-600 border border-emerald-200/80 flex items-center justify-center shrink-0 shadow-2xs">
+                  <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                </div>
               </div>
-              <div className="w-8 h-8 rounded-xl bg-white text-emerald-600 border border-emerald-200/80 flex items-center justify-center shrink-0 shadow-2xs hidden sm:flex">
-                <FileText className="w-4 h-4" />
+              {/* Horizontal Connector Arrow */}
+              <div className="flex absolute top-1/2 -right-2.5 sm:-right-3 -translate-y-1/2 z-10 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-emerald-700 shadow-xs pointer-events-none">
+                <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.5]" />
               </div>
             </div>
-            <div className="hidden lg:flex absolute top-1/2 -right-2.5 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-teal-700 shadow-2xs pointer-events-none">
-              <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
-            </div>
-            <div className="flex sm:hidden justify-center my-0.5 text-emerald-400">
-              <ArrowDown className="w-3.5 h-3.5 stroke-[2.5]" />
-            </div>
-          </div>
 
-          {/* Card 3: JMD */}
-          <div className="relative group flex flex-col">
-            <div className="bg-amber-50/40 hover:bg-amber-50/70 border border-amber-200/80 rounded-2xl p-4 flex flex-row items-center gap-3.5 shadow-2xs hover:shadow-xs transition h-full">
-              <JmdAvatar />
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-black text-amber-700 font-mono bg-amber-100 px-1.5 py-0.5 rounded-md">03</span>
-                  <h3 className="font-black text-slate-900 text-sm sm:text-base tracking-tight">JMD</h3>
+            {/* Card 3: JMD */}
+            <div className="relative group flex flex-col">
+              <div className="bg-amber-50/40 hover:bg-amber-50/70 border border-amber-200/80 hover:border-amber-400 rounded-2xl p-3.5 sm:p-4 flex flex-row items-center gap-3 shadow-2xs hover:shadow-xs transition h-full">
+                <JmdAvatar />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-black text-amber-700 font-mono bg-amber-100 px-1.5 py-0.5 rounded-md">03</span>
+                    <h3 className="font-black text-slate-900 text-sm sm:text-base tracking-tight">JMD</h3>
+                  </div>
+                  <p className="text-xs text-slate-600 font-semibold leading-snug mt-1">
+                    Joint Managing Director
+                  </p>
                 </div>
-                <p className="text-xs text-slate-600 font-semibold leading-snug mt-1">
-                  Joint Managing Director
-                </p>
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white text-amber-600 border border-amber-200/80 flex items-center justify-center shrink-0 shadow-2xs">
+                  <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                </div>
               </div>
-              <div className="w-8 h-8 rounded-xl bg-white text-amber-600 border border-amber-200/80 flex items-center justify-center shrink-0 shadow-2xs hidden sm:flex">
-                <FileText className="w-4 h-4" />
+              {/* Horizontal Connector Arrow */}
+              <div className="flex absolute top-1/2 -right-2.5 sm:-right-3 -translate-y-1/2 z-10 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-amber-700 shadow-xs pointer-events-none">
+                <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.5]" />
               </div>
             </div>
-            <div className="hidden lg:flex absolute top-1/2 -right-2.5 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-teal-700 shadow-2xs pointer-events-none">
-              <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
-            </div>
-            <div className="flex sm:hidden justify-center my-0.5 text-amber-400">
-              <ArrowDown className="w-3.5 h-3.5 stroke-[2.5]" />
-            </div>
-          </div>
 
-          {/* Card 4: ACCOUNTS */}
-          <div className="relative group flex flex-col">
-            <div className="bg-purple-50/40 hover:bg-purple-50/70 border border-purple-200/80 rounded-2xl p-4 flex flex-row items-center gap-3.5 shadow-2xs hover:shadow-xs transition h-full">
-              <AccountsAvatar />
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-black text-purple-700 font-mono bg-purple-100 px-1.5 py-0.5 rounded-md">04</span>
-                  <h3 className="font-black text-slate-900 text-sm sm:text-base tracking-tight">ACCOUNTS</h3>
+            {/* Card 4: ACCOUNTS */}
+            <div className="relative group flex flex-col">
+              <div className="bg-purple-50/40 hover:bg-purple-50/70 border border-purple-200/80 hover:border-purple-400 rounded-2xl p-3.5 sm:p-4 flex flex-row items-center gap-3 shadow-2xs hover:shadow-xs transition h-full">
+                <AccountsAvatar />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-black text-purple-700 font-mono bg-purple-100 px-1.5 py-0.5 rounded-md">04</span>
+                    <h3 className="font-black text-slate-900 text-sm sm:text-base tracking-tight">ACCOUNTS</h3>
+                  </div>
+                  <p className="text-xs text-slate-600 font-semibold leading-snug mt-1">
+                    Processing &amp; Payment
+                  </p>
                 </div>
-                <p className="text-xs text-slate-600 font-semibold leading-snug mt-1">
-                  Processing &amp; Payment
-                </p>
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white text-purple-600 border border-purple-200/80 flex items-center justify-center shrink-0 shadow-2xs">
+                  <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                </div>
               </div>
-              <div className="w-8 h-8 rounded-xl bg-white text-purple-600 border border-purple-200/80 flex items-center justify-center shrink-0 shadow-2xs hidden sm:flex">
-                <FileText className="w-4 h-4" />
+              {/* Horizontal Connector Arrow */}
+              <div className="flex absolute top-1/2 -right-2.5 sm:-right-3 -translate-y-1/2 z-10 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-purple-700 shadow-xs pointer-events-none">
+                <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.5]" />
               </div>
             </div>
-            {/* Tablet & Desktop Connector Arrow */}
-            <div className="hidden lg:flex absolute top-1/2 -right-2.5 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-teal-700 shadow-2xs pointer-events-none">
-              <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
-            </div>
-            {/* Mobile Downward Connector */}
-            <div className="flex sm:hidden justify-center my-0.5 text-purple-400">
-              <ArrowDown className="w-3.5 h-3.5 stroke-[2.5]" />
-            </div>
-          </div>
 
-          {/* Card 5: FILING */}
-          <div className="relative group flex flex-col">
-            <div className="bg-indigo-50/40 hover:bg-indigo-50/70 border border-indigo-200/80 rounded-2xl p-4 flex flex-row items-center gap-3.5 shadow-2xs hover:shadow-xs transition h-full">
-              <FilingAvatar />
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-black text-indigo-700 font-mono bg-indigo-100 px-1.5 py-0.5 rounded-md">05</span>
-                  <h3 className="font-black text-slate-900 text-sm sm:text-base tracking-tight">FILING</h3>
+            {/* Card 5: FILING */}
+            <div className="relative group flex flex-col">
+              <div className="bg-indigo-50/40 hover:bg-indigo-50/70 border border-indigo-200/80 hover:border-indigo-400 rounded-2xl p-3.5 sm:p-4 flex flex-row items-center gap-3 shadow-2xs hover:shadow-xs transition h-full">
+                <FilingAvatar />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-black text-indigo-700 font-mono bg-indigo-100 px-1.5 py-0.5 rounded-md">05</span>
+                    <h3 className="font-black text-slate-900 text-sm sm:text-base tracking-tight">FILING</h3>
+                  </div>
+                  <p className="text-xs text-slate-600 font-semibold leading-snug mt-1">
+                    Document Archiving
+                  </p>
                 </div>
-                <p className="text-xs text-slate-600 font-semibold leading-snug mt-1">
-                  Document Archiving
-                </p>
-              </div>
-              <div className="w-8 h-8 rounded-xl bg-white text-indigo-600 border border-indigo-200/80 flex items-center justify-center shrink-0 shadow-2xs hidden sm:flex">
-                <Archive className="w-4 h-4" />
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white text-indigo-600 border border-indigo-200/80 flex items-center justify-center shrink-0 shadow-2xs">
+                  <Archive className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                </div>
               </div>
             </div>
           </div>
