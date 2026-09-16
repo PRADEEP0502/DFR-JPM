@@ -354,6 +354,70 @@ const BillPassingIllustration: React.FC = () => (
   </svg>
 );
 
+// 08. FILING: 3D File Folder / Document Binder with Checkmark Badge
+const FilingIllustration: React.FC = () => (
+  <svg viewBox="0 0 100 110" className="w-20 h-22 drop-shadow-md">
+    <defs>
+      <linearGradient id="folderBack" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#6366f1" />
+        <stop offset="100%" stopColor="#4338ca" />
+      </linearGradient>
+      <linearGradient id="folderFront" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#818cf8" />
+        <stop offset="100%" stopColor="#4f46e5" />
+      </linearGradient>
+      <linearGradient id="filingCheck" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#10b981" />
+        <stop offset="100%" stopColor="#047857" />
+      </linearGradient>
+    </defs>
+    {/* Folder Back with Tab */}
+    <path
+      d="M 16 28 C 16 23 20 19 25 19 L 45 19 L 52 26 L 81 26 C 86 26 90 30 90 35 L 90 85 C 90 90 86 94 81 94 L 25 94 C 20 94 16 90 16 85 Z"
+      fill="url(#folderBack)"
+    />
+    {/* Stored Document Sheet 1 */}
+    <rect x="24" y="24" width="56" height="58" rx="4" fill="#ffffff" stroke="#cbd5e1" strokeWidth="1" />
+    <rect x="30" y="30" width="24" height="3" rx="1.5" fill="#818cf8" />
+    <rect x="30" y="37" width="44" height="2.5" rx="1.2" fill="#e2e8f0" />
+    <rect x="30" y="43" width="40" height="2.5" rx="1.2" fill="#e2e8f0" />
+    <rect x="30" y="49" width="36" height="2.5" rx="1.2" fill="#e2e8f0" />
+
+    {/* Stored Document Sheet 2 */}
+    <g transform="rotate(3 50 60)">
+      <rect x="25" y="28" width="56" height="56" rx="4" fill="#f8fafc" stroke="#94a3b8" strokeWidth="1" />
+      <rect x="31" y="34" width="20" height="3" rx="1.5" fill="#f59e0b" />
+      <rect x="31" y="41" width="44" height="2.5" rx="1.2" fill="#cbd5e1" />
+      <rect x="31" y="47" width="38" height="2.5" rx="1.2" fill="#cbd5e1" />
+    </g>
+
+    {/* Folder Front Flap */}
+    <path
+      d="M 12 46 C 12 42 15 39 19 39 L 85 39 C 89 39 92 42 92 46 L 88 88 C 88 92 84 96 80 96 L 22 96 C 18 96 14 92 14 88 Z"
+      fill="url(#folderFront)"
+      opacity="0.96"
+    />
+    {/* Folder Label */}
+    <rect x="30" y="58" width="44" height="14" rx="3" fill="#ffffff" stroke="#c7d2fe" strokeWidth="1" />
+    <text x="52" y="68" textAnchor="middle" fontSize="7" fontWeight="900" fill="#4338ca" fontFamily="sans-serif">
+      FILED
+    </text>
+
+    {/* Green Checkmark Badge */}
+    <g transform="translate(58, 64)">
+      <circle cx="16" cy="16" r="15" fill="url(#filingCheck)" stroke="#ffffff" strokeWidth="2.5" />
+      <path
+        d="M 10 16 L 14 21 L 22 11"
+        fill="none"
+        stroke="#ffffff"
+        strokeWidth="3.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </g>
+  </svg>
+);
+
 /* ========================================================================= */
 /* 4 DETAILED 3D CHARACTER AVATARS FOR APPROVAL FLOW                         */
 /* ========================================================================= */
@@ -495,12 +559,12 @@ export const ProcessFlowView: React.FC = () => {
       </div>
 
       {/* ========================================================================= */}
-      {/* SECTION 1: MAIN PURCHASE & BILL PROCESS FLOW (01 TO 07)                   */}
+      {/* SECTION 1: MAIN PURCHASE & BILL PROCESS FLOW (01 TO 08)                   */}
       {/* ========================================================================= */}
       <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-7 shadow-xs overflow-hidden">
-        {/* Responsive Flow Container: Seamless horizontal 7-stage sequence with connecting arrows across Tablet & Desktop */}
+        {/* Responsive Flow Container: Seamless horizontal 8-stage sequence with connecting arrows across Tablet & Desktop */}
         <div className="overflow-x-auto pb-3 pt-3.5 -mx-1 px-1">
-          <div className="grid grid-cols-7 gap-2.5 sm:gap-3 lg:gap-3.5 xl:gap-4 min-w-[780px] xl:min-w-0">
+          <div className="grid grid-cols-8 gap-2.5 sm:gap-3 lg:gap-3.5 xl:gap-4 min-w-[880px] xl:min-w-0">
             {/* STEP 01: PRN */}
             <div className="relative group flex flex-col">
               <div className="bg-sky-50/40 hover:bg-sky-50/70 border border-sky-200/80 hover:border-sky-400 rounded-2xl p-3.5 sm:p-4 pt-6 flex flex-col items-center text-center shadow-2xs hover:shadow-md transition-all duration-200 h-full">
@@ -710,6 +774,37 @@ export const ProcessFlowView: React.FC = () => {
                   <span className="text-emerald-700 font-black">Accounts → Payment</span>
                 </div>
               </div>
+
+              {/* Horizontal Connector Arrow */}
+              <div className="flex absolute top-1/2 -right-2.5 sm:-right-3 -translate-y-1/2 z-10 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white border border-slate-200 items-center justify-center text-amber-700 shadow-xs pointer-events-none">
+                <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.5]" />
+              </div>
+            </div>
+
+            {/* STEP 08: FILING */}
+            <div className="relative group flex flex-col">
+              <div className="bg-indigo-50/40 hover:bg-indigo-50/70 border border-indigo-200/80 hover:border-indigo-400 rounded-2xl p-3.5 sm:p-4 pt-6 flex flex-col items-center text-center shadow-2xs hover:shadow-md transition-all duration-200 h-full">
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-indigo-600 text-white font-black text-xs flex items-center justify-center shadow-xs border-2 border-white ring-2 ring-indigo-100 font-mono">
+                  08
+                </div>
+
+                <h3 className="font-black text-indigo-950 text-base tracking-tight mt-1">
+                  FILING
+                </h3>
+                <p className="text-[11px] text-slate-600 font-bold mt-0.5 leading-tight">
+                  Document &amp; Voucher Filing
+                </p>
+
+                <div className="my-2 sm:my-3 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <FilingIllustration />
+                </div>
+
+                <div className="w-full bg-white/95 border border-indigo-100 text-slate-700 text-[11px] font-bold rounded-xl py-2 px-2 mt-auto shadow-2xs leading-snug">
+                  Archived by
+                  <br />
+                  <span className="text-indigo-950 font-black">Accounts Department</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -880,7 +975,7 @@ export const ProcessFlowView: React.FC = () => {
                 <p className="text-xs sm:text-sm text-slate-700 font-semibold leading-relaxed">
                   Your current DFR workflow (
                   <strong className="text-slate-900">
-                    Bill Inward &rarr; IAD &rarr; AO &rarr; JMD &rarr; Accounts &rarr; Tally
+                    Bill Inward &rarr; IAD &rarr; AO &rarr; JMD &rarr; Accounts &rarr; Tally &rarr; Filing
                   </strong>
                   ) remains unchanged.
                 </p>
@@ -911,17 +1006,17 @@ export const ProcessFlowView: React.FC = () => {
 
           {/* 4 Stat Tiles Grid: Clean 2x2 Grid with Ample Room */}
           <div className="grid grid-cols-2 gap-3 pt-1 flex-1">
-            {/* Tile 1: 7 Main Stages */}
+            {/* Tile 1: 8 Main Stages */}
             <div className="bg-sky-50/50 hover:bg-sky-50/80 border border-sky-200/80 rounded-2xl p-3.5 sm:p-4 text-center flex flex-col items-center justify-center shadow-2xs transition">
               <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center mb-1.5 shadow-2xs">
                 <FileSpreadsheet className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
               </div>
-              <p className="text-2xl sm:text-3xl font-black text-slate-900 font-mono tracking-tight">7</p>
+              <p className="text-2xl sm:text-3xl font-black text-slate-900 font-mono tracking-tight">8</p>
               <p className="text-xs sm:text-sm font-black text-slate-800 uppercase tracking-tight mt-0.5">
                 Main Stages
               </p>
               <p className="text-[11px] text-slate-500 font-semibold mt-0.5">
-                From PRN to Payment
+                From PRN to Filing
               </p>
             </div>
 
