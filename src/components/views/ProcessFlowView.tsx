@@ -980,15 +980,6 @@ export const ProcessFlowView: React.FC = () => {
                   ) remains unchanged.
                 </p>
               </div>
-
-              <div className="flex items-start gap-3">
-                <div className="w-5 h-5 rounded-full bg-sky-600 text-white flex items-center justify-center text-xs shrink-0 mt-0.5 shadow-2xs">
-                  <Check className="w-3 h-3 stroke-[3]" />
-                </div>
-                <p className="text-xs sm:text-sm text-slate-700 font-semibold leading-relaxed">
-                  For any process-related queries, contact the Purchase Department.
-                </p>
-              </div>
             </div>
           </div>
         </div>
