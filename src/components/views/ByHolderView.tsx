@@ -22,6 +22,7 @@ interface ByHolderViewProps {
 export const ByHolderView: React.FC<ByHolderViewProps> = ({
   bills,
   users,
+  onSelectTab,
   onSelectHolder,
 }) => {
   const activeBills = useMemo(() => bills.filter(b => !isTallyExported(b)), [bills]);
