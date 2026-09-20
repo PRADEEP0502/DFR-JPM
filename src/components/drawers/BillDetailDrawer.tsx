@@ -168,7 +168,7 @@ export const BillDetailDrawer: React.FC<BillDetailDrawerProps> = ({
               <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">
                 Total Bill Amount
               </span>
-              <p className="text-xl sm:text-2xl font-black text-slate-900 font-mono tracking-tight">
+              <p className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
                 ₹{bill.amount.toLocaleString('en-IN')}
               </p>
             </div>

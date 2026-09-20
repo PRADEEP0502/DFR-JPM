@@ -876,7 +876,7 @@ export const TallyTrackerView: React.FC<TallyTrackerViewProps> = ({
                             </span>
                           </div>
                           <p className="text-[11px] text-slate-500 mt-0.5">
-                            Total Value: <strong className="text-slate-800 font-mono">₹{group.totalAmount.toLocaleString('en-IN')}</strong>
+                            Total Value: <strong className="text-slate-800 font-bold">₹{group.totalAmount.toLocaleString('en-IN')}</strong>
                           </p>
                         </div>
                       </div>
@@ -1152,7 +1152,7 @@ export const TallyTrackerView: React.FC<TallyTrackerViewProps> = ({
                       </span>
                     </div>
                     <p className="text-xs text-slate-500 mt-0.5">
-                      Total Completed Value: <strong className="text-emerald-700 font-mono">₹{activeMonthData.totalAmount.toLocaleString('en-IN')}</strong> (₹{(activeMonthData.totalAmount / 100000).toFixed(2)}L)
+                      Total Completed Value: <strong className="text-emerald-700 font-bold">₹{activeMonthData.totalAmount.toLocaleString('en-IN')}</strong> (₹{(activeMonthData.totalAmount / 100000).toFixed(2)}L)
                     </p>
                   </div>
                 </div>
