@@ -10,9 +10,10 @@ export interface Pie3DSlice {
 interface PieChart3DProps {
   data: Pie3DSlice[];
   totalBills: number;
+  onSliceClick?: (slice: Pie3DSlice, index: number) => void;
 }
 
-export const PieChart3D: React.FC<PieChart3DProps> = ({ data, totalBills }) => {
+export const PieChart3D: React.FC<PieChart3DProps> = ({ data, totalBills, onSliceClick }) => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   const total = data.reduce((sum, d) => sum + d.value, 0);
@@ -129,7 +130,8 @@ export const PieChart3D: React.FC<PieChart3DProps> = ({ data, totalBills }) => {
                   key={`top-${slice.index}`}
                   onMouseEnter={() => setHoveredIndex(slice.index)}
                   onMouseLeave={() => setHoveredIndex(null)}
-                  className="cursor-pointer transition-transform duration-200"
+                  onClick={() => onSliceClick?.(slice, slice.index)}
+                  className={`transition-transform duration-200 ${onSliceClick ? 'cursor-pointer active:opacity-80' : 'cursor-default'}`}
                   transform={`translate(${shiftX}, ${shiftY})`}
                 >
                   <path
@@ -188,7 +190,10 @@ export const PieChart3D: React.FC<PieChart3DProps> = ({ data, totalBills }) => {
             key={d.name}
             onMouseEnter={() => setHoveredIndex(idx)}
             onMouseLeave={() => setHoveredIndex(null)}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full cursor-pointer border transition ${
+            onClick={() => onSliceClick?.(d, idx)}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition ${
+              onSliceClick ? 'cursor-pointer' : 'cursor-default'
+            } ${
               hoveredIndex === idx
                 ? 'bg-slate-100 border-slate-300 scale-105 shadow-2xs'
                 : 'bg-white border-slate-200 text-slate-700'

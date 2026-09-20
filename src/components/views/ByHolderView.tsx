@@ -146,7 +146,10 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
             </p>
           </div>
 
-          <div className="bg-slate-800/80 backdrop-blur border border-slate-700/80 px-3.5 sm:px-4 py-2.5 rounded-2xl shadow-xs">
+          <div
+            onClick={() => onSelectTab?.('register')}
+            className="bg-slate-800/80 hover:bg-slate-800 backdrop-blur border border-slate-700/80 hover:border-sky-500/50 px-3.5 sm:px-4 py-2.5 rounded-2xl shadow-xs cursor-pointer transition active:scale-95"
+          >
             <span className="text-[10px] text-sky-400 uppercase font-extrabold tracking-wider block">
               Pending Bills
             </span>
@@ -155,7 +158,10 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
             </p>
           </div>
 
-          <div className="bg-slate-800/80 backdrop-blur border border-slate-700/80 px-3.5 sm:px-4 py-2.5 rounded-2xl shadow-xs">
+          <div
+            onClick={() => onSelectTab?.('register')}
+            className="bg-slate-800/80 hover:bg-slate-800 backdrop-blur border border-slate-700/80 hover:border-emerald-500/50 px-3.5 sm:px-4 py-2.5 rounded-2xl shadow-xs cursor-pointer transition active:scale-95"
+          >
             <span className="text-[10px] text-emerald-400 uppercase font-extrabold tracking-wider block">
               Exposure Value
             </span>
@@ -164,7 +170,10 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
             </p>
           </div>
 
-          <div className="bg-slate-800/80 backdrop-blur border border-slate-700/80 px-3.5 sm:px-4 py-2.5 rounded-2xl shadow-xs">
+          <div
+            onClick={() => onSelectTab?.('critical')}
+            className="bg-slate-800/80 hover:bg-slate-800 backdrop-blur border border-slate-700/80 hover:border-rose-500/50 px-3.5 sm:px-4 py-2.5 rounded-2xl shadow-xs cursor-pointer transition active:scale-95"
+          >
             <span className="text-[10px] text-rose-400 uppercase font-extrabold tracking-wider block">
               Critical (A-10)
             </span>

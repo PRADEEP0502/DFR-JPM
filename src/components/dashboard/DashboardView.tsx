@@ -45,6 +45,8 @@ interface DashboardViewProps {
   onSelectBill: (bill: BillRegisterItem) => void;
   onAcknowledgeAlert: (alertId: number) => void;
   onSelectHolder?: (holderId: string) => void;
+  onSelectStage?: (stage: string) => void;
+  onSelectBand?: (band: string) => void;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
@@ -54,6 +56,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onSelectTab,
   onSelectBill,
   onSelectHolder,
+  onSelectStage,
+  onSelectBand,
 }) => {
   // Filter truly active pending bills before Tally/Accounts export
   const activeBills = useMemo(() => bills.filter(b => !isTallyExported(b)), [bills]);
@@ -210,7 +214,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* Row 1: KPI Metric Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5">
         {/* Total Pending Bills */}
-        <Card3D glowColor="rgba(2, 132, 199, 0.2)" className="p-3.5 sm:p-5">
+        <Card3D
+          glowColor="rgba(2, 132, 199, 0.2)"
+          onClick={() => onSelectTab('register')}
+          className="p-3.5 sm:p-5 transition cursor-pointer hover:border-sky-300"
+        >
           <div className="flex items-center justify-between">
             <span className="text-xs font-extrabold uppercase tracking-wider text-slate-500">
               Total Pending
@@ -229,7 +237,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </Card3D>
 
         {/* Total Pending Amount */}
-        <Card3D glowColor="rgba(16, 185, 129, 0.2)" className="p-5">
+        <Card3D
+          glowColor="rgba(16, 185, 129, 0.2)"
+          onClick={() => onSelectTab('register')}
+          className="p-5 transition cursor-pointer hover:border-emerald-300"
+        >
           <div className="flex items-center justify-between">
             <span className="text-xs font-extrabold uppercase tracking-wider text-slate-500">
               Pending Amount
@@ -247,7 +259,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </Card3D>
 
         {/* Normal (0-2d) */}
-        <Card3D glowColor="rgba(16, 185, 129, 0.2)" className="p-5">
+        <Card3D
+          glowColor="rgba(16, 185, 129, 0.2)"
+          onClick={() => (onSelectBand ? onSelectBand('NORMAL') : onSelectTab('register'))}
+          className="p-5 transition cursor-pointer hover:border-emerald-300"
+        >
           <div className="flex items-center justify-between">
             <span className="text-xs font-extrabold uppercase tracking-wider text-emerald-700">
               Normal (0-2d)
@@ -265,7 +281,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </Card3D>
 
         {/* A-5 Warning Card */}
-        <Card3D glowColor="rgba(245, 158, 11, 0.2)" className="p-5">
+        <Card3D
+          glowColor="rgba(245, 158, 11, 0.2)"
+          onClick={() => (onSelectBand ? onSelectBand('A-5') : onSelectTab('register'))}
+          className="p-5 transition cursor-pointer hover:border-amber-300"
+        >
           <div className="flex items-center justify-between">
             <span className="text-xs font-extrabold uppercase tracking-wider text-amber-700">
               A-5 (5-9 Days)
@@ -356,7 +376,20 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
         {/* Dedicated 3D Bar Visualizer for Stages */}
         <div className="w-full pt-2">
-          <BarChart3D data={stageChartData} colorScheme="purple" />
+          <BarChart3D
+            data={stageChartData}
+            colorScheme="purple"
+            onItemClick={item => {
+              const stageKey = (Object.keys(STAGE_DISPLAY_NAMES) as ProcessStage[]).find(
+                k => STAGE_DISPLAY_NAMES[k] === item.name || k === item.name
+              );
+              if (stageKey && onSelectStage) {
+                onSelectStage(stageKey);
+              } else {
+                onSelectTab('register');
+              }
+            }}
+          />
         </div>
       </Card3D>
 
@@ -374,7 +407,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 BILLS BY HOLDER
               </h2>
               <p className="text-xs text-slate-500 font-medium mt-0.5">
-                Active bills distributed across current custodians
+                Active bills distributed across current custodians (Click to inspect)
               </p>
             </div>
           </div>
@@ -393,7 +426,22 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         {/* Dedicated 3D Bar Visualizer for Holders */}
         <div className="w-full pt-2">
           {holderChartData.length > 0 ? (
-            <BarChart3D data={holderChartData} colorScheme="blue" />
+            <BarChart3D
+              data={holderChartData}
+              colorScheme="blue"
+              onItemClick={item => {
+                const u = (users || []).find(
+                  x =>
+                    x.full_name?.toUpperCase().trim() === item.name.toUpperCase().trim() ||
+                    x.username?.toUpperCase().trim() === item.name.toUpperCase().trim()
+                );
+                if (u && onSelectHolder) {
+                  onSelectHolder(u.id);
+                } else if (onSelectHolder) {
+                  onSelectHolder(item.name);
+                }
+              }}
+            />
           ) : (
             <div className="py-12 text-center text-slate-400 text-xs font-bold">
               No active pending bills assigned to holders
@@ -419,7 +467,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="px-3 py-1 rounded-full text-xs font-black bg-red-100 text-red-700 border border-red-200">
+            <span
+              onClick={() => onSelectTab('critical')}
+              className="px-3 py-1 rounded-full text-xs font-black bg-red-100 text-red-700 border border-red-200 cursor-pointer hover:bg-red-200 transition"
+            >
               {a10Bills.length} Critical A-10 Bills
             </span>
           </div>
@@ -427,7 +478,25 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
         {/* 3D Ageing Donut Chart */}
         <div className="w-full pt-2 flex items-center justify-center">
-          <PieChart3D data={ageDistributionData} totalBills={totalPendingCount} />
+          <PieChart3D
+            data={ageDistributionData}
+            totalBills={totalPendingCount}
+            onSliceClick={slice => {
+              let band: string | null = null;
+              if (slice.name.includes('Normal')) band = 'NORMAL';
+              else if (slice.name.includes('A-3')) band = 'A-3';
+              else if (slice.name.includes('A-5')) band = 'A-5';
+              else if (slice.name.includes('A-10')) band = 'A-10';
+
+              if (band === 'A-10') {
+                onSelectTab('critical');
+              } else if (band && onSelectBand) {
+                onSelectBand(band);
+              } else {
+                onSelectTab('register');
+              }
+            }}
+          />
         </div>
       </Card3D>
 

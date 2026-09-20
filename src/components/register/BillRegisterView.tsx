@@ -64,6 +64,9 @@ interface BillRegisterViewProps {
   onSelectBill: (bill: BillRegisterItem) => void;
   initialLabelFilter?: string;
   initialHolderFilter?: string;
+  initialStageFilter?: string;
+  initialBandFilter?: string;
+  filterNonce?: number;
 }
 
 type DateFilterPreset =
@@ -84,26 +87,31 @@ export const BillRegisterView: React.FC<BillRegisterViewProps> = ({
   onSelectBill,
   initialLabelFilter,
   initialHolderFilter,
+  initialStageFilter,
+  initialBandFilter,
+  filterNonce,
 }) => {
   // Filter States
   const [holderFilter, setHolderFilter] = useState<string>(initialHolderFilter || 'ALL');
-  const [stageFilter, setStageFilter] = useState<string>('ALL');
-  const [bandFilter, setBandFilter] = useState<string>('ALL');
+  const [stageFilter, setStageFilter] = useState<string>(initialStageFilter || 'ALL');
+  const [bandFilter, setBandFilter] = useState<string>(initialBandFilter || 'ALL');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
   const [selectedLabelId, setSelectedLabelId] = useState<string>(initialLabelFilter || 'ALL');
 
   useEffect(() => {
-    if (initialLabelFilter) {
-      setSelectedLabelId(initialLabelFilter);
+    if (filterNonce !== undefined && filterNonce > 0) {
+      setHolderFilter(initialHolderFilter || 'ALL');
+      setStageFilter(initialStageFilter || 'ALL');
+      setBandFilter(initialBandFilter || 'ALL');
+      setSelectedLabelId(initialLabelFilter || 'ALL');
+    } else {
+      if (initialLabelFilter) setSelectedLabelId(initialLabelFilter);
+      if (initialHolderFilter) setHolderFilter(initialHolderFilter);
+      if (initialStageFilter) setStageFilter(initialStageFilter);
+      if (initialBandFilter) setBandFilter(initialBandFilter);
     }
-  }, [initialLabelFilter]);
-
-  useEffect(() => {
-    if (initialHolderFilter) {
-      setHolderFilter(initialHolderFilter);
-    }
-  }, [initialHolderFilter]);
+  }, [filterNonce, initialLabelFilter, initialHolderFilter, initialStageFilter, initialBandFilter]);
 
   // Date Filter States (Based strictly on BR Date / Inward Date)
   const [datePreset, setDatePreset] = useState<DateFilterPreset>('ALL');
@@ -255,10 +263,18 @@ export const BillRegisterView: React.FC<BillRegisterViewProps> = ({
 
       // 3. Current Holder Dropdown Filter (Exact 100% Parity with Leaderboard)
       if (holderFilter !== 'ALL') {
-        const u = users.find(x => x.id === holderFilter);
+        const u = users.find(
+          x =>
+            x.id === holderFilter ||
+            x.username?.toLowerCase() === holderFilter.toLowerCase() ||
+            x.full_name?.toUpperCase() === holderFilter.toUpperCase()
+        );
         if (u) {
           if (!isBillHeldByUser(b, u)) return false;
-        } else if (b.current_holder_id !== holderFilter) {
+        } else if (
+          b.current_holder_id !== holderFilter &&
+          b.current_holder_name?.toUpperCase() !== holderFilter.toUpperCase()
+        ) {
           return false;
         }
       }

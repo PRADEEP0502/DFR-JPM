@@ -244,6 +244,16 @@ export const isTallyExported = (b: BillRegisterItem): boolean => {
 export const isBillHeldByUser = (b: BillRegisterItem, user: DfrUser): boolean => {
   if (isTallyExported(b)) return false;
 
+  // Direct exact holder ID or Name match
+  if (
+    b.current_holder_id === user.id ||
+    (b.current_holder_name &&
+      (b.current_holder_name.trim().toUpperCase() === user.full_name.trim().toUpperCase() ||
+        b.current_holder_name.trim().toUpperCase() === user.username?.trim().toUpperCase()))
+  ) {
+    return true;
+  }
+
   const isIad =
     user.username?.toLowerCase() === 'iad' ||
     user.full_name?.toUpperCase() === 'IAD' ||
@@ -301,17 +311,5 @@ export const isBillHeldByUser = (b: BillRegisterItem, user: DfrUser): boolean =>
     );
   }
 
-  // Staff / Purchase Inward custodians (e.g. VANITHA, JAYASURIYA, KRITHIKA)
-  const matchesId = b.current_holder_id === user.id;
-  const matchesName = Boolean(
-    b.current_holder_name &&
-      (b.current_holder_name.trim().toUpperCase() === user.full_name.trim().toUpperCase() ||
-        b.current_holder_name.trim().toUpperCase() === user.username?.trim().toUpperCase())
-  );
-
-  return (
-    (matchesId || matchesName) &&
-    (b.current_stage === 'BILL_INWARD' ||
-      !['IAD', 'AO', 'JMD', 'ACCOUNTS', 'TALLY'].includes(b.current_stage))
-  );
+  return false;
 };

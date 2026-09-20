@@ -37,8 +37,33 @@ export const App: React.FC = () => {
     }
     return true;
   });
-  const [selectedLabelFilter, setSelectedLabelFilter] = useState<string>('ALL');
-  const [selectedHolderFilter, setSelectedHolderFilter] = useState<string>('ALL');
+
+  const [registerFilters, setRegisterFilters] = useState<{
+    holder: string;
+    stage: string;
+    band: string;
+    label: string;
+    nonce: number;
+  }>({
+    holder: 'ALL',
+    stage: 'ALL',
+    band: 'ALL',
+    label: 'ALL',
+    nonce: 0,
+  });
+
+  const navigateToRegister = (
+    filters: Partial<{ holder: string; stage: string; band: string; label: string }>
+  ) => {
+    setRegisterFilters(prev => ({
+      holder: filters.holder !== undefined ? filters.holder : 'ALL',
+      stage: filters.stage !== undefined ? filters.stage : 'ALL',
+      band: filters.band !== undefined ? filters.band : 'ALL',
+      label: filters.label !== undefined ? filters.label : 'ALL',
+      nonce: prev.nonce + 1,
+    }));
+    setCurrentTab('register');
+  };
 
   // Subscribe to service changes and trigger initial live sync
   const [, setTick] = useState(0);
@@ -216,10 +241,9 @@ export const App: React.FC = () => {
               onSelectTab={setCurrentTab}
               onSelectBill={setSelectedBill}
               onAcknowledgeAlert={handleAcknowledgeAlert}
-              onSelectHolder={holderId => {
-                setSelectedHolderFilter(holderId);
-                setCurrentTab('register');
-              }}
+              onSelectHolder={holderId => navigateToRegister({ holder: holderId })}
+              onSelectStage={stage => navigateToRegister({ stage: stage })}
+              onSelectBand={band => navigateToRegister({ band: band })}
             />
           )}
 
@@ -230,8 +254,11 @@ export const App: React.FC = () => {
               labels={labels}
               searchQuery={searchQuery}
               onSelectBill={setSelectedBill}
-              initialLabelFilter={selectedLabelFilter}
-              initialHolderFilter={selectedHolderFilter}
+              initialLabelFilter={registerFilters.label}
+              initialHolderFilter={registerFilters.holder}
+              initialStageFilter={registerFilters.stage}
+              initialBandFilter={registerFilters.band}
+              filterNonce={registerFilters.nonce}
             />
           )}
 
@@ -251,10 +278,7 @@ export const App: React.FC = () => {
               users={users}
               onSelectTab={setCurrentTab}
               onSelectBill={setSelectedBill}
-              onSelectHolder={holderId => {
-                setSelectedHolderFilter(holderId);
-                setCurrentTab('register');
-              }}
+              onSelectHolder={holderId => navigateToRegister({ holder: holderId })}
             />
           )}
 
@@ -294,10 +318,7 @@ export const App: React.FC = () => {
               labels={labels}
               bills={bills}
               onRefresh={() => setTick(t => t + 1)}
-              onSelectLabel={labelId => {
-                setSelectedLabelFilter(labelId);
-                setCurrentTab('register');
-              }}
+              onSelectLabel={labelId => navigateToRegister({ label: labelId })}
             />
           )}
 

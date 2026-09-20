@@ -8,9 +8,14 @@ export interface Bar3DItem {
 interface BarChartProps {
   data: Bar3DItem[];
   colorScheme?: 'blue' | 'purple' | 'emerald';
+  onItemClick?: (item: Bar3DItem, index: number) => void;
 }
 
-export const BarChart3D: React.FC<BarChartProps> = ({ data, colorScheme = 'purple' }) => {
+export const BarChart3D: React.FC<BarChartProps> = ({
+  data,
+  colorScheme = 'purple',
+  onItemClick,
+}) => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   if (!data || data.length === 0) return null;
@@ -145,7 +150,8 @@ export const BarChart3D: React.FC<BarChartProps> = ({ data, colorScheme = 'purpl
                 key={item.name}
                 onMouseEnter={() => setHoveredIndex(idx)}
                 onMouseLeave={() => setHoveredIndex(null)}
-                className="cursor-pointer transition-all duration-200"
+                onClick={() => onItemClick?.(item, idx)}
+                className={`transition-all duration-200 ${onItemClick ? 'cursor-pointer active:opacity-80' : 'cursor-default'}`}
               >
                 {/* Vertical Bar */}
                 <path
