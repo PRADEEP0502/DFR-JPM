@@ -710,30 +710,41 @@ class DfrService {
 
   public async syncErpBillsNow(forceFullSync: boolean = true): Promise<SyncState> {
     this.state.syncState.is_syncing = true;
+    this.state.syncState.last_error = undefined;
     this.notifyListeners();
 
     try {
-      // Execute multi-page synchronization using Selsoft API Client
+      // Execute fast live synchronization using Selsoft API Client (500 items per request)
       const modifiedAfter = forceFullSync ? undefined : (this.state.syncState.last_synced_at || undefined);
-      const result = await selsoftApiClient.fetchAllBills(50, modifiedAfter);
+      const result = await selsoftApiClient.fetchAllBills(500, modifiedAfter);
 
-        // Merge into erpBills to preserve historical completed/exported records permanently
+      if (result.allBills && result.allBills.length > 0) {
+        // If we have live ERP bills, build a fresh mapped list preserving local tally exports
         const incomingMap = new Map(result.allBills.map(b => [b.header_id, b]));
-        const mergedList = [...(this.state.erpBills || [])];
+        const existingMap = new Map((this.state.erpBills || []).map(b => [b.header_id, b]));
+        const mergedList: ErpBill[] = [];
+
         for (const inc of result.allBills) {
-          const idx = mergedList.findIndex(b => b.header_id === inc.header_id);
-          if (idx >= 0) {
-            const existing = mergedList[idx];
+          const existing = existingMap.get(inc.header_id);
+          if (existing) {
             const isLocalExported = existing.tally_status === 'EXPORTED' || existing.tally_status === 'POSTED';
-            mergedList[idx] = {
+            mergedList.push({
               ...inc,
               tally_status: isLocalExported ? existing.tally_status : inc.tally_status,
               tally_exported_date: existing.tally_exported_date || inc.tally_exported_date,
-            };
+            });
           } else {
             mergedList.push(inc);
           }
         }
+
+        // Preserve locally exported historical bills that may not be in the current inward queue
+        for (const [id, existing] of existingMap.entries()) {
+          if (!incomingMap.has(id) && (existing.tally_status === 'EXPORTED' || existing.bill_status === 'PAID')) {
+            mergedList.push(existing);
+          }
+        }
+
         this.state.erpBills = mergedList;
 
         const existingDfrMap = new Map(this.state.dfrBills.map(b => [b.header_id, b]));
@@ -883,6 +894,7 @@ class DfrService {
             }
           }
         }
+      }
 
       // Refresh A-10 alerts strictly for active, non-exported bills
       // Rule: Exclude all bills that have been Accounts/Tally Exported from A-10 Critical

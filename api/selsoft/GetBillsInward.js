@@ -14,7 +14,7 @@ export default async function handler(req, res) {
     return;
   }
 
-  const { pageNumber = '1', pagesize = '50', modifiedAfter } = req.query || {};
+  const { pageNumber = '1', pagesize = '500', modifiedAfter } = req.query || {};
 
   try {
     const targetUrl = new URL('http://103.168.241.16/BillpassingApplication/api/approval/GetBillsInward');
@@ -24,12 +24,16 @@ export default async function handler(req, res) {
       targetUrl.searchParams.set('modifiedAfter', modifiedAfter);
     }
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
+
     const response = await fetch(targetUrl.toString(), {
       method: 'GET',
       headers: {
         Accept: 'application/json',
       },
-    });
+      signal: controller.signal,
+    }).finally(() => clearTimeout(timeoutId));
 
     if (!response.ok) {
       return res.status(response.status).json({

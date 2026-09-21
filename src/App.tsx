@@ -132,9 +132,17 @@ export const App: React.FC = () => {
   };
 
   const handleSyncNow = async () => {
-    showToast('Triggering Selsoft ERP API GetBillsInward synchronization...');
-    await dfrService.syncErpBillsNow();
-    showToast('ERP Sync completed! Bill register updated.');
+    showToast('Fetching latest live data from Selsoft ERP...');
+    try {
+      const state = await dfrService.syncErpBillsNow(true);
+      if (state.last_error) {
+        showToast(`Sync warning: ${state.last_error}`);
+      } else {
+        showToast(`Live ERP Sync successful! ${state.total_count} bills updated.`);
+      }
+    } catch (err: any) {
+      showToast(`Sync failed: ${err.message || 'ERP connection error'}`);
+    }
   };
 
   const handleConfirmHandover = (toHolderId: string, toStage: ProcessStage, note: string) => {

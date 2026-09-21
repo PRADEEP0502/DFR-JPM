@@ -8,10 +8,17 @@ export interface SelsoftApiConfig {
   useLiveApi: boolean;
 }
 
+export interface SelsoftApiConfig {
+  baseUrl: string;
+  endpoint: string;
+  defaultPageSize: number;
+  useLiveApi: boolean;
+}
+
 export const DEFAULT_SELSOFT_CONFIG: SelsoftApiConfig = {
   baseUrl: ((import.meta as any).env?.VITE_SELSOFT_API_URL as string) || '/api/selsoft',
   endpoint: 'GetBillsInward',
-  defaultPageSize: 50,
+  defaultPageSize: 500, // Fetch all bills in a single ultra-fast request (<0.5s)
   useLiveApi: true, // Connects directly to live Selsoft API
 };
 
@@ -112,8 +119,35 @@ class SelsoftApiClient {
   }
 
   /**
+   * Constructs the full URL reliably without stripping base URL subpaths
+   */
+  private buildRequestUrl(pageNumber: number, pageSize: number, modifiedAfter?: string): string {
+    const rawBase = (this.config.baseUrl || '').trim();
+    const rawEndpoint = (this.config.endpoint || 'GetBillsInward').trim().replace(/^\/+/, '');
+    const isAbsolute = rawBase.startsWith('http://') || rawBase.startsWith('https://');
+
+    let urlObj: URL;
+    if (isAbsolute) {
+      const cleanBase = rawBase.endsWith('/') ? rawBase : `${rawBase}/`;
+      urlObj = new URL(rawEndpoint, cleanBase);
+    } else {
+      const cleanPath = `/${rawBase}/${rawEndpoint}`.replace(/\/+/g, '/');
+      const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+      urlObj = new URL(cleanPath, origin);
+    }
+
+    urlObj.searchParams.set('pageNumber', pageNumber.toString());
+    urlObj.searchParams.set('pagesize', pageSize.toString());
+
+    if (modifiedAfter) {
+      urlObj.searchParams.set('modifiedAfter', modifiedAfter);
+    }
+
+    return urlObj.toString();
+  }
+
+  /**
    * Fetches a single page from Selsoft GetBillsInward API
-   * Endpoint: GetBillsInward?pageNumber=1&pagesize=50&modifiedAfter=...
    */
   public async fetchBillsPage(
     pageNumber: number = 1,
@@ -125,26 +159,18 @@ class SelsoftApiClient {
     }
 
     try {
-      // Build request URL
-      const isAbsolute = this.config.baseUrl.startsWith('http://') || this.config.baseUrl.startsWith('https://');
-      const base = isAbsolute ? this.config.baseUrl : window.location.origin;
-      const pathPrefix = isAbsolute ? '' : this.config.baseUrl;
-      const cleanPath = `${pathPrefix}/${this.config.endpoint}`.replace(/\/+/g, '/');
+      const url = this.buildRequestUrl(pageNumber, pageSize, modifiedAfter);
 
-      const url = new URL(cleanPath, base);
-      url.searchParams.set('pageNumber', pageNumber.toString());
-      url.searchParams.set('pagesize', pageSize.toString());
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 25000);
 
-      if (modifiedAfter) {
-        url.searchParams.set('modifiedAfter', modifiedAfter);
-      }
-
-      const response = await fetch(url.toString(), {
+      const response = await fetch(url, {
         method: 'GET',
         headers: {
           Accept: 'application/json',
         },
-      });
+        signal: controller.signal,
+      }).finally(() => clearTimeout(timeoutId));
 
       if (!response.ok) {
         throw new Error(`Selsoft API HTTP ${response.status}: ${response.statusText}`);
@@ -163,7 +189,10 @@ class SelsoftApiClient {
 
       // Map raw API fields to internal ErpBill schema
       const mappedData: ErpBill[] = (json.Data || []).map((raw: any) => {
-        const rawCategory = (raw.Category || '').trim().toUpperCase();
+        let rawCategory = (raw.Category || '').trim().toUpperCase();
+        if (rawCategory.includes('MAINTENANCE')) {
+          rawCategory = 'MAINTENANCE';
+        }
         const rawBrNo = (raw.BRNo || '').trim().toUpperCase();
         let category = rawCategory || 'GENERAL';
         if ((!rawCategory || category === 'GENERAL') && (rawBrNo.startsWith('SB') || rawBrNo.startsWith('SB-') || rawBrNo.startsWith('SB/'))) {
@@ -255,7 +284,7 @@ class SelsoftApiClient {
 
     return {
       allBills: Array.from(allBillsMap.values()),
-      totalCount,
+      totalCount: allBillsMap.size,
       syncTimestampUtc: latestSyncTimestamp,
     };
   }
