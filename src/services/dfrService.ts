@@ -805,6 +805,93 @@ class DfrService {
     );
   }
 
+  public revokeBillFiling(headerId: number, actorUserId: string, note?: string) {
+    const actorUser = this.state.users.find(u => u.id === actorUserId) || authService.getCurrentUser();
+    if (!isFilingAuthorized(actorUser)) {
+      console.warn(`[Security] Unauthorized attempt to revoke filing for bill #${headerId} by user: ${actorUserId}`);
+      return;
+    }
+
+    let dfr = this.state.dfrBills.find(x => x.header_id === headerId);
+    let erp = this.state.erpBills.find(x => x.header_id === headerId);
+    if (!erp) return;
+
+    const nowIso = new Date().toISOString();
+    const fromHolderId = dfr?.current_holder_id || actorUserId;
+    const fromStage = dfr?.current_stage || 'FILING';
+    const actorName = actorUser?.full_name || actorUserId;
+
+    // Accounts custodian resolution
+    const accountsUser = this.state.users.find(
+      u => u.department === 'ACCOUNTS' || u.username === 'accounts' || u.id === 'user-011'
+    );
+    const targetHolderId = accountsUser?.id || 'user-011';
+
+    // Revert stage and filing status
+    if (dfr) {
+      dfr.current_stage = 'ACCOUNTS';
+      dfr.current_holder_id = targetHolderId;
+      dfr.filing_status = 'PENDING';
+      dfr.filing_date = null;
+      dfr.filed_by = null;
+      dfr.filed_by_name = null;
+      dfr.updated_at = nowIso;
+    }
+
+    erp.filing_status = 'PENDING';
+    erp.filing_date = null;
+    erp.filed_by = null;
+    erp.filed_by_name = null;
+
+    const maxHistoryId = this.state.holderHistory.reduce((max, h) => Math.max(max, h.id), 0);
+    this.state.holderHistory.push({
+      id: maxHistoryId + 1,
+      header_id: headerId,
+      from_holder_id: fromHolderId,
+      to_holder_id: targetHolderId,
+      from_stage: fromStage,
+      to_stage: 'ACCOUNTS',
+      changed_by: actorUserId,
+      source: 'Manual Filing',
+      note: note || 'Revoked / Undid filing; returned bill to Pending Filing queue',
+      changed_at: nowIso,
+    });
+
+    this.saveStateToStorage();
+
+    // Persist to backend MongoDB
+    try {
+      fetch('/api/filing/revoke-filing', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('DFR_AUTH_SESSION_TOKEN_V2') || ''}`,
+        },
+        body: JSON.stringify({
+          header_id: headerId,
+          revoked_by: actorUserId,
+          revoked_by_name: actorName,
+          note: note,
+          bill_data: erp,
+        }),
+      }).catch(e => console.warn('Filing backend sync notice:', e));
+    } catch (e) {
+      // Offline fallback
+    }
+
+    const actor = authService.getCurrentUser();
+    auditService.log(
+      'FILING_REVOKED',
+      `Revoked physical filing for bill #${headerId} (${erp.br_no || 'BR'}) - returned to Pending Filing queue`,
+      actor,
+      {
+        header_id: headerId,
+        previous_value: 'FILING',
+        new_value: 'ACCOUNTS',
+      }
+    );
+  }
+
   public acknowledgeAlert(alertId: number, userId: string) {
     const alert = this.state.alerts.find(a => a.id === alertId);
     if (alert) {

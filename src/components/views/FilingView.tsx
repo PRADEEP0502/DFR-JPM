@@ -89,6 +89,8 @@ export const FilingView: React.FC<FilingViewProps> = ({
   const [selectedFiledBy, setSelectedFiledBy] = useState<string>('ALL');
   const [filingBillConfirm, setFilingBillConfirm] = useState<BillRegisterItem | null>(null);
   const [filingNote, setFilingNote] = useState<string>('');
+  const [revokeBillConfirm, setRevokeBillConfirm] = useState<BillRegisterItem | null>(null);
+  const [revokeNote, setRevokeNote] = useState<string>('');
 
   const canMarkFiling = isFilingAuthorized(currentUser);
 
@@ -188,6 +190,14 @@ export const FilingView: React.FC<FilingViewProps> = ({
     dfrService.markBillAsFiled(filingBillConfirm.header_id, currentUser.id, filingNote);
     setFilingBillConfirm(null);
     setFilingNote('');
+    onRefresh();
+  };
+
+  const handleConfirmRevokeFiling = () => {
+    if (!revokeBillConfirm) return;
+    dfrService.revokeBillFiling(revokeBillConfirm.header_id, currentUser.id, revokeNote);
+    setRevokeBillConfirm(null);
+    setRevokeNote('');
     onRefresh();
   };
 
@@ -630,6 +640,7 @@ export const FilingView: React.FC<FilingViewProps> = ({
                         <th className="py-3.5 px-4">Filing Date</th>
                         <th className="py-3.5 px-4">Filed By</th>
                         <th className="py-3.5 px-4 text-center">Status</th>
+                        <th className="py-3.5 px-4 text-center">Action</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 font-sans">
@@ -676,6 +687,20 @@ export const FilingView: React.FC<FilingViewProps> = ({
                               <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                               FILED
                             </span>
+                          </td>
+                          <td className="py-3.5 px-4 text-center" onClick={e => e.stopPropagation()}>
+                            {canMarkFiling ? (
+                              <button
+                                onClick={() => setRevokeBillConfirm(bill)}
+                                className="px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 font-bold text-xs transition shadow-2xs cursor-pointer flex items-center gap-1.5 mx-auto"
+                                title="Undo / Revoke Physical Filing"
+                              >
+                                <RotateCcw className="w-3.5 h-3.5 text-amber-700" />
+                                <span>Revoke</span>
+                              </button>
+                            ) : (
+                              <span className="text-[11px] text-slate-400 italic">—</span>
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -733,6 +758,18 @@ export const FilingView: React.FC<FilingViewProps> = ({
                           <span className="font-extrabold text-slate-800">{bill.filed_by_name || bill.filed_by || 'ACCOUNTS'}</span>
                         </div>
                       </div>
+
+                      {canMarkFiling && (
+                        <div className="pt-2 border-t border-slate-100 flex justify-end" onClick={e => e.stopPropagation()}>
+                          <button
+                            onClick={() => setRevokeBillConfirm(bill)}
+                            className="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 font-bold text-xs transition shadow-2xs cursor-pointer flex items-center gap-1.5"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5 text-amber-700" />
+                            <span>Revoke Filing</span>
+                          </button>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -811,6 +848,81 @@ export const FilingView: React.FC<FilingViewProps> = ({
               >
                 <FolderCheck className="w-4 h-4" />
                 <span>Confirm Filing</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Modal for Revoke / Undo Filing */}
+      {revokeBillConfirm && (
+        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full p-6 space-y-4 animate-in zoom-in-95 duration-150">
+            <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mx-auto shadow-inner">
+              <RotateCcw className="w-6 h-6" />
+            </div>
+
+            <div className="text-center space-y-1.5">
+              <h3 className="text-base font-black text-slate-900">
+                Revoke Physical Filing
+              </h3>
+              <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                Are you sure you want to undo / revoke the filing for this bill? It will be moved back to the <strong>Pending Filing</strong> queue.
+              </p>
+
+              <div className="mt-3 p-3.5 bg-amber-50/60 border border-amber-200 rounded-xl text-xs space-y-1.5 text-left">
+                <div className="flex justify-between">
+                  <span className="text-slate-500 font-bold">BR No:</span>
+                  <span className="font-mono font-black text-slate-900">{revokeBillConfirm.br_no}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500 font-bold">Bill No:</span>
+                  <span className="font-mono font-bold text-slate-900">{revokeBillConfirm.bill_no}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500 font-bold">Supplier:</span>
+                  <span className="font-extrabold text-slate-900 truncate max-w-[200px]">{revokeBillConfirm.supplier}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500 font-bold">Amount:</span>
+                  <span className="font-black text-slate-900">₹ {revokeBillConfirm.amount.toLocaleString('en-IN')}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500 font-bold">Filing Date:</span>
+                  <span className="font-mono text-slate-700">{formatDateTime(revokeBillConfirm.filing_date)}</span>
+                </div>
+              </div>
+
+              <div className="pt-2 text-left">
+                <label className="text-[11px] font-bold text-slate-600 block mb-1">
+                  Reason for Revoking (Optional):
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Filed in wrong folder, needs audit re-check..."
+                  value={revokeNote}
+                  onChange={e => setRevokeNote(e.target.value)}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 pt-2">
+              <button
+                onClick={() => {
+                  setRevokeBillConfirm(null);
+                  setRevokeNote('');
+                }}
+                className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold text-xs transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmRevokeFiling}
+                className="flex-1 py-2.5 px-4 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition shadow-xs cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <RotateCcw className="w-4 h-4" />
+                <span>Confirm Revoke</span>
               </button>
             </div>
           </div>

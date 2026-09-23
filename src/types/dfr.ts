@@ -39,6 +39,7 @@ export type AuditAction =
   | 'MOVE_TO_TALLY'
   | 'PAYMENT_COMPLETE'
   | 'FILING_COMPLETED'
+  | 'FILING_REVOKED'
   | 'STAGE_CHANGE'
   | 'LABEL_CHANGE'
   | 'USER_CREATE'

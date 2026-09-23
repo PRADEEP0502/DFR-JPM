@@ -23,6 +23,7 @@ import {
   Check,
   FolderCheck,
   FolderArchive,
+  RotateCcw,
 } from 'lucide-react';
 import {
   BillRegisterItem,
@@ -104,6 +105,7 @@ export const BillDetailDrawer: React.FC<BillDetailDrawerProps> = ({
   const [showLabelPicker, setShowLabelPicker] = useState<boolean>(false);
   const [note, setNote] = useState<string>('');
   const [showFilingConfirm, setShowFilingConfirm] = useState<boolean>(false);
+  const [showRevokeFilingConfirm, setShowRevokeFilingConfirm] = useState<boolean>(false);
 
   const history = dfrService.getHolderHistory(bill.header_id);
   const users = dfrService.getUsers();
@@ -134,6 +136,12 @@ export const BillDetailDrawer: React.FC<BillDetailDrawerProps> = ({
   const handleConfirmFiling = () => {
     dfrService.markBillAsFiled(bill.header_id, currentUser.id, note);
     setShowFilingConfirm(false);
+    onRefresh();
+  };
+
+  const handleConfirmRevokeFiling = () => {
+    dfrService.revokeBillFiling(bill.header_id, currentUser.id, note);
+    setShowRevokeFilingConfirm(false);
     onRefresh();
   };
 
@@ -365,6 +373,21 @@ export const BillDetailDrawer: React.FC<BillDetailDrawerProps> = ({
                     >
                       <FolderCheck className="w-3.5 h-3.5" />
                       <span>Mark as Filed</span>
+                    </button>
+                  </div>
+                )}
+
+                {/* Revoke / Undo Filing Action if bill is already FILED */}
+                {bill.filing_status === 'FILED' && isFilingAuthorized(currentUser) && (
+                  <div className="pt-2 border-t border-slate-200/80 flex items-center justify-between">
+                    <span className="text-xs text-slate-500 font-medium">Archived physically</span>
+                    <button
+                      onClick={() => setShowRevokeFilingConfirm(true)}
+                      className="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 font-bold text-xs flex items-center gap-1.5 shadow-2xs transition cursor-pointer"
+                      title="Undo filing and move back to Pending Filing"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5 text-amber-700" />
+                      <span>Revoke / Undo Filing</span>
                     </button>
                   </div>
                 )}
@@ -630,6 +653,54 @@ export const BillDetailDrawer: React.FC<BillDetailDrawerProps> = ({
                 >
                   <FolderCheck className="w-4 h-4" />
                   <span>Confirm Filing</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Confirmation Modal for Revoke / Undo Filing */}
+        {showRevokeFilingConfirm && (
+          <div className="fixed inset-0 z-60 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full p-6 space-y-4 animate-in zoom-in-95 duration-150">
+              <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mx-auto shadow-inner">
+                <RotateCcw className="w-6 h-6" />
+              </div>
+
+              <div className="text-center space-y-1.5">
+                <h3 className="text-base font-black text-slate-900">Revoke Physical Filing</h3>
+                <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                  Are you sure you want to undo / revoke physical filing for this bill? It will be moved back to the <strong>Pending Filing</strong> queue.
+                </p>
+                <div className="mt-3 p-3 bg-amber-50/60 border border-amber-200 rounded-xl text-xs space-y-1 text-left font-sans">
+                  <div className="flex justify-between">
+                    <span className="text-slate-500 font-bold">BR No:</span>
+                    <span className="font-mono font-black text-slate-900">{bill.br_no}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500 font-bold">Supplier:</span>
+                    <span className="font-extrabold text-slate-900 truncate max-w-[200px]">{bill.supplier}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500 font-bold">Amount:</span>
+                    <span className="font-black text-slate-900">₹ {bill.amount.toLocaleString('en-IN')}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 pt-2">
+                <button
+                  onClick={() => setShowRevokeFilingConfirm(false)}
+                  className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold text-xs transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmRevokeFiling}
+                  className="flex-1 py-2.5 px-4 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition shadow-xs cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  <span>Confirm Revoke</span>
                 </button>
               </div>
             </div>
