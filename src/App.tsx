@@ -17,7 +17,7 @@ import { BillDetailDrawer } from './components/drawers/BillDetailDrawer';
 import { HandoverModal } from './components/modals/HandoverModal';
 import { dfrService } from './services/dfrService';
 import { authService, isTallyTrackerAuthorized, isAdminSettingsAuthorized } from './services/authService';
-import { BillRegisterItem, DfrUser, ProcessStage } from './types/dfr';
+import { BillRegisterItem, DfrUser, ProcessStage, isDeletedBill } from './types/dfr';
 import { ShieldAlert } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -118,6 +118,7 @@ export const App: React.FC = () => {
 
   const criticalCount = bills.filter(
     b =>
+      !isDeletedBill(b) &&
       b.age_band === 'A-10' &&
       b.bill_status !== 'PAID' &&
       b.bill_status !== 'CLOSED' &&

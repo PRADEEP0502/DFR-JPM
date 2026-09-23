@@ -17,7 +17,7 @@ import {
   RotateCcw,
   Sparkles,
 } from 'lucide-react';
-import { BillRegisterItem, DfrUser, isTallyExported } from '../../types/dfr';
+import { BillRegisterItem, DfrUser, isTallyExported, isDeletedBill } from '../../types/dfr';
 import { dfrService } from '../../services/dfrService';
 import { isFilingAuthorized } from '../../services/authService';
 import { Card3D } from '../ui/Card3D';
@@ -92,16 +92,16 @@ export const FilingView: React.FC<FilingViewProps> = ({
 
   const canMarkFiling = isFilingAuthorized(currentUser);
 
-  // Filter 1: Pending Filing bills (Strict Rule: Must be Tally Exported & not yet Filed)
+  // Filter 1: Pending Filing bills (Strict Rule: Must be Tally Exported & not yet Filed, excluding deleted bills)
   const pendingFilingBills = useMemo(() => {
     return bills.filter(
-      b => isTallyExported(b) && b.filing_status !== 'FILED'
+      b => !isDeletedBill(b) && isTallyExported(b) && b.filing_status !== 'FILED'
     );
   }, [bills]);
 
   // Filter 2: Manually Filed Bills
   const filedBills = useMemo(() => {
-    return bills.filter(b => b.filing_status === 'FILED');
+    return bills.filter(b => !isDeletedBill(b) && b.filing_status === 'FILED');
   }, [bills]);
 
   // Overall KPI Metrics

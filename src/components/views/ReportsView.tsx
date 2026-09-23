@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FileText, Download, Filter, CheckCircle2, Table } from 'lucide-react';
-import { BillRegisterItem, DfrUser, STAGE_DISPLAY_NAMES } from '../../types/dfr';
+import { BillRegisterItem, DfrUser, STAGE_DISPLAY_NAMES, isDeletedBill } from '../../types/dfr';
 
 const formatDateOnly = (dateStr?: string | null): string => {
   if (!dateStr) return '—';
@@ -43,13 +43,14 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ bills }) => {
   );
 
   const getFilteredData = () => {
+    const validBills = bills.filter(b => !isDeletedBill(b));
     switch (reportType) {
       case 'PENDING':
-        return bills.filter(
+        return validBills.filter(
           b => b.bill_status !== 'PAID' && b.bill_status !== 'CLOSED' && b.dfr_status !== 'PAID'
         );
       case 'CRITICAL':
-        return bills.filter(
+        return validBills.filter(
           b =>
             b.age_band === 'A-10' &&
             b.bill_status !== 'PAID' &&
@@ -57,7 +58,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ bills }) => {
             b.dfr_status !== 'PAID'
         );
       case 'TALLY':
-        return bills.filter(
+        return validBills.filter(
           b =>
             b.tally_status !== 'EXPORTED' &&
             b.tally_status !== 'POSTED' &&
@@ -65,9 +66,9 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ bills }) => {
             b.bill_status !== 'CLOSED'
         );
       case 'PAID':
-        return bills.filter(b => b.bill_status === 'PAID' || b.dfr_status === 'PAID');
+        return validBills.filter(b => b.bill_status === 'PAID' || b.dfr_status === 'PAID');
       default:
-        return bills;
+        return validBills;
     }
   };
 

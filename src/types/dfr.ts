@@ -225,10 +225,40 @@ export interface SyncState {
 }
 
 /**
+ * Checks if a bill is deleted or cancelled.
+ * Deleted/cancelled bills are strictly excluded from all dashboard views, counts, amounts, registers, and trackers.
+ */
+export const isDeletedBill = (b: {
+  bill_status?: string | null;
+  approval_status?: string | null;
+  dfr_status?: string | null;
+  [key: string]: any;
+}): boolean => {
+  if (!b) return false;
+  const billStatus = (b.bill_status || '').toUpperCase().trim();
+  const approvalStatus = (b.approval_status || '').toUpperCase().trim();
+  const dfrStatus = (b.dfr_status || '').toUpperCase().trim();
+
+  return (
+    billStatus === 'DELETED' ||
+    billStatus === 'CANCELLED' ||
+    billStatus === 'CANCELED' ||
+    approvalStatus === 'DELETED' ||
+    approvalStatus === 'CANCELLED' ||
+    approvalStatus === 'CANCELED' ||
+    dfrStatus === 'DELETED' ||
+    Boolean(b.is_deleted) ||
+    Boolean(b.IsDeleted) ||
+    Boolean(b.isDeleted)
+  );
+};
+
+/**
  * Checks if a bill is fully completed/exported to Tally, paid, or closed.
  * Exported bills are excluded from active master bill register and current holder workload.
  */
 export const isTallyExported = (b: BillRegisterItem): boolean => {
+  if (isDeletedBill(b)) return true;
   const tally = (b.tally_status || '').toUpperCase().trim();
   const dfr = (b.dfr_status || '').toUpperCase().trim();
   const bill = (b.bill_status || '').toUpperCase().trim();

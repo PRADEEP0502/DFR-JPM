@@ -30,6 +30,7 @@ import {
   AgeBand,
   isTallyExported,
   isBillHeldByUser,
+  isDeletedBill,
 } from '../../types/dfr';
 import { ViewTab } from '../layout/Sidebar';
 import { Card3D } from '../ui/Card3D';
@@ -59,8 +60,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onSelectStage,
   onSelectBand,
 }) => {
-  // Filter truly active pending bills before Tally/Accounts export
-  const activeBills = useMemo(() => bills.filter(b => !isTallyExported(b)), [bills]);
+  // Filter truly active pending bills before Tally/Accounts export and exclude deleted bills
+  const activeBills = useMemo(() => bills.filter(b => !isTallyExported(b) && !isDeletedBill(b)), [bills]);
 
   // Strict Ageing metrics
   const normalBills = useMemo(() => activeBills.filter(b => b.age_band === 'NORMAL'), [activeBills]);

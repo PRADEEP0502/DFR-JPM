@@ -12,6 +12,7 @@ import {
   STAGE_DISPLAY_NAMES,
   AgeBand,
   FilingStatus,
+  isDeletedBill,
 } from '../types/dfr';
 import { INITIAL_LABELS, INITIAL_CATEGORY_MAPPINGS } from './mockData';
 import { authService, isTallyTrackerAuthorized, isFilingAuthorized } from './authService';
@@ -164,7 +165,7 @@ class DfrService {
   }
 
   public getRawErpBills(): ErpBill[] {
-    return this.state.erpBills;
+    return this.state.erpBills.filter(b => !isDeletedBill(b));
   }
 
   /**
@@ -254,6 +255,10 @@ class DfrService {
     const items: BillRegisterItem[] = [];
 
     for (const erp of this.state.erpBills) {
+      if (isDeletedBill(erp)) {
+        continue; // Exclude deleted and cancelled bills from all registers & views
+      }
+
       const isClosed = erp.bill_status === 'PAID' || erp.bill_status === 'CLOSED';
       if (!includeClosed && isClosed) {
         continue; // Exclude closed bills from active views
@@ -1037,6 +1042,7 @@ class DfrService {
       let maxAlertId = this.state.alerts.reduce((max, a) => Math.max(max, a.id), 0);
 
       for (const bill of this.state.erpBills) {
+        if (isDeletedBill(bill)) continue;
         const isAccountsExported = exportedHeaderIds.has(bill.header_id);
 
         if (

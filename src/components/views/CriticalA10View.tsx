@@ -15,10 +15,9 @@ import {
   Building2,
   Calendar,
   Layers,
-  FileText,
   Filter,
 } from 'lucide-react';
-import { BillRegisterItem, DfrAlert, DfrUser, STAGE_DISPLAY_NAMES } from '../../types/dfr';
+import { BillRegisterItem, DfrAlert, DfrUser, STAGE_DISPLAY_NAMES, isDeletedBill } from '../../types/dfr';
 
 const formatDateOnly = (dateStr?: string | null): string => {
   if (!dateStr) return '—';
@@ -70,6 +69,7 @@ export const CriticalA10View: React.FC<CriticalA10ViewProps> = ({
   // Strict Rule: Active pending bills
   const activeBills = bills.filter(
     b =>
+      !isDeletedBill(b) &&
       b.bill_status !== 'PAID' &&
       b.bill_status !== 'CLOSED' &&
       b.dfr_status !== 'PAID'

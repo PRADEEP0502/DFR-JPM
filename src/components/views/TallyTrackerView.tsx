@@ -20,7 +20,7 @@ import {
   Layers,
   Sparkles,
 } from 'lucide-react';
-import { BillRegisterItem, DfrUser, STAGE_DISPLAY_NAMES, isTallyExported } from '../../types/dfr';
+import { BillRegisterItem, DfrUser, STAGE_DISPLAY_NAMES, isTallyExported, isDeletedBill } from '../../types/dfr';
 import { dfrService } from '../../services/dfrService';
 
 const formatDateOnly = (dateStr?: string | null): string => {
@@ -173,12 +173,15 @@ export const TallyTrackerView: React.FC<TallyTrackerViewProps> = ({
 
   // 1. Awaiting Tally Export (Bills currently held by Accounts/Tally waiting for export)
   const awaitingBills = useMemo(
-    () => bills.filter(b => isWaitingForTally(b)),
+    () => bills.filter(b => !isDeletedBill(b) && isWaitingForTally(b)),
     [bills]
   );
 
   // 2. Exported to Tally (Completed bills)
-  const exportedBills = useMemo(() => bills.filter(b => isTallyExported(b)), [bills]);
+  const exportedBills = useMemo(
+    () => bills.filter(b => !isDeletedBill(b) && isTallyExported(b) && !isDeletedBill(b)),
+    [bills]
+  );
 
   const awaitingAmount = useMemo(
     () => awaitingBills.reduce((sum, b) => sum + b.amount, 0),

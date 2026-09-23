@@ -7,7 +7,7 @@ import {
   Layers,
   CheckCircle2,
 } from 'lucide-react';
-import { BillRegisterItem, DfrUser, isTallyExported, isBillHeldByUser } from '../../types/dfr';
+import { BillRegisterItem, DfrUser, isTallyExported, isBillHeldByUser, isDeletedBill } from '../../types/dfr';
 import { ViewTab } from '../layout/Sidebar';
 import { Card3D } from '../ui/Card3D';
 
@@ -25,7 +25,7 @@ export const ByHolderView: React.FC<ByHolderViewProps> = ({
   onSelectTab,
   onSelectHolder,
 }) => {
-  const activeBills = useMemo(() => bills.filter(b => !isTallyExported(b)), [bills]);
+  const activeBills = useMemo(() => bills.filter(b => !isTallyExported(b) && !isDeletedBill(b)), [bills]);
 
   const excludedUsernames = useMemo(
     () => new Set(['gm', 'md_mam', 'md', 'dfr_admin', 'admin']),

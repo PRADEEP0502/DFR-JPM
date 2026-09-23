@@ -24,6 +24,7 @@ import {
   STAGE_DISPLAY_NAMES,
   isTallyExported,
   isBillHeldByUser,
+  isDeletedBill,
 } from '../../types/dfr';
 
 const formatDateOnly = (dateStr?: string | null): string => {
@@ -255,6 +256,9 @@ export const BillRegisterView: React.FC<BillRegisterViewProps> = ({
 
   const filteredBills = useMemo(() => {
     return bills.filter(b => {
+      // 0. Exclude all deleted / cancelled bills
+      if (isDeletedBill(b)) return false;
+
       // 1. Exclude all exported / paid / closed bills from Master Bill Register
       if (isTallyExported(b)) return false;
 
@@ -608,7 +612,6 @@ export const BillRegisterView: React.FC<BillRegisterViewProps> = ({
             >
               <option value="ALL">All Statuses</option>
               <option value="Active">Active</option>
-              <option value="Deleted">Deleted</option>
               <option value="OPEN">OPEN</option>
               <option value="PAID">PAID</option>
             </select>
