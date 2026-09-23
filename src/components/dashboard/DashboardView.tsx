@@ -231,7 +231,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       </div>
 
       {/* Row 1: KPI Metric Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-5">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5">
         {/* Total Pending Bills */}
         <Card3D
           glowColor="rgba(2, 132, 199, 0.2)"
@@ -300,32 +300,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <p className="text-xs text-emerald-600 mt-1 font-bold flex items-center gap-1">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
             On Time
-          </p>
-        </Card3D>
-
-        {/* A-3 (3–4 DAYS) */}
-        <Card3D
-          glowColor="rgba(234, 179, 8, 0.2)"
-          onClick={() => (onSelectBand ? onSelectBand('A-3') : onSelectTab('register'))}
-          className="p-5 transition cursor-pointer hover:border-yellow-300"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-extrabold uppercase tracking-wider text-yellow-700">
-              A-3 (3–4 DAYS)
-            </span>
-            <div className="w-9 h-9 rounded-2xl bg-yellow-100 text-yellow-700 flex items-center justify-center font-bold">
-              <Clock className="w-4 h-4" />
-            </div>
-          </div>
-          <p className="text-3xl font-black text-yellow-600 mt-4 tracking-tight">
-            {a3Bills.length}
-          </p>
-          <p className="text-xs text-slate-500 mt-1 font-semibold">
-            ₹{a3Amount.toLocaleString('en-IN')} Total
-          </p>
-          <p className="text-xs text-yellow-600 mt-1 font-bold flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-yellow-500" />
-            Needs Attention
           </p>
         </Card3D>
 
