@@ -68,6 +68,24 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const a5Bills = useMemo(() => activeBills.filter(b => b.age_band === 'A-5'), [activeBills]);
   const a10Bills = useMemo(() => activeBills.filter(b => b.age_band === 'A-10'), [activeBills]);
 
+  // Band-specific amounts (calculated strictly from bills belonging to each exact ageing band)
+  const normalAmount = useMemo(
+    () => normalBills.reduce((sum, b) => sum + b.amount, 0),
+    [normalBills]
+  );
+  const a3Amount = useMemo(
+    () => a3Bills.reduce((sum, b) => sum + b.amount, 0),
+    [a3Bills]
+  );
+  const a5Amount = useMemo(
+    () => a5Bills.reduce((sum, b) => sum + b.amount, 0),
+    [a5Bills]
+  );
+  const a10Amount = useMemo(
+    () => a10Bills.reduce((sum, b) => sum + b.amount, 0),
+    [a10Bills]
+  );
+
   const totalPendingAmount = useMemo(
     () => activeBills.reduce((sum, b) => sum + b.amount, 0),
     [activeBills]
@@ -213,7 +231,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       </div>
 
       {/* Row 1: KPI Metric Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-5">
         {/* Total Pending Bills */}
         <Card3D
           glowColor="rgba(2, 132, 199, 0.2)"
@@ -259,7 +277,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </p>
         </Card3D>
 
-        {/* Normal (0-2d) */}
+        {/* NORMAL (0–2 DAYS) */}
         <Card3D
           glowColor="rgba(16, 185, 129, 0.2)"
           onClick={() => (onSelectBand ? onSelectBand('NORMAL') : onSelectTab('register'))}
@@ -267,7 +285,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-extrabold uppercase tracking-wider text-emerald-700">
-              Normal (0-2d)
+              NORMAL (0–2 DAYS)
             </span>
             <div className="w-9 h-9 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
               <Clock className="w-4 h-4" />
@@ -277,11 +295,41 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             {normalBills.length}
           </p>
           <p className="text-xs text-slate-500 mt-1 font-semibold">
-            {totalPendingCount > 0 ? ((normalBills.length / totalPendingCount) * 100).toFixed(1) : 0}% of active
+            ₹{normalAmount.toLocaleString('en-IN')} Total
+          </p>
+          <p className="text-xs text-emerald-600 mt-1 font-bold flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            On Time
           </p>
         </Card3D>
 
-        {/* A-5 Warning Card */}
+        {/* A-3 (3–4 DAYS) */}
+        <Card3D
+          glowColor="rgba(234, 179, 8, 0.2)"
+          onClick={() => (onSelectBand ? onSelectBand('A-3') : onSelectTab('register'))}
+          className="p-5 transition cursor-pointer hover:border-yellow-300"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-extrabold uppercase tracking-wider text-yellow-700">
+              A-3 (3–4 DAYS)
+            </span>
+            <div className="w-9 h-9 rounded-2xl bg-yellow-100 text-yellow-700 flex items-center justify-center font-bold">
+              <Clock className="w-4 h-4" />
+            </div>
+          </div>
+          <p className="text-3xl font-black text-yellow-600 mt-4 tracking-tight">
+            {a3Bills.length}
+          </p>
+          <p className="text-xs text-slate-500 mt-1 font-semibold">
+            ₹{a3Amount.toLocaleString('en-IN')} Total
+          </p>
+          <p className="text-xs text-yellow-600 mt-1 font-bold flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-yellow-500" />
+            Needs Attention
+          </p>
+        </Card3D>
+
+        {/* A-5 (5–9 DAYS) */}
         <Card3D
           glowColor="rgba(245, 158, 11, 0.2)"
           onClick={() => (onSelectBand ? onSelectBand('A-5') : onSelectTab('register'))}
@@ -289,7 +337,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-extrabold uppercase tracking-wider text-amber-700">
-              A-5 (5-9 Days)
+              A-5 (5–9 DAYS)
             </span>
             <div className="w-9 h-9 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold">
               <AlertTriangle className="w-4 h-4" />
@@ -299,18 +347,22 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             {a5Bills.length}
           </p>
           <p className="text-xs text-slate-500 mt-1 font-semibold">
-            Warning escalation zone
+            ₹{a5Amount.toLocaleString('en-IN')} Total
+          </p>
+          <p className="text-xs text-amber-600 mt-1 font-bold flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+            Follow-up Needed
           </p>
         </Card3D>
 
-        {/* A-10 CRITICAL Card */}
+        {/* A-10 (10+ DAYS) */}
         <Card3D
           glowColor="rgba(239, 68, 68, 0.4)"
-          onClick={() => onSelectTab('critical')}
+          onClick={() => (onSelectBand ? onSelectBand('A-10') : onSelectTab('critical'))}
           className={`p-5 transition cursor-pointer ${
             a10Bills.length > 0
               ? 'bg-gradient-to-br from-red-500 via-rose-600 to-red-700 text-white border-red-500 shadow-xl shadow-red-500/30'
-              : ''
+              : 'hover:border-red-300'
           }`}
         >
           <div className="flex items-center justify-between">
@@ -319,7 +371,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 a10Bills.length > 0 ? 'text-white' : 'text-red-700'
               }`}
             >
-              A-10 Critical
+              A-10 (10+ DAYS)
             </span>
             <div
               className={`w-9 h-9 rounded-2xl flex items-center justify-center text-white shadow-md ${
@@ -338,13 +390,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           >
             {a10Bills.length}
           </p>
+          <p
+            className={`text-xs mt-1 font-semibold ${
+              a10Bills.length > 0 ? 'text-red-100' : 'text-slate-500'
+            }`}
+          >
+            ₹{a10Amount.toLocaleString('en-IN')} Total
+          </p>
           <div className="flex items-center justify-between mt-1">
             <p
-              className={`text-xs font-extrabold ${
-                a10Bills.length > 0 ? 'text-red-100' : 'text-red-700'
+              className={`text-xs font-bold flex items-center gap-1 ${
+                a10Bills.length > 0 ? 'text-white' : 'text-red-600'
               }`}
             >
-              ≥ 10 Days Escalation
+              <span className={`w-1.5 h-1.5 rounded-full ${a10Bills.length > 0 ? 'bg-white' : 'bg-red-500'}`} />
+              Action Needed
             </p>
             <ChevronRight
               className={`w-4 h-4 ${a10Bills.length > 0 ? 'text-white' : 'text-red-600'}`}
