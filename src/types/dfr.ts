@@ -38,6 +38,7 @@ export type AuditAction =
   | 'HANDOVER'
   | 'MOVE_TO_TALLY'
   | 'PAYMENT_COMPLETE'
+  | 'FILING_COMPLETED'
   | 'STAGE_CHANGE'
   | 'LABEL_CHANGE'
   | 'USER_CREATE'
@@ -89,8 +90,8 @@ export interface StageHolderMapping {
   updated_at: string;
 }
 
-// Canonical DFR process stages: Bill Inward → IAD → AO → JMD → Accounts / Tally
-export type ProcessStage = 'BILL_INWARD' | 'IAD' | 'AO' | 'JMD' | 'ACCOUNTS' | 'TALLY';
+// Canonical DFR process stages: Bill Inward → IAD → AO → JMD → Accounts / Tally → Filing
+export type ProcessStage = 'BILL_INWARD' | 'IAD' | 'AO' | 'JMD' | 'ACCOUNTS' | 'TALLY' | 'FILING';
 
 export const STAGE_DISPLAY_NAMES: Record<ProcessStage, string> = {
   BILL_INWARD: 'BILL INWARD',
@@ -99,10 +100,12 @@ export const STAGE_DISPLAY_NAMES: Record<ProcessStage, string> = {
   JMD: 'JMD',
   ACCOUNTS: 'ACCOUNTS / TALLY',
   TALLY: 'ACCOUNTS / TALLY',
+  FILING: 'FILING',
 };
 
 export type DfrStatus = 'OPEN' | 'ON_HOLD' | 'TALLY_DONE' | 'PAID' | 'CLOSED';
 export type AgeBand = 'NORMAL' | 'A-3' | 'A-5' | 'A-10';
+export type FilingStatus = 'PENDING' | 'FILED';
 
 // 1. ERP Bill interface matching Selsoft GetBillsInward response
 export interface ErpBill {
@@ -121,6 +124,10 @@ export interface ErpBill {
   tally_status?: string; // WAITING, EXPORTED, POSTED, PENDING
   bill_status: string; // OPEN, PAID, CLOSED, CANCELLED
   tally_exported_date?: string;
+  filing_status?: FilingStatus;
+  filing_date?: string | null;
+  filed_by?: string | null;
+  filed_by_name?: string | null;
   last_modified_datetime: string;
   raw_payload?: Record<string, any>;
 }
@@ -131,6 +138,10 @@ export interface DfrBillTracking {
   current_holder_id: string; // Maintained strictly via DFR human checkpoints or ERP stage transitions
   current_stage: ProcessStage;
   dfr_status: DfrStatus;
+  filing_status?: FilingStatus;
+  filing_date?: string | null;
+  filed_by?: string | null;
+  filed_by_name?: string | null;
   notes?: string;
   created_at: string;
   updated_at: string;
@@ -147,7 +158,7 @@ export interface HolderHistory {
   changed_by: string;
   note: string;
   changed_at: string;
-  source?: 'ERP Sync' | 'Manual Handover' | 'System Initial';
+  source?: 'ERP Sync' | 'Manual Handover' | 'System Initial' | 'Manual Filing';
 }
 
 // 4. Ageing Alerts Log
@@ -181,6 +192,10 @@ export interface BillRegisterItem {
   rejection_reason?: string;
   tally_status?: string;
   tally_exported_date?: string;
+  filing_status?: FilingStatus;
+  filing_date?: string | null;
+  filed_by?: string | null;
+  filed_by_name?: string | null;
   bill_status: string;
   dfr_status: DfrStatus;
   labels: DfrLabel[];

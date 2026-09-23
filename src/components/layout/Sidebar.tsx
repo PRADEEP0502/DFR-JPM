@@ -5,6 +5,7 @@ import {
   AlertTriangle,
   Users,
   Calculator,
+  FolderCheck,
   Tags,
   FileText,
   GitFork,
@@ -23,6 +24,7 @@ export type ViewTab =
   | 'critical'
   | 'by_holder'
   | 'tally'
+  | 'filing'
   | 'process_flow'
   | 'labels'
   | 'category_mapping'
@@ -67,6 +69,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     ...(canAccessTally
       ? [{ id: 'tally', label: 'Tally Tracker', icon: Calculator }]
       : []),
+    { id: 'filing', label: 'Filing', icon: FolderCheck },
     { id: 'process_flow', label: 'Process Flow', icon: GitFork },
     { id: 'labels', label: 'Labels Manager', icon: Tags },
     { id: 'category_mapping', label: 'Category Mappings', icon: GitFork },

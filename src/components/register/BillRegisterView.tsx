@@ -378,6 +378,7 @@ export const BillRegisterView: React.FC<BillRegisterViewProps> = ({
     JMD: 'bg-purple-50 text-purple-700 border-purple-200',
     ACCOUNTS: 'bg-indigo-50 text-indigo-700 border-indigo-200',
     TALLY: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    FILING: 'bg-teal-50 text-teal-700 border-teal-200',
   };
 
   return (

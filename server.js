@@ -107,6 +107,10 @@ const HistoricalBillSchema = new mongoose.Schema({
   tally_status: { type: String, default: 'Exported' },
   bill_status: { type: String, default: 'OPEN' },
   tally_exported_date: { type: String, index: true },
+  filing_status: { type: String, default: 'PENDING' },
+  filing_date: { type: String, default: null },
+  filed_by: { type: String, default: null },
+  filed_by_name: { type: String, default: null },
   last_modified_datetime: { type: String, default: () => new Date().toISOString() },
   updated_at: { type: String, default: () => new Date().toISOString() },
 });
@@ -491,6 +495,12 @@ const server = http.createServer(async (req, res) => {
                 existing.tally_exported_date = inc.tally_exported_date;
               }
             }
+            if (inc.filing_status === 'FILED') {
+              existing.filing_status = 'FILED';
+              existing.filing_date = inc.filing_date || existing.filing_date;
+              existing.filed_by = inc.filed_by || existing.filed_by;
+              existing.filed_by_name = inc.filed_by_name || existing.filed_by_name;
+            }
             await existing.save();
           } else if (isExported) {
             // New exported bill to permanently store
@@ -510,6 +520,10 @@ const server = http.createServer(async (req, res) => {
               tally_status: 'EXPORTED',
               bill_status: inc.bill_status || 'OPEN',
               tally_exported_date: inc.tally_exported_date || new Date().toISOString(),
+              filing_status: inc.filing_status || 'PENDING',
+              filing_date: inc.filing_date || null,
+              filed_by: inc.filed_by || null,
+              filed_by_name: inc.filed_by_name || null,
               last_modified_datetime: inc.last_modified_datetime || new Date().toISOString(),
               updated_at: new Date().toISOString(),
             });
@@ -556,6 +570,55 @@ const server = http.createServer(async (req, res) => {
           tally_status: 'EXPORTED',
           bill_status: bill_data.bill_status || 'OPEN',
           tally_exported_date: exportDate,
+          filing_status: 'PENDING',
+          updated_at: new Date().toISOString(),
+        });
+      }
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, bill: doc }));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: false, error: err.message }));
+    }
+    return;
+  }
+
+  // 11. Filing Mark Filed: POST /api/filing/mark-filed
+  if (reqUrl.pathname === '/api/filing/mark-filed' && req.method === 'POST') {
+    if (!checkTallyAuth(req, res)) return;
+
+    try {
+      const { header_id, filing_date, filed_by, filed_by_name, bill_data } = await parseRequestBody(req);
+      const nowIso = filing_date || new Date().toISOString();
+
+      let doc = await HistoricalBill.findOne({ header_id });
+      if (doc) {
+        doc.filing_status = 'FILED';
+        doc.filing_date = nowIso;
+        doc.filed_by = filed_by || 'ACCOUNTS';
+        doc.filed_by_name = filed_by_name || 'ACCOUNTS';
+        doc.updated_at = new Date().toISOString();
+        await doc.save();
+      } else if (bill_data) {
+        doc = await HistoricalBill.create({
+          header_id,
+          br_no: bill_data.br_no || `BR-${header_id}`,
+          br_date: bill_data.br_date || nowIso,
+          category: bill_data.category || 'GENERAL',
+          supplier: bill_data.supplier || '',
+          bill_no: bill_data.bill_no || '—',
+          bill_date: bill_data.bill_date || '',
+          amount: bill_data.amount || 0,
+          approval_status: 'Approved',
+          next_approver: 'Accounts',
+          tally_status: 'EXPORTED',
+          bill_status: bill_data.bill_status || 'OPEN',
+          tally_exported_date: bill_data.tally_exported_date || nowIso,
+          filing_status: 'FILED',
+          filing_date: nowIso,
+          filed_by: filed_by || 'ACCOUNTS',
+          filed_by_name: filed_by_name || 'ACCOUNTS',
           updated_at: new Date().toISOString(),
         });
       }

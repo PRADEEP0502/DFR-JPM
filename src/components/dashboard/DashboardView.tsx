@@ -116,6 +116,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     JMD: { count: 0, amount: 0 },
     ACCOUNTS: { count: 0, amount: 0 },
     TALLY: { count: 0, amount: 0 },
+    FILING: { count: 0, amount: 0 },
   };
 
   activeBills.forEach(b => {

@@ -11,9 +11,10 @@ import {
   ProcessStage,
   STAGE_DISPLAY_NAMES,
   AgeBand,
+  FilingStatus,
 } from '../types/dfr';
 import { INITIAL_LABELS, INITIAL_CATEGORY_MAPPINGS } from './mockData';
-import { authService, isTallyTrackerAuthorized } from './authService';
+import { authService, isTallyTrackerAuthorized, isFilingAuthorized } from './authService';
 import { auditService } from './auditService';
 import { selsoftApiClient, mapErpToDfrStage } from './selsoftApi';
 
@@ -321,6 +322,22 @@ class DfrService {
         .map(id => labelMap.get(id))
         .filter((l): l is DfrLabel => l !== undefined);
 
+      // Filing Status mapping:
+      // If manually marked as FILED, status is 'FILED'.
+      // If exported/posted to Tally, status is 'PENDING'.
+      // Otherwise undefined.
+      const rawFilingStatus = dfrEntry?.filing_status || erp.filing_status;
+      const filingStatus: FilingStatus | undefined =
+        rawFilingStatus === 'FILED'
+          ? 'FILED'
+          : isAccountsExported
+          ? 'PENDING'
+          : undefined;
+
+      const filingDate = dfrEntry?.filing_date || erp.filing_date || null;
+      const filedBy = dfrEntry?.filed_by || erp.filed_by || null;
+      const filedByName = dfrEntry?.filed_by_name || erp.filed_by_name || (filedBy ? userMap.get(filedBy) : null);
+
       items.push({
         header_id: erp.header_id,
         br_no: erp.br_no,
@@ -341,6 +358,10 @@ class DfrService {
         rejection_reason: erp.rejection_reason,
         tally_status: erp.tally_status,
         tally_exported_date: erp.tally_exported_date,
+        filing_status: filingStatus,
+        filing_date: filingDate,
+        filed_by: filedBy,
+        filed_by_name: filedByName,
         bill_status: erp.bill_status,
         dfr_status: dfr.dfr_status,
         labels: billLabels,
@@ -684,6 +705,101 @@ class DfrService {
     );
   }
 
+  public markBillAsFiled(headerId: number, actorUserId: string, note?: string) {
+    const actorUser = this.state.users.find(u => u.id === actorUserId) || authService.getCurrentUser();
+    if (!isFilingAuthorized(actorUser)) {
+      console.warn(`[Security] Unauthorized attempt to file bill #${headerId} by user: ${actorUserId}`);
+      return;
+    }
+
+    let dfr = this.state.dfrBills.find(x => x.header_id === headerId);
+    let erp = this.state.erpBills.find(x => x.header_id === headerId);
+    if (!erp) return;
+
+    if (!dfr) {
+      dfr = {
+        header_id: headerId,
+        current_holder_id: actorUserId,
+        current_stage: 'FILING',
+        dfr_status: 'OPEN',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      this.state.dfrBills.push(dfr);
+    }
+
+    const nowIso = new Date().toISOString();
+    const fromHolderId = dfr.current_holder_id;
+    const fromStage = dfr.current_stage;
+    const actorName = actorUser?.full_name || actorUserId;
+
+    dfr.current_stage = 'FILING';
+    dfr.current_holder_id = actorUserId;
+    dfr.filing_status = 'FILED';
+    dfr.filing_date = nowIso;
+    dfr.filed_by = actorUserId;
+    dfr.filed_by_name = actorName;
+    dfr.updated_at = nowIso;
+
+    erp.filing_status = 'FILED';
+    erp.filing_date = nowIso;
+    erp.filed_by = actorUserId;
+    erp.filed_by_name = actorName;
+
+    const maxHistoryId = this.state.holderHistory.reduce((max, h) => Math.max(max, h.id), 0);
+    this.state.holderHistory.push({
+      id: maxHistoryId + 1,
+      header_id: headerId,
+      from_holder_id: fromHolderId,
+      to_holder_id: actorUserId,
+      from_stage: fromStage,
+      to_stage: 'FILING',
+      changed_by: actorUserId,
+      source: 'Manual Filing',
+      note: note || 'Physically filed bill in archives after Tally export',
+      changed_at: nowIso,
+    });
+
+    // Rule: Exclude filed bills from active A-10 alerts
+    this.state.alerts = this.state.alerts.filter(
+      a => !(a.header_id === headerId && a.band === 'A-10')
+    );
+
+    this.saveStateToStorage();
+
+    // Persist to backend MongoDB
+    try {
+      fetch('/api/filing/mark-filed', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('DFR_AUTH_SESSION_TOKEN_V2') || ''}`,
+        },
+        body: JSON.stringify({
+          header_id: headerId,
+          filing_date: nowIso,
+          filed_by: actorUserId,
+          filed_by_name: actorName,
+          bill_data: erp,
+        }),
+      }).catch(e => console.warn('Filing backend sync notice:', e));
+    } catch (e) {
+      // Offline fallback
+    }
+
+    const actor = authService.getCurrentUser();
+    auditService.log(
+      'FILING_COMPLETED',
+      `Physically filed bill #${headerId} (${erp.br_no || 'BR'}) in archives`,
+      actor,
+      {
+        header_id: headerId,
+        previous_value: fromStage,
+        new_value: 'FILING',
+      }
+    );
+  }
+
   public acknowledgeAlert(alertId: number, userId: string) {
     const alert = this.state.alerts.find(a => a.id === alertId);
     if (alert) {
@@ -719,7 +835,7 @@ class DfrService {
       const result = await selsoftApiClient.fetchAllBills(500, modifiedAfter);
 
       if (result.allBills && result.allBills.length > 0) {
-        // If we have live ERP bills, build a fresh mapped list preserving local tally exports
+        // If we have live ERP bills, build a fresh mapped list preserving local tally exports & filing status
         const incomingMap = new Map(result.allBills.map(b => [b.header_id, b]));
         const existingMap = new Map((this.state.erpBills || []).map(b => [b.header_id, b]));
         const mergedList: ErpBill[] = [];
@@ -732,6 +848,10 @@ class DfrService {
               ...inc,
               tally_status: isLocalExported ? existing.tally_status : inc.tally_status,
               tally_exported_date: existing.tally_exported_date || inc.tally_exported_date,
+              filing_status: existing.filing_status || inc.filing_status,
+              filing_date: existing.filing_date || inc.filing_date,
+              filed_by: existing.filed_by || inc.filed_by,
+              filed_by_name: existing.filed_by_name || inc.filed_by_name,
             });
           } else {
             mergedList.push(inc);

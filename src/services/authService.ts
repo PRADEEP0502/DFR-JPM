@@ -576,3 +576,12 @@ export const isAuditLogAuthorized = (user?: DfrUser | null): boolean => {
 
 export const isAdminSettingsAuthorized = isAuditLogAuthorized;
 
+/**
+ * Filing Authorization Guard:
+ * Filing action (Mark as Filed) is primarily executable by ACCOUNTS staff,
+ * as well as senior executive roles (JMD, MD, MD_MAM, DFR_ADMIN).
+ */
+export const isFilingAuthorized = (user?: DfrUser | null): boolean => {
+  return isTallyTrackerAuthorized(user);
+};
+

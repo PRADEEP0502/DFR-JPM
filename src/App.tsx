@@ -6,6 +6,7 @@ import { BillRegisterView } from './components/register/BillRegisterView';
 import { CriticalA10View } from './components/views/CriticalA10View';
 import { ByHolderView } from './components/views/ByHolderView';
 import { TallyTrackerView } from './components/views/TallyTrackerView';
+import { FilingView } from './components/views/FilingView';
 import { LabelsManagerView } from './components/views/LabelsManagerView';
 import { CategoryMappingView } from './components/views/CategoryMappingView';
 import { ReportsView } from './components/views/ReportsView';
@@ -317,6 +318,15 @@ export const App: React.FC = () => {
                 </button>
               </div>
             )
+          )}
+
+          {currentTab === 'filing' && (
+            <FilingView
+              bills={bills}
+              currentUser={currentUser}
+              onSelectBill={setSelectedBill}
+              onRefresh={() => setTick(t => t + 1)}
+            />
           )}
 
           {currentTab === 'process_flow' && <ProcessFlowView />}

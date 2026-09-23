@@ -21,6 +21,8 @@ import {
   ArrowRightCircle,
   Activity,
   Check,
+  FolderCheck,
+  FolderArchive,
 } from 'lucide-react';
 import {
   BillRegisterItem,
@@ -28,8 +30,10 @@ import {
   HolderHistory,
   DfrLabel,
   STAGE_DISPLAY_NAMES,
+  isTallyExported,
 } from '../../types/dfr';
 import { dfrService } from '../../services/dfrService';
+import { isFilingAuthorized } from '../../services/authService';
 
 const formatAuditDateTime = (dateStr: string) => {
   if (!dateStr) return '—';
@@ -99,6 +103,7 @@ export const BillDetailDrawer: React.FC<BillDetailDrawerProps> = ({
 }) => {
   const [showLabelPicker, setShowLabelPicker] = useState<boolean>(false);
   const [note, setNote] = useState<string>('');
+  const [showFilingConfirm, setShowFilingConfirm] = useState<boolean>(false);
 
   const history = dfrService.getHolderHistory(bill.header_id);
   const users = dfrService.getUsers();
@@ -123,6 +128,12 @@ export const BillDetailDrawer: React.FC<BillDetailDrawerProps> = ({
 
   const handleCompletePayment = () => {
     dfrService.markPaymentCompleted(bill.header_id, currentUser.id, note);
+    onRefresh();
+  };
+
+  const handleConfirmFiling = () => {
+    dfrService.markBillAsFiled(bill.header_id, currentUser.id, note);
+    setShowFilingConfirm(false);
     onRefresh();
   };
 
@@ -288,6 +299,75 @@ export const BillDetailDrawer: React.FC<BillDetailDrawerProps> = ({
                     <p className="font-extrabold text-sky-700 mt-1">{bill.dfr_status}</p>
                   </div>
                 </div>
+              </div>
+
+              {/* Section 3: Physical Filing Section */}
+              <div className="bg-slate-50/80 border border-slate-200/90 rounded-2xl p-5 space-y-4 shadow-2xs">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                    <FolderCheck className="w-4 h-4 text-emerald-600" />
+                    Filing
+                  </h3>
+                  <span
+                    className={`px-2.5 py-0.5 rounded-lg text-xs font-black border ${
+                      bill.filing_status === 'FILED'
+                        ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                        : isTallyExported(bill)
+                        ? 'bg-amber-100 text-amber-800 border-amber-200'
+                        : 'bg-slate-100 text-slate-600 border-slate-200'
+                    }`}
+                  >
+                    {bill.filing_status === 'FILED'
+                      ? 'Filed'
+                      : isTallyExported(bill)
+                      ? 'Pending Filing'
+                      : 'In Progress (Pre-Tally)'}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 text-xs">
+                  <div>
+                    <span className="text-[11px] text-slate-400 font-bold uppercase block">Filing Status</span>
+                    <p className="font-extrabold text-slate-900 mt-1">
+                      {bill.filing_status === 'FILED' ? 'FILED' : isTallyExported(bill) ? 'PENDING' : '—'}
+                    </p>
+                  </div>
+
+                  <div>
+                    <span className="text-[11px] text-slate-400 font-bold uppercase block">Tally Exported Date</span>
+                    <p className="font-mono text-slate-700 mt-1">
+                      {formatDateOnly(bill.tally_exported_date)}
+                    </p>
+                  </div>
+
+                  <div>
+                    <span className="text-[11px] text-slate-400 font-bold uppercase block">Filing Date</span>
+                    <p className="font-mono text-slate-700 mt-1">
+                      {bill.filing_date ? formatAuditDateTime(bill.filing_date) : '—'}
+                    </p>
+                  </div>
+
+                  <div>
+                    <span className="text-[11px] text-slate-400 font-bold uppercase block">Filed By</span>
+                    <p className="font-extrabold text-slate-900 mt-1 truncate">
+                      {bill.filed_by_name || bill.filed_by || '—'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Mark as Filed Action if bill is Tally Exported & not yet filed */}
+                {isTallyExported(bill) && bill.filing_status !== 'FILED' && isFilingAuthorized(currentUser) && (
+                  <div className="pt-2 border-t border-slate-200/80 flex items-center justify-between">
+                    <span className="text-xs text-slate-500 font-medium">Ready for physical archive</span>
+                    <button
+                      onClick={() => setShowFilingConfirm(true)}
+                      className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition cursor-pointer"
+                    >
+                      <FolderCheck className="w-3.5 h-3.5" />
+                      <span>Mark as Filed</span>
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Multi-Labels Section */}
@@ -507,6 +587,54 @@ export const BillDetailDrawer: React.FC<BillDetailDrawerProps> = ({
             </div>
           </div>
         </div>
+
+        {/* Confirmation Modal for Mark as Filed */}
+        {showFilingConfirm && (
+          <div className="fixed inset-0 z-60 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full p-6 space-y-4 animate-in zoom-in-95 duration-150">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto shadow-inner">
+                <FolderCheck className="w-6 h-6" />
+              </div>
+
+              <div className="text-center space-y-1.5">
+                <h3 className="text-base font-black text-slate-900">Confirm Physical Filing</h3>
+                <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                  Have you physically filed this bill in the document archives?
+                </p>
+                <div className="mt-3 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs space-y-1 text-left font-sans">
+                  <div className="flex justify-between">
+                    <span className="text-slate-500 font-bold">BR No:</span>
+                    <span className="font-mono font-black text-slate-900">{bill.br_no}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500 font-bold">Supplier:</span>
+                    <span className="font-extrabold text-slate-900 truncate max-w-[200px]">{bill.supplier}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500 font-bold">Amount:</span>
+                    <span className="font-black text-emerald-700">₹ {bill.amount.toLocaleString('en-IN')}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 pt-2">
+                <button
+                  onClick={() => setShowFilingConfirm(false)}
+                  className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold text-xs transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmFiling}
+                  className="flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition shadow-xs cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <FolderCheck className="w-4 h-4" />
+                  <span>Confirm Filing</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
