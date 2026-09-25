@@ -326,11 +326,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </p>
           <p className="text-xs text-amber-600 mt-1 font-bold flex items-center gap-1">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-            Follow-up Needed
+            Follow-up Need
           </p>
         </Card3D>
 
-        {/* A-10 (10+ DAYS) */}
+        {/* Action Need */}
         <Card3D
           glowColor="rgba(239, 68, 68, 0.4)"
           onClick={() => (onSelectBand ? onSelectBand('A-10') : onSelectTab('critical'))}
@@ -346,7 +346,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 a10Bills.length > 0 ? 'text-white' : 'text-red-700'
               }`}
             >
-              Action Needed
+              Action Need
             </span>
             <div
               className={`w-9 h-9 rounded-2xl flex items-center justify-center text-white shadow-md ${
@@ -379,7 +379,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               }`}
             >
               <span className={`w-1.5 h-1.5 rounded-full ${a10Bills.length > 0 ? 'bg-white' : 'bg-red-500'}`} />
-              Action Needed
+              Action Need
             </p>
             <ChevronRight
               className={`w-4 h-4 ${a10Bills.length > 0 ? 'text-white' : 'text-red-600'}`}
