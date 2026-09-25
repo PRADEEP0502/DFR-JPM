@@ -346,7 +346,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 a10Bills.length > 0 ? 'text-white' : 'text-red-700'
               }`}
             >
-              A-10 (10+ DAYS)
+              Action Needed
             </span>
             <div
               className={`w-9 h-9 rounded-2xl flex items-center justify-center text-white shadow-md ${
