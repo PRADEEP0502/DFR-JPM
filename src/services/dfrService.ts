@@ -13,6 +13,7 @@ import {
   AgeBand,
   FilingStatus,
   isDeletedBill,
+  AuditLogEntry,
 } from '../types/dfr';
 import { INITIAL_LABELS, INITIAL_CATEGORY_MAPPINGS } from './mockData';
 import { authService, isTallyTrackerAuthorized, isFilingAuthorized } from './authService';
@@ -397,6 +398,324 @@ class DfrService {
     });
   }
 
+  /**
+   * Retrieves the comprehensive, deduplicated chronological audit trail / history for a specific bill.
+   */
+  public getBillAuditHistory(headerId: number): AuditLogEntry[] {
+    // 1. Check if auditService has logs for this headerId
+    let logs = auditService.getLogsForBill(headerId);
+
+    // 2. If no logs exist or minimal logs, ensure ERP baseline events are synthesized
+    if (logs.length === 0) {
+      const erp = this.state.erpBills.find(b => b.header_id === headerId);
+      if (erp) {
+        this.synthesizeAuditEventsForBill(erp);
+        logs = auditService.getLogsForBill(headerId);
+      }
+    }
+
+    return logs.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+  }
+
+  /**
+   * Synthesizes and logs deduplicated audit events for a bill from its ERP and tracking record
+   */
+  public synthesizeAuditEventsForBill(bill: ErpBill) {
+    const erpStage = mapErpToDfrStage(bill);
+    const initialHolder = this.resolveInitialHolderForCategory(bill.category);
+
+    let baseTime: number;
+    const dateStr = bill.br_date || bill.bill_date;
+    if (dateStr && !dateStr.includes('T') && dateStr.split('-').length === 3) {
+      const [y, m, d] = dateStr.split('-').map(Number);
+      baseTime = new Date(y, m - 1, d, 9, 10, 0).getTime();
+    } else {
+      baseTime = new Date(dateStr || Date.now()).getTime();
+    }
+
+    const iadUser = this.state.users.find(u => u.username === 'iad' || u.id === 'user-004') || {
+      id: 'user-004',
+      username: 'iad',
+      full_name: 'IAD',
+      role: 'STAFF' as const,
+      department: 'IAD' as const,
+      access_level: 'DEPARTMENT_ACCESS' as const,
+      active: true,
+    };
+    const aoUser = this.state.users.find(u => u.username === 'ao' || u.id === 'user-005') || {
+      id: 'user-005',
+      username: 'ao',
+      full_name: 'AO',
+      role: 'MANAGER' as const,
+      department: 'AO' as const,
+      access_level: 'DEPARTMENT_ACCESS' as const,
+      active: true,
+    };
+    const jmdUser = this.state.users.find(u => u.username === 'jmd' || u.id === 'user-007') || {
+      id: 'user-007',
+      username: 'jmd',
+      full_name: 'JMD',
+      role: 'MD' as const,
+      department: 'JMD' as const,
+      access_level: 'FULL_EDIT' as const,
+      active: true,
+    };
+    const accountsUser = this.state.users.find(u => u.username === 'accounts' || u.id === 'user-011') || {
+      id: 'user-011',
+      username: 'accounts',
+      full_name: 'ACCOUNTS',
+      role: 'STAFF' as const,
+      department: 'ACCOUNTS' as const,
+      access_level: 'DEPARTMENT_ACCESS' as const,
+      active: true,
+    };
+
+    // 1. Bill Received (Inward)
+    const tIntake = new Date(baseTime).toISOString();
+    auditService.logUniqueEvent(
+      `intake_${bill.header_id}`,
+      'BILL_RECEIVED',
+      'Bill received and assigned',
+      initialHolder,
+      {
+        header_id: bill.header_id,
+        br_no: bill.br_no,
+        bill_no: bill.bill_no,
+        user_id: initialHolder.id,
+        user_name: initialHolder.full_name,
+        user_role: initialHolder.role,
+        previous_stage: null,
+        new_stage: 'BILL_INWARD',
+        previous_holder: null,
+        new_holder: initialHolder.full_name,
+        status_before: 'NEW',
+        status_after: 'OPEN',
+        source: 'ERP',
+        timestamp: tIntake,
+        action_label: 'Bill Received',
+        note: `Assigned via Category Routing (${bill.category})`,
+      }
+    );
+
+    // 2. IAD Checked
+    const stagesPastInward: ProcessStage[] = ['IAD', 'AO', 'JMD', 'ACCOUNTS', 'TALLY', 'FILING'];
+    if (stagesPastInward.includes(erpStage)) {
+      const tChecked = new Date(baseTime + 1000 * 60 * 75).toISOString();
+      auditService.logUniqueEvent(
+        `iad_check_${bill.header_id}`,
+        'CHECKED',
+        'Bill verified',
+        iadUser,
+        {
+          header_id: bill.header_id,
+          br_no: bill.br_no,
+          bill_no: bill.bill_no,
+          user_id: iadUser.id,
+          user_name: iadUser.full_name,
+          user_role: iadUser.role,
+          previous_stage: 'BILL_INWARD',
+          new_stage: 'IAD',
+          previous_holder: initialHolder.full_name,
+          new_holder: iadUser.full_name,
+          status_before: 'OPEN',
+          status_after: 'CHECKED',
+          source: 'ERP',
+          timestamp: tChecked,
+          action_label: 'Checked',
+          note: 'Internal audit verification completed',
+        }
+      );
+    }
+
+    // 3. IAD Passed (IAD -> AO)
+    const stagesPastIad: ProcessStage[] = ['AO', 'JMD', 'ACCOUNTS', 'TALLY', 'FILING'];
+    if (stagesPastIad.includes(erpStage)) {
+      const tIadPass = new Date(baseTime + 1000 * 60 * 150).toISOString();
+      auditService.logUniqueEvent(
+        `iad_pass_${bill.header_id}`,
+        'PASSED',
+        'IAD → AO',
+        iadUser,
+        {
+          header_id: bill.header_id,
+          br_no: bill.br_no,
+          bill_no: bill.bill_no,
+          user_id: iadUser.id,
+          user_name: iadUser.full_name,
+          user_role: iadUser.role,
+          previous_stage: 'IAD',
+          new_stage: 'AO',
+          previous_holder: iadUser.full_name,
+          new_holder: aoUser.full_name,
+          status_before: 'CHECKED',
+          status_after: 'PASSED',
+          source: 'ERP',
+          timestamp: tIadPass,
+          action_label: 'Passed',
+          note: 'Passed from IAD to AO for administrative approval',
+        }
+      );
+    }
+
+    // 4. AO Passed (AO -> JMD)
+    const stagesPastAo: ProcessStage[] = ['JMD', 'ACCOUNTS', 'TALLY', 'FILING'];
+    if (stagesPastAo.includes(erpStage)) {
+      const tAoPass = new Date(baseTime + 1000 * 60 * 245).toISOString();
+      auditService.logUniqueEvent(
+        `ao_pass_${bill.header_id}`,
+        'PASSED',
+        'AO → JMD',
+        aoUser,
+        {
+          header_id: bill.header_id,
+          br_no: bill.br_no,
+          bill_no: bill.bill_no,
+          user_id: aoUser.id,
+          user_name: aoUser.full_name,
+          user_role: aoUser.role,
+          previous_stage: 'AO',
+          new_stage: 'JMD',
+          previous_holder: aoUser.full_name,
+          new_holder: jmdUser.full_name,
+          status_before: 'PASSED',
+          status_after: 'PASSED',
+          source: 'ERP',
+          timestamp: tAoPass,
+          action_label: 'Passed',
+          note: 'Administrative check passed; submitted to JMD for final executive approval',
+        }
+      );
+    }
+
+    // 5. JMD Passed (JMD -> ACCOUNTS)
+    const stagesPastJmd: ProcessStage[] = ['ACCOUNTS', 'TALLY', 'FILING'];
+    if (stagesPastJmd.includes(erpStage)) {
+      const tJmdPass = new Date(baseTime + 1000 * 60 * 370).toISOString();
+      auditService.logUniqueEvent(
+        `jmd_pass_${bill.header_id}`,
+        'PASSED',
+        'JMD → ACCOUNTS',
+        jmdUser,
+        {
+          header_id: bill.header_id,
+          br_no: bill.br_no,
+          bill_no: bill.bill_no,
+          user_id: jmdUser.id,
+          user_name: jmdUser.full_name,
+          user_role: jmdUser.role,
+          previous_stage: 'JMD',
+          new_stage: 'ACCOUNTS',
+          previous_holder: jmdUser.full_name,
+          new_holder: accountsUser.full_name,
+          status_before: 'PASSED',
+          status_after: 'APPROVED',
+          source: 'ERP',
+          timestamp: tJmdPass,
+          action_label: 'Passed',
+          note: 'Approved by JMD; sent to Accounts for Tally export & payment disbursement',
+        }
+      );
+    }
+
+    // 6. Rejected if applicable
+    if (bill.approval_status?.toUpperCase() === 'REJECTED') {
+      const tReject = new Date(baseTime + 1000 * 60 * 180).toISOString();
+      const rejectorName = bill.rejected_by || 'Approver';
+      const rejectorUser = this.state.users.find(u => u.full_name === rejectorName || u.username === rejectorName) || {
+        id: 'user-approver',
+        username: rejectorName.toLowerCase(),
+        full_name: rejectorName,
+        role: 'MANAGER' as const,
+        department: 'AO' as const,
+        access_level: 'DEPARTMENT_ACCESS' as const,
+        active: true,
+      };
+      auditService.logUniqueEvent(
+        `rejected_${bill.header_id}_${rejectorName}`,
+        'REJECTED',
+        `Bill rejected: ${bill.rejection_reason || 'No reason provided'}`,
+        rejectorUser,
+        {
+          header_id: bill.header_id,
+          br_no: bill.br_no,
+          bill_no: bill.bill_no,
+          rejection_reason: bill.rejection_reason,
+          status_before: 'PENDING',
+          status_after: 'REJECTED',
+          source: 'ERP',
+          timestamp: tReject,
+          action_label: 'Rejected',
+          note: bill.rejection_reason || 'Bill returned with rejection remarks',
+        }
+      );
+    }
+
+    // 7. Tally Exported
+    if (
+      bill.tally_status?.toUpperCase() === 'EXPORTED' ||
+      bill.tally_status?.toUpperCase() === 'POSTED' ||
+      bill.tally_exported_date
+    ) {
+      const tTally = bill.tally_exported_date || new Date(baseTime + 1000 * 60 * 420).toISOString();
+      auditService.logUniqueEvent(
+        `tally_export_${bill.header_id}`,
+        'TALLY_EXPORTED',
+        'Exported to Tally',
+        accountsUser,
+        {
+          header_id: bill.header_id,
+          br_no: bill.br_no,
+          bill_no: bill.bill_no,
+          user_id: accountsUser.id,
+          user_name: accountsUser.full_name,
+          user_role: accountsUser.role,
+          previous_stage: 'ACCOUNTS',
+          new_stage: 'TALLY',
+          previous_holder: accountsUser.full_name,
+          new_holder: accountsUser.full_name,
+          status_before: 'APPROVED',
+          status_after: 'EXPORTED',
+          source: bill.tally_exported_date ? 'ERP' : 'DFR',
+          timestamp: tTally,
+          action_label: 'Tally Exported',
+          note: 'Confirmed bill posted to Tally software',
+        }
+      );
+    }
+
+    // 8. Physical Filing
+    if (bill.filing_status === 'FILED') {
+      const tFiling = bill.filing_date || new Date(baseTime + 1000 * 60 * 440).toISOString();
+      const filedUser = bill.filed_by_name
+        ? this.state.users.find(u => u.full_name === bill.filed_by_name) || accountsUser
+        : accountsUser;
+      auditService.logUniqueEvent(
+        `filing_${bill.header_id}`,
+        'FILED',
+        'Physical filing completed',
+        filedUser,
+        {
+          header_id: bill.header_id,
+          br_no: bill.br_no,
+          bill_no: bill.bill_no,
+          user_id: filedUser.id,
+          user_name: filedUser.full_name,
+          user_role: filedUser.role,
+          previous_stage: 'TALLY',
+          new_stage: 'FILING',
+          previous_holder: accountsUser.full_name,
+          new_holder: filedUser.full_name,
+          status_before: 'EXPORTED',
+          status_after: 'FILED',
+          source: 'DFR',
+          timestamp: tFiling,
+          action_label: 'Filed',
+          note: 'Physical filing completed in document archives',
+        }
+      );
+    }
+  }
+
   // ============================================================================
   // MUTATIONS (Category Mappings & Human Checkpoints)
   // ============================================================================
@@ -567,13 +886,23 @@ class DfrService {
     const actor = authService.getCurrentUser();
     const fromUser = this.state.users.find(u => u.id === fromHolderId);
     const toUser = this.state.users.find(u => u.id === toHolderId);
+    const erp = this.state.erpBills.find(x => x.header_id === headerId);
 
     auditService.log(
-      'HANDOVER',
-      `Confirmed custody handover for bill #${headerId}: ${fromUser?.full_name || 'Inward'} → ${toUser?.full_name || toHolderId} (${STAGE_DISPLAY_NAMES[toStage]})`,
+      'MOVED',
+      `Moved custody for bill #${headerId} (${erp?.br_no || 'BR'}): ${fromUser?.full_name || 'Inward'} → ${toUser?.full_name || toHolderId} (${STAGE_DISPLAY_NAMES[toStage]})`,
       actor,
       {
         header_id: headerId,
+        br_no: erp?.br_no,
+        bill_no: erp?.bill_no,
+        previous_stage: fromStage,
+        new_stage: toStage,
+        previous_holder: fromUser?.full_name || 'Inward',
+        new_holder: toUser?.full_name || toHolderId,
+        note: note || 'Physical custody handover confirmed',
+        source: 'DFR',
+        action_label: 'Moved',
         previous_value: fromUser?.full_name,
         new_value: toUser?.full_name,
       }
@@ -591,7 +920,11 @@ class DfrService {
     auditService.log(
       'SETTINGS_UPDATE',
       `Updated Selsoft ERP auto-sync schedule interval to ${mins} minutes`,
-      authService.getCurrentUser()
+      authService.getCurrentUser(),
+      {
+        action_label: 'Settings Changed',
+        source: 'DFR',
+      }
     );
   }
 
@@ -609,6 +942,8 @@ class DfrService {
     const nowIso = new Date().toISOString();
     const fromHolderId = dfr.current_holder_id;
     const fromStage = dfr.current_stage;
+    const fromUser = this.state.users.find(u => u.id === fromHolderId);
+    const actorName = actorUser?.full_name || actorUserId;
 
     dfr.current_stage = 'TALLY';
     dfr.dfr_status = 'TALLY_DONE';
@@ -621,11 +956,16 @@ class DfrService {
     this.state.holderHistory.push({
       id: maxHistoryId + 1,
       header_id: headerId,
+      br_no: erp.br_no,
+      bill_no: erp.bill_no,
       from_holder_id: fromHolderId,
       to_holder_id: actorUserId,
       from_stage: fromStage,
       to_stage: 'TALLY',
+      action: 'TALLY_EXPORTED',
       changed_by: actorUserId,
+      user_name: actorName,
+      source: 'DFR',
       note: note || 'Confirmed bill posted to Tally software',
       changed_at: nowIso,
     });
@@ -657,11 +997,20 @@ class DfrService {
 
     const actor = authService.getCurrentUser();
     auditService.log(
-      'MOVE_TO_TALLY',
+      'TALLY_EXPORTED',
       `Exported bill #${headerId} (${erp.br_no || 'BR'}) to Tally software`,
       actor,
       {
         header_id: headerId,
+        br_no: erp.br_no,
+        bill_no: erp.bill_no,
+        previous_stage: fromStage,
+        new_stage: 'TALLY',
+        previous_holder: fromUser?.full_name || 'Accounts',
+        new_holder: actorName,
+        note: note || 'Confirmed bill posted to Tally software',
+        source: 'DFR',
+        action_label: 'Tally Exported',
         previous_value: fromStage,
         new_value: 'TALLY',
       }
@@ -676,6 +1025,8 @@ class DfrService {
     const nowIso = new Date().toISOString();
     const fromHolderId = dfr.current_holder_id;
     const fromStage = dfr.current_stage;
+    const actorUser = this.state.users.find(u => u.id === actorUserId) || authService.getCurrentUser();
+    const actorName = actorUser?.full_name || actorUserId;
 
     dfr.dfr_status = 'PAID';
     dfr.updated_at = nowIso;
@@ -686,11 +1037,16 @@ class DfrService {
     this.state.holderHistory.push({
       id: maxHistoryId + 1,
       header_id: headerId,
+      br_no: erp.br_no,
+      bill_no: erp.bill_no,
       from_holder_id: fromHolderId,
       to_holder_id: actorUserId,
       from_stage: fromStage,
       to_stage: fromStage,
+      action: 'PAYMENT_COMPLETE',
       changed_by: actorUserId,
+      user_name: actorName,
+      source: 'DFR',
       note: note || 'Confirmed payment completion & bank disbursement',
       changed_at: nowIso,
     });
@@ -704,6 +1060,13 @@ class DfrService {
       actor,
       {
         header_id: headerId,
+        br_no: erp.br_no,
+        bill_no: erp.bill_no,
+        previous_stage: fromStage,
+        new_stage: fromStage,
+        note: note || 'Confirmed payment completion & bank disbursement',
+        source: 'DFR',
+        action_label: 'Payment Done',
         previous_value: 'TALLY_DONE',
         new_value: 'PAID',
       }
@@ -736,6 +1099,7 @@ class DfrService {
     const nowIso = new Date().toISOString();
     const fromHolderId = dfr.current_holder_id;
     const fromStage = dfr.current_stage;
+    const fromUser = this.state.users.find(u => u.id === fromHolderId);
     const actorName = actorUser?.full_name || actorUserId;
 
     dfr.current_stage = 'FILING';
@@ -755,12 +1119,16 @@ class DfrService {
     this.state.holderHistory.push({
       id: maxHistoryId + 1,
       header_id: headerId,
+      br_no: erp.br_no,
+      bill_no: erp.bill_no,
       from_holder_id: fromHolderId,
       to_holder_id: actorUserId,
       from_stage: fromStage,
       to_stage: 'FILING',
+      action: 'FILED',
       changed_by: actorUserId,
-      source: 'Manual Filing',
+      user_name: actorName,
+      source: 'DFR',
       note: note || 'Physically filed bill in archives after Tally export',
       changed_at: nowIso,
     });
@@ -794,11 +1162,20 @@ class DfrService {
 
     const actor = authService.getCurrentUser();
     auditService.log(
-      'FILING_COMPLETED',
+      'FILED',
       `Physically filed bill #${headerId} (${erp.br_no || 'BR'}) in archives`,
       actor,
       {
         header_id: headerId,
+        br_no: erp.br_no,
+        bill_no: erp.bill_no,
+        previous_stage: fromStage,
+        new_stage: 'FILING',
+        previous_holder: fromUser?.full_name || 'Accounts',
+        new_holder: actorName,
+        note: note || 'Physically filed bill in archives after Tally export',
+        source: 'DFR',
+        action_label: 'Filed',
         previous_value: fromStage,
         new_value: 'FILING',
       }
@@ -826,6 +1203,7 @@ class DfrService {
       u => u.department === 'ACCOUNTS' || u.username === 'accounts' || u.id === 'user-011'
     );
     const targetHolderId = accountsUser?.id || 'user-011';
+    const targetHolderName = accountsUser?.full_name || 'ACCOUNTS';
 
     // Revert stage and filing status
     if (dfr) {
@@ -847,12 +1225,16 @@ class DfrService {
     this.state.holderHistory.push({
       id: maxHistoryId + 1,
       header_id: headerId,
+      br_no: erp.br_no,
+      bill_no: erp.bill_no,
       from_holder_id: fromHolderId,
       to_holder_id: targetHolderId,
       from_stage: fromStage,
       to_stage: 'ACCOUNTS',
+      action: 'FILING_REVOKED',
       changed_by: actorUserId,
-      source: 'Manual Filing',
+      user_name: actorName,
+      source: 'DFR',
       note: note || 'Revoked / Undid filing; returned bill to Pending Filing queue',
       changed_at: nowIso,
     });
@@ -886,6 +1268,15 @@ class DfrService {
       actor,
       {
         header_id: headerId,
+        br_no: erp.br_no,
+        bill_no: erp.bill_no,
+        previous_stage: 'FILING',
+        new_stage: 'ACCOUNTS',
+        previous_holder: actorName,
+        new_holder: targetHolderName,
+        note: note || 'Revoked / Undid filing; returned bill to Pending Filing queue',
+        source: 'DFR',
+        action_label: 'Filing Revoked',
         previous_value: 'FILING',
         new_value: 'ACCOUNTS',
       }
@@ -907,6 +1298,10 @@ class DfrService {
         actor,
         {
           header_id: alert.header_id,
+          br_no: erp?.br_no,
+          bill_no: erp?.bill_no,
+          action_label: 'Alert Acknowledged',
+          source: 'DFR',
         }
       );
     }
@@ -1094,17 +1489,44 @@ class DfrService {
               this.state.holderHistory.push({
                 id: ++maxHistoryId,
                 header_id: incomingBill.header_id,
+                br_no: incomingBill.br_no,
+                bill_no: incomingBill.bill_no,
                 from_holder_id: fromHolder.id,
                 to_holder_id: toHolder.id,
                 from_stage: previousStage,
                 to_stage: erpStage,
+                action: 'PASSED',
                 changed_by: 'ERP_SYNC',
-                source: 'ERP Sync',
+                user_name: toHolder.full_name,
+                source: 'ERP',
                 note: `ERP process stage progressed: ${STAGE_DISPLAY_NAMES[previousStage] || previousStage} (${fromHolder.full_name}) → ${STAGE_DISPLAY_NAMES[erpStage] || erpStage} (${toHolder.full_name})`,
                 changed_at: new Date().toISOString(),
               });
+
+              // Also log to auditService
+              auditService.logUniqueEvent(
+                `stage_sync_${incomingBill.header_id}_${previousStage}_${erpStage}`,
+                'PASSED',
+                `${STAGE_DISPLAY_NAMES[previousStage] || previousStage} → ${STAGE_DISPLAY_NAMES[erpStage] || erpStage}`,
+                toHolder,
+                {
+                  header_id: incomingBill.header_id,
+                  br_no: incomingBill.br_no,
+                  bill_no: incomingBill.bill_no,
+                  previous_stage: previousStage,
+                  new_stage: erpStage,
+                  previous_holder: fromHolder.full_name,
+                  new_holder: toHolder.full_name,
+                  source: 'ERP',
+                  action_label: 'Passed',
+                  note: `ERP process stage progressed to ${STAGE_DISPLAY_NAMES[erpStage] || erpStage}`,
+                }
+              );
             }
           }
+
+          // Ensure deduplicated audit events exist in auditService for this bill
+          this.synthesizeAuditEventsForBill(incomingBill);
         }
       }
 

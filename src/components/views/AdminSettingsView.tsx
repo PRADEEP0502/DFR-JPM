@@ -20,9 +20,23 @@ import {
   Check,
   X,
 } from 'lucide-react';
-import { DfrUser, UserDepartment, UserRole, AccessLevel, AuditLogEntry, SyncState } from '../../types/dfr';
+import {
+  DfrUser,
+  UserDepartment,
+  UserRole,
+  AccessLevel,
+  AuditLogEntry,
+  SyncState,
+  STAGE_DISPLAY_NAMES,
+  ProcessStage,
+} from '../../types/dfr';
 import { authService } from '../../services/authService';
-import { auditService } from '../../services/auditService';
+import {
+  auditService,
+  formatAuditActionLabel,
+  formatAuditDateOnly,
+  formatAuditTimeOnly,
+} from '../../services/auditService';
 import { dfrService } from '../../services/dfrService';
 
 interface AdminSettingsViewProps {
@@ -52,7 +66,12 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({ currentUse
   // Audit Logs State
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>(auditService.getLogs());
   const [auditSearch, setAuditSearch] = useState<string>('');
+  const [userFilter, setUserFilter] = useState<string>('ALL');
   const [actionFilter, setActionFilter] = useState<string>('ALL');
+  const [stageFilter, setStageFilter] = useState<string>('ALL');
+  const [sourceFilter, setSourceFilter] = useState<string>('ALL');
+  const [startDateFilter, setStartDateFilter] = useState<string>('');
+  const [endDateFilter, setEndDateFilter] = useState<string>('');
 
   // Sync Configuration
   const syncState: SyncState = dfrService.getSyncState();
@@ -168,7 +187,7 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({ currentUse
   };
 
   const handleExportAuditCsv = () => {
-    const csvContent = auditService.exportCsv();
+    const csvContent = auditService.exportCsv(filteredAuditLogs);
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -177,20 +196,122 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({ currentUse
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    showToast('Audit logs CSV exported.');
+    showToast(`Exported ${filteredAuditLogs.length} audit records to CSV.`);
   };
 
-  // Filtered Audit Logs
+  const handleResetAuditFilters = () => {
+    setAuditSearch('');
+    setUserFilter('ALL');
+    setActionFilter('ALL');
+    setStageFilter('ALL');
+    setSourceFilter('ALL');
+    setStartDateFilter('');
+    setEndDateFilter('');
+  };
+
+  // Filtered Audit Logs with complete multi-criteria filtering
   const filteredAuditLogs = auditLogs.filter(log => {
-    const matchSearch =
-      auditSearch === '' ||
-      log.user_name.toLowerCase().includes(auditSearch.toLowerCase()) ||
-      log.details.toLowerCase().includes(auditSearch.toLowerCase()) ||
-      (log.header_id && log.header_id.toString().includes(auditSearch));
+    // 1. Search Query
+    if (auditSearch.trim()) {
+      const q = auditSearch.toLowerCase().trim();
+      const matchHeader = log.header_id?.toString().includes(q);
+      const matchBr = log.br_no?.toLowerCase().includes(q);
+      const matchBill = log.bill_no?.toLowerCase().includes(q);
+      const matchUser = log.user_name?.toLowerCase().includes(q);
+      const matchDetails = log.details?.toLowerCase().includes(q);
+      const matchNote = log.note?.toLowerCase().includes(q);
+      const matchRejection = log.rejection_reason?.toLowerCase().includes(q);
+      if (
+        !matchHeader &&
+        !matchBr &&
+        !matchBill &&
+        !matchUser &&
+        !matchDetails &&
+        !matchNote &&
+        !matchRejection
+      ) {
+        return false;
+      }
+    }
 
-    const matchAction = actionFilter === 'ALL' || log.action === actionFilter;
+    // 2. User Filter
+    if (userFilter !== 'ALL') {
+      if (
+        log.user_id !== userFilter &&
+        log.user_name.toLowerCase() !== userFilter.toLowerCase()
+      ) {
+        return false;
+      }
+    }
 
-    return matchSearch && matchAction;
+    // 3. Action Filter (Simple English criteria)
+    if (actionFilter !== 'ALL') {
+      const actNorm = (log.action || '').toUpperCase();
+      const fltNorm = actionFilter.toUpperCase();
+      if (fltNorm === 'BILL_RECEIVED') {
+        if (!actNorm.includes('RECEIVED') && !actNorm.includes('INTAKE')) return false;
+      } else if (fltNorm === 'CHECKED') {
+        if (!actNorm.includes('CHECK')) return false;
+      } else if (fltNorm === 'PASSED') {
+        if (!actNorm.includes('PASS')) return false;
+      } else if (fltNorm === 'REJECTED') {
+        if (!actNorm.includes('REJECT')) return false;
+      } else if (fltNorm === 'MOVED') {
+        if (!actNorm.includes('MOVE') && !actNorm.includes('HANDOVER')) return false;
+      } else if (fltNorm === 'TALLY_EXPORTED') {
+        if (!actNorm.includes('TALLY')) return false;
+      } else if (fltNorm === 'FILED') {
+        if (actNorm !== 'FILED' && !actNorm.includes('FILING_COMPLETED')) return false;
+      } else if (fltNorm === 'FILING_REVOKED') {
+        if (!actNorm.includes('REVOKE')) return false;
+      } else if (fltNorm === 'LOGIN') {
+        if (actNorm !== 'LOGIN' && actNorm !== 'LOGOUT') return false;
+      } else if (fltNorm === 'SETTINGS_UPDATE') {
+        if (
+          !actNorm.includes('SETTINGS') &&
+          !actNorm.includes('USER_') &&
+          !actNorm.includes('PASSWORD') &&
+          !actNorm.includes('CATEGORY_MAP') &&
+          !actNorm.includes('LABEL')
+        ) {
+          return false;
+        }
+      } else if (log.action !== actionFilter) {
+        return false;
+      }
+    }
+
+    // 4. Stage Filter
+    if (stageFilter !== 'ALL') {
+      const pStage = log.previous_stage || '';
+      const nStage = log.new_stage || '';
+      if (
+        pStage !== stageFilter &&
+        nStage !== stageFilter &&
+        !(stageFilter === 'ACCOUNTS' && (nStage === 'TALLY' || pStage === 'TALLY'))
+      ) {
+        return false;
+      }
+    }
+
+    // 5. Source Filter (ERP / DFR)
+    if (sourceFilter !== 'ALL') {
+      if ((log.source || 'DFR') !== sourceFilter) {
+        return false;
+      }
+    }
+
+    // 6. Date Range Filter
+    if (startDateFilter) {
+      const logDate = log.timestamp.slice(0, 10);
+      if (logDate < startDateFilter) return false;
+    }
+    if (endDateFilter) {
+      const logDate = log.timestamp.slice(0, 10);
+      if (logDate > endDateFilter) return false;
+    }
+
+    return true;
   });
 
   return (
@@ -384,111 +505,304 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({ currentUse
       {/* TAB 2: AUDIT LOGS */}
       {activeTab === 'audit' && (
         <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white border border-slate-200/90 rounded-2xl p-4 shadow-sm">
-            <div className="flex items-center gap-2 flex-1 max-w-md">
-              <div className="relative w-full">
+          {/* Advanced Multi-Filter Control Bar */}
+          <div className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-sm space-y-3.5">
+            {/* Row 1: Search & Core Dropdown Filters */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2.5">
+              {/* Search Bar */}
+              <div className="lg:col-span-4 relative">
                 <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   value={auditSearch}
                   onChange={e => setAuditSearch(e.target.value)}
-                  placeholder="Search logs by user, bill header ID, or action..."
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-1.5 text-xs font-medium text-slate-900 focus:outline-none focus:border-sky-500"
+                  placeholder="Search by BR No, Bill No, Header ID, User..."
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-xs font-medium text-slate-900 focus:outline-none focus:border-sky-500"
                 />
               </div>
 
-              <select
-                value={actionFilter}
-                onChange={e => setActionFilter(e.target.value)}
-                className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-700 focus:outline-none focus:border-sky-500"
-              >
-                <option value="ALL">All Actions</option>
-                <option value="LOGIN">Login / Logout</option>
-                <option value="HANDOVER">Handover / Custody</option>
-                <option value="MOVE_TO_TALLY">Tally Export</option>
-                <option value="PAYMENT_COMPLETE">Payment Done</option>
-                <option value="ALERT_ACKNOWLEDGE">Alert Acknowledged</option>
-                <option value="CATEGORY_MAP_CREATE">Category Mappings</option>
-                <option value="USER_CREATE">User Management</option>
-                <option value="SETTINGS_UPDATE">Settings Update</option>
-              </select>
+              {/* User Filter */}
+              <div className="lg:col-span-2">
+                <select
+                  value={userFilter}
+                  onChange={e => setUserFilter(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:border-sky-500 truncate"
+                >
+                  <option value="ALL">All Users</option>
+                  {usersList.map(u => (
+                    <option key={u.id} value={u.id}>
+                      {u.full_name} ({u.role})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Action Filter */}
+              <div className="lg:col-span-2">
+                <select
+                  value={actionFilter}
+                  onChange={e => setActionFilter(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:border-sky-500 truncate"
+                >
+                  <option value="ALL">All Actions</option>
+                  <option value="BILL_RECEIVED">Bill Received</option>
+                  <option value="CHECKED">Checked</option>
+                  <option value="PASSED">Passed</option>
+                  <option value="REJECTED">Rejected</option>
+                  <option value="MOVED">Moved</option>
+                  <option value="TALLY_EXPORTED">Tally Exported</option>
+                  <option value="FILED">Filed</option>
+                  <option value="FILING_REVOKED">Filing Revoked</option>
+                  <option value="LOGIN">Login / Logout</option>
+                  <option value="SETTINGS_UPDATE">Settings Changed</option>
+                </select>
+              </div>
+
+              {/* Stage Filter */}
+              <div className="lg:col-span-2">
+                <select
+                  value={stageFilter}
+                  onChange={e => setStageFilter(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:border-sky-500 truncate"
+                >
+                  <option value="ALL">All Stages</option>
+                  <option value="BILL_INWARD">Bill Inward</option>
+                  <option value="IAD">IAD</option>
+                  <option value="AO">AO</option>
+                  <option value="JMD">JMD</option>
+                  <option value="ACCOUNTS">Accounts / Tally</option>
+                  <option value="FILING">Filing</option>
+                </select>
+              </div>
+
+              {/* Source Filter */}
+              <div className="lg:col-span-2">
+                <select
+                  value={sourceFilter}
+                  onChange={e => setSourceFilter(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:border-sky-500"
+                >
+                  <option value="ALL">All Sources</option>
+                  <option value="ERP">ERP Sync</option>
+                  <option value="DFR">DFR Native</option>
+                </select>
+              </div>
             </div>
 
-            <button
-              onClick={handleExportAuditCsv}
-              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow transition flex items-center gap-1.5 self-start sm:self-auto min-h-[38px]"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>Export CSV</span>
-            </button>
+            {/* Row 2: Date Pickers, Stats & Actions */}
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100">
+              {/* Date Pickers */}
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-xl">
+                  <span className="text-[11px] font-bold text-slate-400 uppercase">From:</span>
+                  <input
+                    type="date"
+                    value={startDateFilter}
+                    onChange={e => setStartDateFilter(e.target.value)}
+                    className="bg-transparent text-xs font-semibold text-slate-800 focus:outline-none cursor-pointer"
+                  />
+                </div>
+
+                <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-xl">
+                  <span className="text-[11px] font-bold text-slate-400 uppercase">To:</span>
+                  <input
+                    type="date"
+                    value={endDateFilter}
+                    onChange={e => setEndDateFilter(e.target.value)}
+                    className="bg-transparent text-xs font-semibold text-slate-800 focus:outline-none cursor-pointer"
+                  />
+                </div>
+
+                {(auditSearch ||
+                  userFilter !== 'ALL' ||
+                  actionFilter !== 'ALL' ||
+                  stageFilter !== 'ALL' ||
+                  sourceFilter !== 'ALL' ||
+                  startDateFilter ||
+                  endDateFilter) && (
+                  <button
+                    onClick={handleResetAuditFilters}
+                    className="px-2.5 py-1.5 text-xs font-bold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl transition cursor-pointer"
+                  >
+                    Reset Filters
+                  </button>
+                )}
+              </div>
+
+              {/* Counter and Export Action */}
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-slate-500 font-semibold">
+                  Showing <strong className="text-slate-900 font-black">{filteredAuditLogs.length}</strong> of{' '}
+                  {auditLogs.length} records
+                </span>
+
+                <button
+                  onClick={handleExportAuditCsv}
+                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow transition flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Export CSV</span>
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Audit Logs Table */}
           <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs min-w-[750px] border-collapse">
+              <table className="w-full text-left text-xs min-w-[950px] border-collapse">
                 <thead className="bg-slate-100/80 text-slate-600 uppercase tracking-wider font-extrabold text-[11px] border-b border-slate-200">
                   <tr>
-                    <th className="py-3.5 px-5">ID / Timestamp</th>
+                    <th className="py-3.5 px-4">Date & Time / ID</th>
+                    <th className="py-3.5 px-4">BR No / Bill No</th>
                     <th className="py-3.5 px-4">User</th>
-                    <th className="py-3.5 px-4">Action</th>
+                    <th className="py-3.5 px-3">Action</th>
+                    <th className="py-3.5 px-3">Stage</th>
                     <th className="py-3.5 px-5">Details / Description</th>
-                    <th className="py-3.5 px-4">Header ID</th>
+                    <th className="py-3.5 px-3 text-center">Source</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-medium">
                   {filteredAuditLogs.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="py-8 text-center text-slate-400">
-                        No user activity logs recorded yet.
+                      <td colSpan={7} className="py-12 text-center text-slate-400">
+                        No audit records match the selected filter criteria.
                       </td>
                     </tr>
                   ) : (
-                    filteredAuditLogs.slice(0, 150).map(log => (
-                      <tr key={log.id} className="hover:bg-slate-50/80 transition">
-                        <td className="py-3 px-5">
-                          <span className="font-mono text-slate-400 text-[10px] block">#{log.id}</span>
-                          <span className="text-[11px] text-slate-700">
-                            {new Date(log.timestamp).toLocaleString()}
-                          </span>
-                        </td>
+                    filteredAuditLogs.slice(0, 200).map(log => {
+                      const actionLabel = log.action_label || formatAuditActionLabel(log.action);
+                      const isErp = log.source === 'ERP';
+                      const isRejected = log.action === 'REJECTED' || actionLabel.toLowerCase().includes('reject');
 
-                        <td className="py-3 px-4 font-bold text-slate-900">
-                          {log.user_name}
-                          <span className="text-[10px] text-slate-400 block font-normal">
-                            {log.user_role}
-                          </span>
-                        </td>
+                      const getActionBadgeClass = () => {
+                        const norm = (log.action || '').toUpperCase();
+                        if (norm.includes('REJECT') || isRejected) {
+                          return 'bg-rose-100 text-rose-800 border-rose-300';
+                        }
+                        if (norm.includes('INTAKE') || norm.includes('RECEIVED')) {
+                          return 'bg-sky-100 text-sky-800 border-sky-300';
+                        }
+                        if (norm.includes('CHECK')) {
+                          return 'bg-indigo-100 text-indigo-800 border-indigo-300';
+                        }
+                        if (norm.includes('PASS')) {
+                          return 'bg-emerald-100 text-emerald-800 border-emerald-300';
+                        }
+                        if (norm.includes('MOVE') || norm.includes('HANDOVER')) {
+                          return 'bg-cyan-100 text-cyan-800 border-cyan-300';
+                        }
+                        if (norm.includes('TALLY')) {
+                          return 'bg-amber-100 text-amber-800 border-amber-300';
+                        }
+                        if (norm === 'FILED' || norm.includes('FILING_COMPLETED')) {
+                          return 'bg-teal-100 text-teal-800 border-teal-300';
+                        }
+                        if (norm.includes('REVOKE')) {
+                          return 'bg-orange-100 text-orange-800 border-orange-300';
+                        }
+                        if (norm === 'LOGIN' || norm === 'LOGOUT') {
+                          return 'bg-purple-100 text-purple-800 border-purple-300';
+                        }
+                        return 'bg-slate-100 text-slate-700 border-slate-300';
+                      };
 
-                        <td className="py-3 px-4">
-                          <span
-                            className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
-                              log.action === 'LOGIN' || log.action === 'LOGOUT'
-                                ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
-                                : log.action === 'HANDOVER'
-                                ? 'bg-sky-50 text-sky-700 border border-sky-200'
-                                : log.action === 'MOVE_TO_TALLY'
-                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                : log.action === 'PAYMENT_COMPLETE'
-                                ? 'bg-teal-50 text-teal-700 border border-teal-200'
-                                : log.action === 'ALERT_ACKNOWLEDGE'
-                                ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                                : 'bg-slate-100 text-slate-700 border border-slate-200'
-                            }`}
-                          >
-                            {log.action}
-                          </span>
-                        </td>
+                      return (
+                        <tr key={log.id} className="hover:bg-slate-50/80 transition">
+                          {/* Col 1: Date & Time / ID */}
+                          <td className="py-3 px-4 whitespace-nowrap">
+                            <span className="font-mono text-slate-400 text-[10px] block">#{log.id}</span>
+                            <span className="font-mono font-bold text-slate-900 text-xs block">
+                              {log.time || formatAuditTimeOnly(log.timestamp)}
+                            </span>
+                            <span className="text-[10px] text-slate-500 block">
+                              {log.date || formatAuditDateOnly(log.timestamp)}
+                            </span>
+                          </td>
 
-                        <td className="py-3 px-5 text-slate-800 text-xs">
-                          {log.details}
-                        </td>
+                          {/* Col 2: BR No / Bill No */}
+                          <td className="py-3 px-4">
+                            {log.br_no ? (
+                              <div>
+                                <span className="font-mono font-black text-sky-700 text-xs block">
+                                  {log.br_no}
+                                </span>
+                                {log.bill_no && (
+                                  <span className="text-[10px] text-slate-500 font-mono block">
+                                    Inv: {log.bill_no}
+                                  </span>
+                                )}
+                              </div>
+                            ) : log.header_id ? (
+                              <span className="font-mono font-bold text-sky-700">#{log.header_id}</span>
+                            ) : (
+                              <span className="text-slate-400">—</span>
+                            )}
+                          </td>
 
-                        <td className="py-3 px-4 font-mono font-bold text-sky-700">
-                          {log.header_id ? `#${log.header_id}` : '—'}
-                        </td>
-                      </tr>
-                    ))
+                          {/* Col 3: User */}
+                          <td className="py-3 px-4">
+                            <span className="font-bold text-slate-900 block">{log.user_name}</span>
+                            <span className="text-[10px] text-slate-400 font-medium block">
+                              {log.user_role}
+                            </span>
+                          </td>
+
+                          {/* Col 4: Action */}
+                          <td className="py-3 px-3 whitespace-nowrap">
+                            <span
+                              className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider border ${getActionBadgeClass()}`}
+                            >
+                              {actionLabel}
+                            </span>
+                          </td>
+
+                          {/* Col 5: Stage */}
+                          <td className="py-3 px-3 whitespace-nowrap">
+                            {log.previous_stage && log.new_stage && log.previous_stage !== log.new_stage ? (
+                              <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1">
+                                <span>{(STAGE_DISPLAY_NAMES as Record<string, string>)[log.previous_stage] || log.previous_stage}</span>
+                                <span className="text-sky-500 font-black">→</span>
+                                <strong className="text-sky-900 font-black">
+                                  {(STAGE_DISPLAY_NAMES as Record<string, string>)[log.new_stage] || log.new_stage}
+                                </strong>
+                              </span>
+                            ) : log.new_stage || log.previous_stage ? (
+                              <span className="text-[11px] font-bold text-slate-700">
+                                {(STAGE_DISPLAY_NAMES as Record<string, string>)[(log.new_stage || log.previous_stage) || ''] ||
+                                  log.new_stage ||
+                                  log.previous_stage}
+                              </span>
+                            ) : (
+                              <span className="text-slate-400">—</span>
+                            )}
+                          </td>
+
+                          {/* Col 6: Details / Description */}
+                          <td className="py-3 px-5 text-slate-800 text-xs">
+                            <p className="leading-relaxed">{log.details}</p>
+                            {log.rejection_reason && (
+                              <span className="text-[11px] font-bold text-rose-600 block mt-0.5">
+                                Rejection: {log.rejection_reason}
+                              </span>
+                            )}
+                          </td>
+
+                          {/* Col 7: Source */}
+                          <td className="py-3 px-3 text-center whitespace-nowrap">
+                            <span
+                              className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider border ${
+                                isErp
+                                  ? 'bg-purple-50 text-purple-700 border-purple-200'
+                                  : 'bg-sky-50 text-sky-700 border-sky-200'
+                              }`}
+                            >
+                              {log.source || 'DFR'}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>

@@ -33,13 +33,20 @@ export interface AuthSession {
 }
 
 export type AuditAction =
+  | 'BILL_RECEIVED'
+  | 'CHECKED'
+  | 'PASSED'
+  | 'REJECTED'
+  | 'MOVED'
+  | 'TALLY_EXPORTED'
+  | 'FILED'
+  | 'FILING_REVOKED'
   | 'LOGIN'
   | 'LOGOUT'
   | 'HANDOVER'
   | 'MOVE_TO_TALLY'
   | 'PAYMENT_COMPLETE'
   | 'FILING_COMPLETED'
-  | 'FILING_REVOKED'
   | 'STAGE_CHANGE'
   | 'LABEL_CHANGE'
   | 'USER_CREATE'
@@ -54,17 +61,33 @@ export type AuditAction =
   | 'ALERT_ACKNOWLEDGE'
   | 'SETTINGS_UPDATE';
 
+export type AuditSource = 'ERP' | 'DFR';
+
 export interface AuditLogEntry {
   id: number;
+  header_id?: number;
+  br_no?: string;
+  bill_no?: string;
   user_id: string;
   user_name: string;
   user_role: string;
-  action: AuditAction;
+  action: AuditAction | string;
+  action_label?: string;
+  previous_stage?: ProcessStage | string | null;
+  new_stage?: ProcessStage | string | null;
+  previous_holder?: string | null;
+  new_holder?: string | null;
+  status_before?: string | null;
+  status_after?: string | null;
+  rejection_reason?: string | null;
+  note?: string | null;
   details: string;
-  header_id?: number;
+  source: AuditSource;
+  timestamp: string;
+  date?: string;
+  time?: string;
   previous_value?: string;
   new_value?: string;
-  timestamp: string;
 }
 
 export interface DfrLabel {
@@ -152,14 +175,19 @@ export interface DfrBillTracking {
 export interface HolderHistory {
   id: number;
   header_id: number;
+  br_no?: string;
+  bill_no?: string;
   from_holder_id: string | null;
   to_holder_id: string;
   from_stage: ProcessStage | null;
   to_stage: ProcessStage;
+  action?: string;
   changed_by: string;
+  user_name?: string;
   note: string;
+  rejection_reason?: string | null;
   changed_at: string;
-  source?: 'ERP Sync' | 'Manual Handover' | 'System Initial' | 'Manual Filing';
+  source?: 'ERP Sync' | 'Manual Handover' | 'System Initial' | 'Manual Filing' | 'ERP' | 'DFR';
 }
 
 // 4. Ageing Alerts Log
