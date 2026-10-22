@@ -39,6 +39,7 @@ import {
   formatAuditActionLabel,
   formatAuditDateOnly,
   formatAuditTimeOnly,
+  formatAuditDateTimeDisplay,
 } from '../../services/auditService';
 import { dfrService } from '../../services/dfrService';
 
@@ -768,11 +769,14 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({
                           {/* Col 1: Date & Time / ID */}
                           <td className="py-3 px-4 whitespace-nowrap">
                             <span className="font-mono text-slate-400 text-[10px] block">#{log.id}</span>
-                            <span className="font-mono font-bold text-slate-900 text-xs block">
-                              {log.time || formatAuditTimeOnly(log.timestamp)}
+                            <span
+                              className="font-mono font-bold text-slate-900 text-xs block"
+                              title={formatAuditDateTimeDisplay(log.timestamp)}
+                            >
+                              {formatAuditTimeOnly(log.timestamp || log.time)}
                             </span>
                             <span className="text-[10px] text-slate-500 block">
-                              {log.date || formatAuditDateOnly(log.timestamp)}
+                              {formatAuditDateOnly(log.timestamp || log.date)}
                             </span>
                           </td>
 

@@ -39,6 +39,7 @@ import {
   formatAuditActionLabel,
   formatAuditDateOnly,
   formatAuditTimeOnly,
+  formatAuditDateTimeDisplay,
 } from '../../services/auditService';
 
 const formatAuditDateTime = (dateStr: string) => {
@@ -52,11 +53,12 @@ const formatAuditDateTime = (dateStr: string) => {
 
   let hours = d.getHours();
   const minutes = String(d.getMinutes()).padStart(2, '0');
+  const seconds = String(d.getSeconds()).padStart(2, '0');
   const ampm = hours >= 12 ? 'PM' : 'AM';
   hours = hours % 12 || 12;
   const hoursStr = String(hours).padStart(2, '0');
 
-  return `${day}/${month}/${year}, ${hoursStr}:${minutes} ${ampm}`;
+  return `${day}/${month}/${year}, ${hoursStr}:${minutes}:${seconds} ${ampm}`;
 };
 
 const formatDateOnly = (dateStr?: string | null): string => {
@@ -614,8 +616,11 @@ export const BillDetailDrawer: React.FC<BillDetailDrawerProps> = ({
                           {/* Row 1: Time, User, Action, Source */}
                           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2">
                             <div className="flex items-center gap-2">
-                              <span className="font-mono text-xs font-black text-slate-900 bg-slate-100 px-2 py-0.5 rounded-md">
-                                {entry.time || formatAuditTimeOnly(entry.timestamp)}
+                              <span
+                                className="font-mono text-xs font-black text-slate-900 bg-slate-100 px-2 py-0.5 rounded-md"
+                                title={formatAuditDateTimeDisplay(entry.timestamp)}
+                              >
+                                {formatAuditTimeOnly(entry.timestamp || entry.time)}
                               </span>
                               <span className="text-xs font-black text-slate-900 uppercase">
                                 {entry.user_name || 'SYSTEM'}
@@ -664,7 +669,7 @@ export const BillDetailDrawer: React.FC<BillDetailDrawerProps> = ({
                             </div>
 
                             <span className="text-[10px] text-slate-400 font-mono">
-                              {entry.date || formatAuditDateOnly(entry.timestamp)}
+                              {formatAuditDateOnly(entry.timestamp || entry.date)}
                             </span>
                           </div>
 

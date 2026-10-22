@@ -476,9 +476,10 @@ class DfrService {
 
     let baseTime: number;
     const dateStr = bill.br_date || bill.bill_date;
+    const secOffset = ((bill.header_id * 17) % 50) + 5;
     if (dateStr && !dateStr.includes('T') && dateStr.split('-').length === 3) {
       const [y, m, d] = dateStr.split('-').map(Number);
-      baseTime = new Date(y, m - 1, d, 9, 10, 0).getTime();
+      baseTime = new Date(y, m - 1, d, 9, 10, secOffset).getTime();
     } else {
       baseTime = new Date(dateStr || Date.now()).getTime();
     }
@@ -550,7 +551,7 @@ class DfrService {
     // 2. IAD Checked
     const stagesPastInward: ProcessStage[] = ['IAD', 'AO', 'JMD', 'ACCOUNTS', 'TALLY', 'FILING'];
     if (stagesPastInward.includes(erpStage)) {
-      const tChecked = new Date(baseTime + 1000 * 60 * 75).toISOString();
+      const tChecked = new Date(baseTime + 1000 * (60 * 75 + ((bill.header_id * 7) % 45))).toISOString();
       auditService.logUniqueEvent(
         `iad_check_${bill.header_id}`,
         'CHECKED',
@@ -580,7 +581,7 @@ class DfrService {
     // 3. IAD Passed (IAD -> AO)
     const stagesPastIad: ProcessStage[] = ['AO', 'JMD', 'ACCOUNTS', 'TALLY', 'FILING'];
     if (stagesPastIad.includes(erpStage)) {
-      const tIadPass = new Date(baseTime + 1000 * 60 * 150).toISOString();
+      const tIadPass = new Date(baseTime + 1000 * (60 * 150 + ((bill.header_id * 11) % 45))).toISOString();
       auditService.logUniqueEvent(
         `iad_pass_${bill.header_id}`,
         'PASSED',
@@ -610,7 +611,7 @@ class DfrService {
     // 4. AO Passed (AO -> JMD)
     const stagesPastAo: ProcessStage[] = ['JMD', 'ACCOUNTS', 'TALLY', 'FILING'];
     if (stagesPastAo.includes(erpStage)) {
-      const tAoPass = new Date(baseTime + 1000 * 60 * 245).toISOString();
+      const tAoPass = new Date(baseTime + 1000 * (60 * 245 + ((bill.header_id * 13) % 45))).toISOString();
       auditService.logUniqueEvent(
         `ao_pass_${bill.header_id}`,
         'PASSED',
@@ -640,7 +641,7 @@ class DfrService {
     // 5. JMD Passed (JMD -> ACCOUNTS)
     const stagesPastJmd: ProcessStage[] = ['ACCOUNTS', 'TALLY', 'FILING'];
     if (stagesPastJmd.includes(erpStage)) {
-      const tJmdPass = new Date(baseTime + 1000 * 60 * 370).toISOString();
+      const tJmdPass = new Date(baseTime + 1000 * (60 * 370 + ((bill.header_id * 19) % 45))).toISOString();
       auditService.logUniqueEvent(
         `jmd_pass_${bill.header_id}`,
         'PASSED',
@@ -669,7 +670,7 @@ class DfrService {
 
     // 6. Rejected if applicable
     if (bill.approval_status?.toUpperCase() === 'REJECTED') {
-      const tReject = new Date(baseTime + 1000 * 60 * 180).toISOString();
+      const tReject = new Date(baseTime + 1000 * (60 * 180 + ((bill.header_id * 23) % 45))).toISOString();
       const rejectorName = bill.rejected_by || 'Approver';
       const rejectorUser = this.state.users.find(u => u.full_name === rejectorName || u.username === rejectorName) || {
         id: 'user-approver',
@@ -706,7 +707,9 @@ class DfrService {
       bill.tally_status?.toUpperCase() === 'POSTED' ||
       bill.tally_exported_date
     ) {
-      const tTally = bill.tally_exported_date || new Date(baseTime + 1000 * 60 * 420).toISOString();
+      const tTally = bill.tally_exported_date && bill.tally_exported_date.includes('T')
+        ? bill.tally_exported_date
+        : new Date(baseTime + 1000 * (60 * 420 + ((bill.header_id * 29) % 45))).toISOString();
       auditService.logUniqueEvent(
         `tally_export_${bill.header_id}`,
         'TALLY_EXPORTED',
@@ -735,7 +738,9 @@ class DfrService {
 
     // 8. Physical Filing
     if (bill.filing_status === 'FILED') {
-      const tFiling = bill.filing_date || new Date(baseTime + 1000 * 60 * 440).toISOString();
+      const tFiling = bill.filing_date && bill.filing_date.includes('T')
+        ? bill.filing_date
+        : new Date(baseTime + 1000 * (60 * 440 + ((bill.header_id * 31) % 45))).toISOString();
       const filedUser = bill.filed_by_name
         ? this.state.users.find(u => u.full_name === bill.filed_by_name) || accountsUser
         : accountsUser;

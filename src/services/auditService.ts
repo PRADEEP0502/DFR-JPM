@@ -59,11 +59,26 @@ export const formatAuditActionLabel = (action: AuditAction | string): string => 
 export const formatAuditTimeOnly = (isoString?: string | null): string => {
   if (!isoString) return '—';
   try {
-    const d = new Date(isoString);
-    if (isNaN(d.getTime())) return '—';
+    const trimmed = isoString.trim();
+    // If it's already in format like '09:10:30 AM' or '9:10:30 PM', return it
+    if (/^\d{1,2}:\d{2}:\d{2}\s?(AM|PM)$/i.test(trimmed)) {
+      return trimmed;
+    }
+    const d = new Date(trimmed);
+    if (isNaN(d.getTime())) {
+      // Check if it's like '09:10 AM' (missing seconds)
+      if (/^\d{1,2}:\d{2}\s?(AM|PM)$/i.test(trimmed)) {
+        const parts = trimmed.split(' ');
+        const timePart = parts[0];
+        const ampm = parts[1] || '';
+        return `${timePart}:00 ${ampm}`.trim();
+      }
+      return trimmed;
+    }
     return d.toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
+      second: '2-digit',
       hour12: true,
     });
   } catch {
@@ -90,7 +105,7 @@ export const formatAuditDateTimeDisplay = (isoString?: string | null): string =>
   if (!isoString) return '—';
   try {
     const d = new Date(isoString);
-    if (isNaN(d.getTime())) return '—';
+    if (isNaN(d.getTime())) return isoString;
     const dateStr = d.toLocaleDateString('en-GB', {
       day: '2-digit',
       month: 'short',
@@ -99,9 +114,10 @@ export const formatAuditDateTimeDisplay = (isoString?: string | null): string =>
     const timeStr = d.toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
+      second: '2-digit',
       hour12: true,
     });
-    return `${timeStr} | ${dateStr}`;
+    return `${dateStr}, ${timeStr}`;
   } catch {
     return '—';
   }
@@ -147,9 +163,15 @@ class AuditService {
       try {
         const parsed: AuditLogEntry[] = JSON.parse(saved);
         if (Array.isArray(parsed)) {
-          this.logs = parsed.filter(
-            l => l.action !== 'ERP_SYNC' && l.action !== 'MANUAL_SYNC' && l.action !== 'SYNC'
-          );
+          this.logs = parsed
+            .filter(
+              l => l.action !== 'ERP_SYNC' && l.action !== 'MANUAL_SYNC' && l.action !== 'SYNC'
+            )
+            .map(l => ({
+              ...l,
+              time: formatAuditTimeOnly(l.timestamp || l.time),
+              date: formatAuditDateOnly(l.timestamp || l.date),
+            }));
         }
       } catch (e) {
         console.error('Failed to parse audit logs:', e);
@@ -338,8 +360,8 @@ class AuditService {
     const rows = list.map(l => [
       l.id,
       `"${l.timestamp}"`,
-      `"${l.date || formatAuditDateOnly(l.timestamp)}"`,
-      `"${l.time || formatAuditTimeOnly(l.timestamp)}"`,
+      `"${formatAuditDateOnly(l.timestamp || l.date)}"`,
+      `"${formatAuditTimeOnly(l.timestamp || l.time)}"`,
       l.header_id || '',
       `"${(l.br_no || '').replace(/"/g, '""')}"`,
       `"${(l.bill_no || '').replace(/"/g, '""')}"`,
