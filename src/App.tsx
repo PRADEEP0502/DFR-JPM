@@ -356,6 +356,8 @@ export const App: React.FC = () => {
               <AdminSettingsView
                 currentUser={currentUser}
                 onRefresh={() => setTick(t => t + 1)}
+                bills={bills}
+                onSelectBill={setSelectedBill}
               />
             ) : (
               <div className="bg-white rounded-3xl border border-rose-200 p-8 text-center space-y-4 shadow-sm max-w-lg mx-auto my-12 animate-in fade-in zoom-in-95 duration-200">

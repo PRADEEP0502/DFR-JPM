@@ -19,6 +19,8 @@ import {
   Sliders,
   Check,
   X,
+  ExternalLink,
+  ChevronRight,
 } from 'lucide-react';
 import {
   DfrUser,
@@ -29,6 +31,7 @@ import {
   SyncState,
   STAGE_DISPLAY_NAMES,
   ProcessStage,
+  BillRegisterItem,
 } from '../../types/dfr';
 import { authService } from '../../services/authService';
 import {
@@ -42,9 +45,16 @@ import { dfrService } from '../../services/dfrService';
 interface AdminSettingsViewProps {
   currentUser: DfrUser;
   onRefresh: () => void;
+  bills?: BillRegisterItem[];
+  onSelectBill?: (bill: BillRegisterItem) => void;
 }
 
-export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({ currentUser, onRefresh }) => {
+export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({
+  currentUser,
+  onRefresh,
+  bills,
+  onSelectBill,
+}) => {
   const [activeTab, setActiveTab] = useState<'users' | 'audit' | 'sync'>('users');
 
   // User Management State
@@ -197,6 +207,27 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({ currentUse
     link.click();
     document.body.removeChild(link);
     showToast(`Exported ${filteredAuditLogs.length} audit records to CSV.`);
+  };
+
+  const handleOpenBillFromLog = (log: AuditLogEntry) => {
+    if (!log.header_id && !log.br_no) return;
+    let targetBill: BillRegisterItem | undefined;
+    if (log.header_id) {
+      targetBill =
+        bills?.find(b => b.header_id === log.header_id) ||
+        dfrService.getBillByHeaderId(log.header_id);
+    }
+    if (!targetBill && log.br_no) {
+      const cleanBr = log.br_no.toLowerCase().trim();
+      targetBill =
+        bills?.find(b => b.br_no.toLowerCase().trim() === cleanBr) ||
+        dfrService.getBillRegister(true).find(b => b.br_no.toLowerCase().trim() === cleanBr);
+    }
+    if (targetBill && onSelectBill) {
+      onSelectBill(targetBill);
+    } else if (log.header_id || log.br_no) {
+      showToast(`Bill details not found for ${log.br_no || '#' + log.header_id}`);
+    }
   };
 
   const handleResetAuditFilters = () => {
@@ -355,7 +386,7 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({ currentUse
             }`}
           >
             <History className="w-3.5 h-3.5" />
-            <span>Audit Logs</span>
+            <span>Activity / Audit Logs</span>
           </button>
 
           <button
@@ -649,9 +680,19 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({ currentUse
 
           {/* Audit Logs Table */}
           <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden">
+            <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/70 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <span className="font-extrabold text-slate-800 flex items-center gap-2">
+                <History className="w-4 h-4 text-sky-600" />
+                <span>DFR Chronological Activity History</span>
+              </span>
+              <span className="text-[11px] text-sky-700 bg-sky-100/80 border border-sky-200 px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1.5 shadow-2xs">
+                <span>💡 Click any bill activity row to open bill details</span>
+              </span>
+            </div>
+
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs min-w-[950px] border-collapse">
-                <thead className="bg-slate-100/80 text-slate-600 uppercase tracking-wider font-extrabold text-[11px] border-b border-slate-200">
+              <table className="w-full text-left text-xs min-w-[1000px] border-collapse">
+                <thead className="bg-slate-100/80 text-slate-600 uppercase tracking-wider font-extrabold text-[11px] border-b border-slate-200 select-none">
                   <tr>
                     <th className="py-3.5 px-4">Date & Time / ID</th>
                     <th className="py-3.5 px-4">BR No / Bill No</th>
@@ -660,17 +701,19 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({ currentUse
                     <th className="py-3.5 px-3">Stage</th>
                     <th className="py-3.5 px-5">Details / Description</th>
                     <th className="py-3.5 px-3 text-center">Source</th>
+                    <th className="py-3.5 px-4 text-right">Bill Detail</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-medium">
                   {filteredAuditLogs.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="py-12 text-center text-slate-400">
+                      <td colSpan={8} className="py-12 text-center text-slate-400">
                         No audit records match the selected filter criteria.
                       </td>
                     </tr>
                   ) : (
                     filteredAuditLogs.slice(0, 200).map(log => {
+                      const hasBill = Boolean(log.header_id || log.br_no);
                       const actionLabel = log.action_label || formatAuditActionLabel(log.action);
                       const isErp = log.source === 'ERP';
                       const isRejected = log.action === 'REJECTED' || actionLabel.toLowerCase().includes('reject');
@@ -708,7 +751,20 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({ currentUse
                       };
 
                       return (
-                        <tr key={log.id} className="hover:bg-slate-50/80 transition">
+                        <tr
+                          key={log.id}
+                          onClick={() => {
+                            if (hasBill) {
+                              handleOpenBillFromLog(log);
+                            }
+                          }}
+                          className={`transition ${
+                            hasBill
+                              ? 'cursor-pointer hover:bg-sky-50/80 hover:shadow-2xs group'
+                              : 'hover:bg-slate-50/50'
+                          }`}
+                          title={hasBill ? `Click to open bill details (${log.br_no || '#' + log.header_id})` : undefined}
+                        >
                           {/* Col 1: Date & Time / ID */}
                           <td className="py-3 px-4 whitespace-nowrap">
                             <span className="font-mono text-slate-400 text-[10px] block">#{log.id}</span>
@@ -724,8 +780,9 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({ currentUse
                           <td className="py-3 px-4">
                             {log.br_no ? (
                               <div>
-                                <span className="font-mono font-black text-sky-700 text-xs block">
+                                <span className="font-mono font-black text-sky-700 text-xs flex items-center gap-1.5 group-hover:text-sky-900 group-hover:underline">
                                   {log.br_no}
+                                  <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-sky-600 shrink-0" />
                                 </span>
                                 {log.bill_no && (
                                   <span className="text-[10px] text-slate-500 font-mono block">
@@ -734,7 +791,10 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({ currentUse
                                 )}
                               </div>
                             ) : log.header_id ? (
-                              <span className="font-mono font-bold text-sky-700">#{log.header_id}</span>
+                              <span className="font-mono font-bold text-sky-700 flex items-center gap-1.5 group-hover:text-sky-900 group-hover:underline">
+                                #{log.header_id}
+                                <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-sky-600 shrink-0" />
+                              </span>
                             ) : (
                               <span className="text-slate-400">—</span>
                             )}
@@ -799,6 +859,26 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({ currentUse
                             >
                               {log.source || 'DFR'}
                             </span>
+                          </td>
+
+                          {/* Col 8: Bill Detail Action */}
+                          <td className="py-3 px-4 text-right whitespace-nowrap">
+                            {hasBill ? (
+                              <button
+                                type="button"
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  handleOpenBillFromLog(log);
+                                }}
+                                className="inline-flex items-center gap-1 text-[11px] font-bold text-sky-700 bg-sky-50 hover:bg-sky-600 hover:text-white group-hover:bg-sky-600 group-hover:text-white px-2.5 py-1 rounded-lg border border-sky-200 group-hover:border-sky-600 transition shadow-2xs cursor-pointer"
+                                title={`Open details for ${log.br_no || '#' + log.header_id}`}
+                              >
+                                <span>Open Bill</span>
+                                <ChevronRight className="w-3.5 h-3.5" />
+                              </button>
+                            ) : (
+                              <span className="text-slate-300 text-[11px]">—</span>
+                            )}
                           </td>
                         </tr>
                       );

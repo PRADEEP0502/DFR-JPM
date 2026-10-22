@@ -399,6 +399,56 @@ class DfrService {
   }
 
   /**
+   * Retrieves a single bill item by headerId for quick navigation and drawers
+   */
+  public getBillByHeaderId(headerId: number): BillRegisterItem | undefined {
+    const list = this.getBillRegister(true);
+    const found = list.find(b => b.header_id === headerId);
+    if (found) return found;
+
+    const erp = this.state.erpBills.find(b => b.header_id === headerId);
+    if (!erp) return undefined;
+
+    const dfr = this.state.dfrBills.find(d => d.header_id === headerId);
+    const stage = mapErpToDfrStage(erp);
+    const stageHolder = this.resolveHolderForBill(erp.category, stage);
+
+    const now = new Date();
+    const brDateObj = new Date(erp.br_date);
+    const diffTime = Math.max(0, now.getTime() - brDateObj.getTime());
+    const ageDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+    return {
+      header_id: erp.header_id,
+      br_no: erp.br_no,
+      br_date: erp.br_date,
+      bill_no: erp.bill_no,
+      bill_date: erp.bill_date,
+      supplier: erp.supplier,
+      amount: erp.amount,
+      category: erp.category,
+      current_holder_id: dfr?.current_holder_id || stageHolder.id,
+      current_holder_name: stageHolder.full_name,
+      current_stage: dfr?.current_stage || stage,
+      age_days: ageDays,
+      age_band: 'NORMAL',
+      approval_status: erp.approval_status,
+      next_approver: erp.next_approver,
+      rejected_by: erp.rejected_by,
+      rejection_reason: erp.rejection_reason,
+      tally_status: erp.tally_status,
+      tally_exported_date: erp.tally_exported_date,
+      filing_status: dfr?.filing_status || erp.filing_status,
+      filing_date: dfr?.filing_date || erp.filing_date,
+      filed_by: dfr?.filed_by || erp.filed_by,
+      filed_by_name: dfr?.filed_by_name || erp.filed_by_name,
+      bill_status: erp.bill_status,
+      dfr_status: dfr?.dfr_status || 'OPEN',
+      labels: [],
+    };
+  }
+
+  /**
    * Retrieves the comprehensive, deduplicated chronological audit trail / history for a specific bill.
    */
   public getBillAuditHistory(headerId: number): AuditLogEntry[] {
